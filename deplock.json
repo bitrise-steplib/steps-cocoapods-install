@@ -1,0 +1,12 @@
+{
+	"dep_locks": [
+		{
+			"url": "https://github.com/bitrise-io/steps-cocoapods-update.git",
+			"revision": "067e4c630c057e38882ea40528ba306be1d85568"
+		},
+		{
+			"url": "https://github.com/bitrise-io/steps-utils-bash-toolkit.git",
+			"revision": "1e3af9647d8ae5f1c48b2eb0549a06c71f9defad"
+		}
+	]
+}

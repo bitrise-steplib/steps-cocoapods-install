@@ -1,0 +1,34 @@
+title: Run CocoaPods install
+summary: |-
+  Run CocoaPods install (`$ pod install`) in your App's directory.
+description: |-
+  Run CocoaPods install (`$ pod install`) in your App's directory.
+website: https://github.com/bitrise-io/steps-cocoapods-install
+source_code_url: https://github.com/bitrise-io/steps-cocoapods-install
+support_url: https://github.com/bitrise-io/steps-cocoapods-install/issues
+host_os_tags:
+  - osx-10.10
+project_type_tags:
+  - ios
+type_tags:
+  - xcode
+  - cocoapods
+  - pod
+dependencies: []
+is_requires_admin_user: false
+is_always_run: false
+is_skippable: false
+inputs:
+  - source_root_path: "$BITRISE_SOURCE_DIR"
+    opts:
+      title: "Source Code Directory path."
+      is_expand: true
+      is_required: true
+  - is_update_cocoapods: "true"
+    opts:
+      title: "Update CocoaPods version?"
+      description: |
+        Should update the installed CocoaPods version before using it?
+      value_options: ["true", "false"]
+      is_expand: false
+      is_required: true

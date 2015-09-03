@@ -1,0 +1,12 @@
+{
+	"deps": [
+		{
+			"url": "https://github.com/bitrise-io/steps-cocoapods-update.git",
+			"store_path": "steps-cocoapods-update"
+		},
+		{
+			"url": "https://github.com/bitrise-io/steps-utils-bash-toolkit.git",
+			"store_path": "_bash_utils"
+		}
+	]
+}
