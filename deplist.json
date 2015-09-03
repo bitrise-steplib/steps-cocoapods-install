@@ -2,7 +2,7 @@
 	"deps": [
 		{
 			"url": "https://github.com/bitrise-io/steps-cocoapods-update.git",
-			"store_path": "steps-cocoapods-update"
+			"store_path": "_steps-cocoapods-update"
 		},
 		{
 			"url": "https://github.com/bitrise-io/steps-utils-bash-toolkit.git",

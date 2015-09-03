@@ -16,7 +16,7 @@ fi
 
 # Update Cocoapods
 if [[ "${is_update_cocoapods}" != "false" ]] ; then
-  print_and_do_command_exit_on_error bash "${THIS_SCRIPTDIR}/steps-cocoapods-update/step.sh"
+  print_and_do_command_exit_on_error bash "${THIS_SCRIPTDIR}/_steps-cocoapods-update/step.sh"
 else
   write_section_to_formatted_output "*Skipping Cocoapods version update*"
   pod_version=$(pod --version)
