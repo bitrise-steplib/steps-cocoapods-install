@@ -13,6 +13,7 @@ if [ -z "${source_root_path}" ]; then
   write_section_start_to_formatted_output '* source_root_path input is missing'
   exit 1
 fi
+print_and_do_command_exit_on_error cd "${source_root_path}"
 
 # Update Cocoapods
 if [[ "${is_update_cocoapods}" != "false" ]] ; then
@@ -28,8 +29,6 @@ else
 
   write_section_start_to_formatted_output "CocoaPods version: ${pod_version}"
 fi
-
-print_and_do_command_exit_on_error cd "${source_root_path}"
 
 write_section_to_formatted_output "# Run pod install"
 print_and_do_command_exit_on_error bash "${THIS_SCRIPTDIR}/run_pod_install.sh"
