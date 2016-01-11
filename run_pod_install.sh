@@ -29,15 +29,18 @@ do
     if [ -f './Gemfile' ] ; then
       echo
       echo "==> Found 'Gemfile' - using it..."
-      bundle install --verbose
+      bundle install
       fail_if_cmd_error "Failed to bundle install"
       echo
-      echo "==> CocoaPods version:"
+      echo "==> Gemfile specified CocoaPods version:"
       bundle exec pod --version
-      fail_if_cmd_error "Failed to bundle install"
+      fail_if_cmd_error "Failed to get pod version"
       bundle exec pod install --verbose
       fail_if_cmd_error "Failed to pod install"
     else
+      echo "==> System Installed CocoaPods version:"
+      pod --version
+      fail_if_cmd_error "Failed to get pod version"
       pod install --verbose
       fail_if_cmd_error "Failed to pod install"
     fi

@@ -25,11 +25,12 @@ inputs:
       title: "Source Code Directory path."
       is_expand: true
       is_required: true
-  - is_update_cocoapods: "true"
+  - is_update_cocoapods: "false"
     opts:
       title: "Update CocoaPods version?"
       description: |
-        Should update the installed CocoaPods version before using it?
+        Should update the system installed CocoaPods
+        to the latest version?
       value_options: ["true", "false"]
       is_expand: false
       is_required: true
