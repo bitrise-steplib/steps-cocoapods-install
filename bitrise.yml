@@ -15,6 +15,8 @@ workflows:
             git clone https://github.com/bitrise-io/sample-apps-ios-cocoapods.git ./_tmp
             # Without Gemfile:
             # git clone https://github.com/bitrise-io/sample-apps-ios-cocoapods.git -b only_podfile ./_tmp
+            # Pods dir inside the repo:
+            # git clone https://github.com/bitrise-samples/ios-cocoapods-minimal-sample.git ./_tmp
     - script:
         title: Switch working dir to test/_tmp dir
         description: |-
