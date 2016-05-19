@@ -42,6 +42,7 @@ do
       bundle exec pod install --verbose --no-repo-update
       if [ $? -ne 0 ] ; then
         echo "===> Failed, retrying without --no-repo-update ..."
+        bundle exec pod repo update
         bundle exec pod install --verbose
         fail_if_cmd_error "Failed to pod install"
       fi
@@ -55,6 +56,7 @@ do
       pod install --verbose --no-repo-update
       if [ $? -ne 0 ] ; then
         echo "===> Failed, retrying without --no-repo-update ..."
+        pod repo update
         pod install --verbose
         fail_if_cmd_error "Failed to pod install"
       fi
