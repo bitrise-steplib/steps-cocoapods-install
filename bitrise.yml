@@ -7,6 +7,7 @@ workflows:
     envs:
     # define this!
     - REPO_URL: $REPO_URL
+    - PODFILE_PTH: $PODFILE_PTH
     steps:
     - script:
         inputs:
@@ -27,23 +28,34 @@ workflows:
     - path::./:
         inputs:
         - is_update_cocoapods: "false"
+        - podfile_path: $PODFILE_PTH
 
   test_with_gemfile:
     envs:
     # With Gemfile:
     - REPO_URL: https://github.com/bitrise-samples/ios-cocoapods-1.x-Gemfile.git
+    - PODFILE_PTH: ''
     after_run:
     - _test_with_repo
   test_without_gemfile:
     envs:
     # Without Gemfile:
     - REPO_URL: https://github.com/bitrise-samples/ios-cocoapods-1.x.git
+    - PODFILE_PTH: ''
+    after_run:
+    - _test_with_repo
+  test_without_gemfile_with_podfile_path:
+    envs:
+    # Without Gemfile:
+    - REPO_URL: https://github.com/bitrise-samples/ios-cocoapods-1.x.git
+    - PODFILE_PTH: 'CocoaPods1X/Podfile'
     after_run:
     - _test_with_repo
   test_podfile_at_root:
     envs:
     # Podfile is in repo root
-    - REPO_URL: https://github.com/bitrise-io/sample-apps-ios-cocoapods.git
+    - REPO_URL: https://github.com/bitrise-samples/ios-cocoapods-at-root.git
+    - PODFILE_PTH: ''
     after_run:
     - _test_with_repo
 
@@ -52,6 +64,7 @@ workflows:
     - test_with_gemfile
     - test_without_gemfile
     - test_podfile_at_root
+    - test_without_gemfile_with_podfile_path
 
   # ----------------------------------------------------------------
   # --- workflows to Share this step into a Step Library

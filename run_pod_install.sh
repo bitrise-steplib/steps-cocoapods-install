@@ -9,8 +9,23 @@ CONFIG_cocoapods_ssh_source_fix_script_path="${THIS_SCRIPTDIR}/cocoapods_ssh_sou
 write_section_to_formatted_output "### Searching for podfiles and installing the found ones"
 
 podcount=0
-IFS=$'\n'
-for podfile in $(find . -type f -iname 'Podfile' -not -path "*.git/*")
+podfile_pths_arr=('./Podfile')
+if [ ! -z "${podfile_path}" ] ; then
+  if [ ! -f "${podfile_path}" ] ; then
+    echo " [!] Podfile can't be found at the specified path: ${podfile_path}"
+    exit 1
+  fi
+  echo " (i) Podfile path specified, using it (${podfile_path})"
+  podfile_pths_arr=("${podfile_path}")
+else
+  IFS=$'\n'
+  podfile_pths_arr=$(find . -type f -iname 'Podfile' -not -path "*.git/*")
+  unset IFS
+  echo " (i) No Podfile path specified, found: ${podfile_pths_arr}"
+fi
+echo " (i) podfile_pths_arr: ${podfile_pths_arr}"
+
+for podfile in ${podfile_pths_arr}
 do
   podcount=$[podcount + 1]
   echo " (i) Podfile found at: ${podfile}"
@@ -68,5 +83,5 @@ do
   fi
   echo_string_to_formatted_output "* Installed podfile: ${podfile}"
 done
-unset IFS
+
 write_section_to_formatted_output "**${podcount} podfile(s) found and installed**"

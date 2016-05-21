@@ -23,6 +23,15 @@ inputs:
     opts:
       title: "Source Code Directory path."
       is_required: true
+  - podfile_path: ""
+    opts:
+      title: "Podfile path"
+      summary: "(optional) Podfile path, relative to the source_root_path"
+      description: |-
+        (optional) `Podfile` path, relative to the `source_root_path`.
+
+        If not provided, the Step will search for Podfiles,
+        and run `pod install` with every `Podfile` it finds.
   - is_update_cocoapods: "false"
     opts:
       title: "Update CocoaPods version?"
