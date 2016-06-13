@@ -1,6 +1,12 @@
-## Changelog (Current version: 1.4.0)
+## Changelog (Current version: 1.4.1)
 
 -----------------
+
+### 1.4.1 (2016 Jun 13)
+
+* [17112db] prepare for v1.4.1
+* [028c30c] Merge pull request #8 from bitrise-io/cocoapods_version
+* [c52598d] update cocoapods to Podfile.lock specified version
 
 ### 1.4.0 (2016 May 24)
 
@@ -51,4 +57,4 @@
 
 -----------------
 
-Updated: 2016 May 24
+Updated: 2016 Jun 13
