@@ -59,7 +59,7 @@ if [ -n "$update_version" ] ; then
     print_and_do_command_exit_on_error gem uninstall --all --executables cocoapods
 
     # install the version you want to use
-    print_and_do_command_exit_on_error gem install cocoapods --version "${install_cocoapods_version}" --no-document
+    print_and_do_command_exit_on_error gem install cocoapods --version "${update_version}" --no-document
     print_and_do_command_exit_on_error pod setup --verbose
   fi
 fi
