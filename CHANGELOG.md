@@ -1,6 +1,12 @@
-## Changelog (Current version: 1.4.1)
+## Changelog (Current version: 1.4.2)
 
 -----------------
+
+### 1.4.2 (2016 Jun 14)
+
+* [9ccc90d] prepare for version 1.4.2
+* [c40cd5c] Merge pull request #9 from bitrise-io/install_fix
+* [a182042] install version fix
 
 ### 1.4.1 (2016 Jun 13)
 
@@ -57,4 +63,4 @@
 
 -----------------
 
-Updated: 2016 Jun 13
+Updated: 2016 Jun 14
