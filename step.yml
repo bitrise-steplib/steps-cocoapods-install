@@ -15,7 +15,7 @@ type_tags:
   - xcode
   - cocoapods
   - pod
-is_requires_admin_user: false
+is_requires_admin_user: true
 is_always_run: false
 is_skippable: false
 inputs:
@@ -30,29 +30,5 @@ inputs:
       description: |-
         (optional) `Podfile` path, relative to the `source_root_path`.
 
-        If not provided, the Step will search for Podfiles,
-        and run `pod install` with every `Podfile` it finds.
-  - is_update_cocoapods: "false"
-    opts:
-      title: "Update CocoaPods to the latest version?"
-      description: |
-        [Deprecated!] Use `install_cocoapods_version` input instead of this.
-
-        Should update the system installed CocoaPods
-        to the latest version?
-      value_options: ["true", "false"]
-      is_expand: false
-      is_required: true
-  - install_cocoapods_version: ""
-    opts:
-      title: "Install specified CocoaPods version"
-      description: |
-        Install specified CocoaPods version.
-
-        Leave it empty to use system installed version of CocoaPods.
-
-        Format examles:
-
-        - 0.39.0.beta.1
-        - 1.0.0
-        - latest
+        If not provided, the Step will search for root Podfile,
+        and run `pod install` with.
