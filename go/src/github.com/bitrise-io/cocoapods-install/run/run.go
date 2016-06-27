@@ -1,6 +1,7 @@
 package run
 
 import (
+	"errors"
 	"fmt"
 	"net/url"
 	"path/filepath"
@@ -11,6 +12,11 @@ import (
 	"github.com/bitrise-io/go-utils/cmdex"
 	"github.com/bitrise-io/go-utils/fileutil"
 	"github.com/bitrise-io/go-utils/pathutil"
+)
+
+const (
+	osxSystemRubyPth = "/usr/bin/ruby"
+	brewRubyPth      = "/usr/local/bin/ruby"
 )
 
 // CmdSlice ...
@@ -138,4 +144,65 @@ func CheckForGemInstalled(gem, version string) (bool, error) {
 	}
 
 	return false, nil
+}
+
+func cmdExist(cmdSlice []string) bool {
+	if len(cmdSlice) == 0 {
+		return false
+	}
+
+	if len(cmdSlice) == 1 {
+		_, err := cmdex.RunCommandAndReturnCombinedStdoutAndStderr(cmdSlice[0])
+		return (err == nil)
+	}
+
+	_, err := cmdex.RunCommandAndReturnCombinedStdoutAndStderr(cmdSlice[0], cmdSlice[1:]...)
+	return (err == nil)
+}
+
+// GemInstall ...
+func GemInstall(gem, version string) error {
+	whichRuby, err := cmdex.RunCommandAndReturnCombinedStdoutAndStderr("which", "ruby")
+	if err != nil {
+		return err
+	}
+
+	if whichRuby == osxSystemRubyPth {
+		log.Details("using system ruby - requires sudo")
+
+		gemInstallCocoapodsCmd := []string{"sudo", "gem", "install", "cocoapods", "-v", version, "--no-document"}
+		if err := CmdSlice("", false, gemInstallCocoapodsCmd); err != nil {
+			return err
+		}
+	} else if whichRuby == brewRubyPth {
+		log.Details("using brew %s ruby", brewRubyPth)
+
+		gemInstallCocoapodsCmd := []string{"gem", "install", "cocoapods", "-v", version, "--no-document"}
+		if err := CmdSlice("", false, gemInstallCocoapodsCmd); err != nil {
+			return err
+		}
+	} else if cmdExist([]string{"rvm", "-v"}) {
+		log.Details("installing with RVM")
+
+		gemInstallCocoapodsCmd := []string{"gem", "install", "cocoapods", "-v", version, "--no-document"}
+		if err := CmdSlice("", false, gemInstallCocoapodsCmd); err != nil {
+			return err
+		}
+	} else if cmdExist([]string{"rbenv", "-v"}) {
+		log.Details("installing with rbenv")
+
+		gemInstallCocoapodsCmd := []string{"gem", "install", "cocoapods", "-v", version, "--no-document"}
+		if err := CmdSlice("", false, gemInstallCocoapodsCmd); err != nil {
+			return err
+		}
+
+		rbenvRehashCmd := []string{"rbenv", "rehash"}
+		if err := CmdSlice("", false, rbenvRehashCmd); err != nil {
+			return err
+		}
+	} else {
+		return errors.New("no ruby is available")
+	}
+
+	return nil
 }

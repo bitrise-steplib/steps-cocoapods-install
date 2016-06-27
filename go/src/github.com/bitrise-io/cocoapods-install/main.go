@@ -222,8 +222,7 @@ func main() {
 
 		if !installed {
 			log.Info("Installing cocoapods: %s", useCocoapodsVersion)
-			gemInstallCocoapodsCmd := []string{"sudo", "gem", "install", "cocoapods", "-v", useCocoapodsVersion}
-			if err := run.CmdSlice(podfileDir, false, gemInstallCocoapodsCmd); err != nil {
+			if err := run.GemInstall("cocoapods", useCocoapodsVersion); err != nil {
 				log.Fail("Command failed, error: %s", err)
 			}
 		}
