@@ -256,5 +256,5 @@ func main() {
 			log.Fail("Command failed, error: %s", err)
 		}
 	}
-	log.Done("Succed")
+	log.Done("Success!")
 }
