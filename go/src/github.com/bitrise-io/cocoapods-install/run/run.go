@@ -19,8 +19,140 @@ const (
 	brewRubyPth      = "/usr/local/bin/ruby"
 )
 
-// CmdSlice ...
-func CmdSlice(workDir string, bundleExec bool, cmdSlice []string) error {
+// ----------------------
+// RubyCommand
+
+// RubyInstallType ...
+type RubyInstallType int8
+
+const (
+	// OsxSystemRuby ...
+	OsxSystemRuby RubyInstallType = iota
+	// BrewRuby ...
+	BrewRuby
+	// RVMRuby ...
+	RVMRuby
+	// RbenvRuby ...
+	RbenvRuby
+)
+
+// RubyCommandModel ...
+type RubyCommandModel struct {
+	rubyInstallType RubyInstallType
+}
+
+// NewRubyCommandModel ...
+func NewRubyCommandModel() (RubyCommandModel, error) {
+	whichRuby, err := cmdex.RunCommandAndReturnCombinedStdoutAndStderr("which", "ruby")
+	if err != nil {
+		return RubyCommandModel{}, err
+	}
+
+	command := RubyCommandModel{}
+
+	if whichRuby == osxSystemRubyPth {
+		command.rubyInstallType = OsxSystemRuby
+	} else if whichRuby == brewRubyPth {
+		command.rubyInstallType = BrewRuby
+	} else if cmdExist([]string{"rvm", "-v"}) {
+		command.rubyInstallType = RVMRuby
+	} else if cmdExist([]string{"rbenv", "-v"}) {
+		command.rubyInstallType = RbenvRuby
+	} else {
+		return RubyCommandModel{}, errors.New("unkown ruby installation type")
+	}
+
+	return command, nil
+}
+
+// Execute ...
+func (command RubyCommandModel) Execute(workDir string, useBundle bool, cmdSlice []string) error {
+	if useBundle {
+		cmdSlice = append([]string{"bundle", "exec"}, cmdSlice...)
+	}
+
+	if command.rubyInstallType == OsxSystemRuby {
+		cmdSlice = append([]string{"sudo"}, cmdSlice...)
+	}
+
+	return execute(workDir, false, cmdSlice)
+}
+
+// ExecuteForOutput ...
+func (command RubyCommandModel) ExecuteForOutput(workDir string, useBundle bool, cmdSlice []string) (string, error) {
+	if useBundle {
+		cmdSlice = append([]string{"bundle", "exec"}, cmdSlice...)
+	}
+
+	if command.rubyInstallType == OsxSystemRuby {
+		cmdSlice = append([]string{"sudo"}, cmdSlice...)
+	}
+
+	return executeForOutput(workDir, false, cmdSlice)
+}
+
+// GemInstall ...
+func (command RubyCommandModel) GemInstall(gem, version string) error {
+	cmdSlice := []string{"gem", "install", gem, "-v", version}
+	if err := command.Execute("", false, cmdSlice); err != nil {
+		return err
+	}
+
+	if command.rubyInstallType == RbenvRuby {
+		cmdSlice := []string{"rbenv", "rehash"}
+
+		if err := command.Execute("", false, cmdSlice); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// IsGemInstalled ...
+func (command RubyCommandModel) IsGemInstalled(gem, version string) (bool, error) {
+	cmdSlice := []string{"gem", "list"}
+	out, err := command.ExecuteForOutput("", false, cmdSlice)
+	if err != nil {
+		return false, err
+	}
+
+	regexpStr := gem + ` \((?P<versions>.*)\)`
+	exp := regexp.MustCompile(regexpStr)
+	matches := exp.FindStringSubmatch(out)
+	if len(matches) > 1 {
+		if version == "" {
+			return true, nil
+		}
+
+		versionsStr := matches[1]
+		versions := strings.Split(versionsStr, ", ")
+
+		for _, v := range versions {
+			if v == version {
+				return true, nil
+			}
+		}
+	}
+
+	return false, nil
+}
+
+// GetPodVersion ...
+func (command RubyCommandModel) GetPodVersion() string {
+	cmdSlice := []string{"pod", "--version"}
+	out, err := command.ExecuteForOutput("", false, cmdSlice)
+	if err != nil {
+		return ""
+	}
+
+	return out
+}
+
+// ----------------------
+// Common
+
+func execute(workDir string, bundleExec bool, cmdSlice []string) error {
 	if bundleExec {
 		cmdSlice = append([]string{"bundle", "exec"}, cmdSlice...)
 	}
@@ -34,22 +166,28 @@ func CmdSlice(workDir string, bundleExec bool, cmdSlice []string) error {
 	return err
 }
 
-// GetPodVersion ...
-func GetPodVersion() (string, error) {
-	if installed, err := CheckForGemInstalled("cocoapods", ""); err != nil {
-		return "", err
-	} else if !installed {
-		return "", nil
+func executeForOutput(workDir string, bundleExec bool, cmdSlice []string) (string, error) {
+	if bundleExec {
+		cmdSlice = append([]string{"bundle", "exec"}, cmdSlice...)
 	}
 
-	cmdSlice := []string{"pod", "--version"}
-	out, err := cmdex.RunCommandAndReturnCombinedStdoutAndStderr(cmdSlice[0], cmdSlice[1:len(cmdSlice)]...)
-	if err != nil {
-		return "", err
+	out, err := cmdex.RunCommandInDirAndReturnCombinedStdoutAndStderr(workDir, cmdSlice[0], cmdSlice[1:len(cmdSlice)]...)
+
+	return out, err
+}
+
+func cmdExist(cmdSlice []string) bool {
+	if len(cmdSlice) == 0 {
+		return false
 	}
 
-	split := strings.Split(out, "\n")
-	return split[len(split)-1], nil
+	if len(cmdSlice) == 1 {
+		_, err := cmdex.RunCommandAndReturnCombinedStdoutAndStderr(cmdSlice[0])
+		return (err == nil)
+	}
+
+	_, err := cmdex.RunCommandAndReturnCombinedStdoutAndStderr(cmdSlice[0], cmdSlice[1:]...)
+	return (err == nil)
 }
 
 // FixCocoapodsSSHSourceInDir ...
@@ -113,95 +251,6 @@ func FixCocoapodsSSHSourceInDir(podfilePth string) error {
 				}
 			}
 		}
-	}
-
-	return nil
-}
-
-// CheckForGemInstalled ...
-func CheckForGemInstalled(gem, version string) (bool, error) {
-	cmdSlice := []string{"gem", "list"}
-	out, err := cmdex.RunCommandAndReturnCombinedStdoutAndStderr(cmdSlice[0], cmdSlice[1:len(cmdSlice)]...)
-	if err != nil {
-		return false, err
-	}
-
-	cocoapodsExp := regexp.MustCompile(`cocoapods \((?P<versions>.*)\)`)
-	matches := cocoapodsExp.FindStringSubmatch(out)
-	if len(matches) > 1 {
-		if version == "" {
-			return true, nil
-		}
-
-		versionsStr := matches[1]
-		versions := strings.Split(versionsStr, ", ")
-
-		for _, v := range versions {
-			if v == version {
-				return true, nil
-			}
-		}
-	}
-
-	return false, nil
-}
-
-func cmdExist(cmdSlice []string) bool {
-	if len(cmdSlice) == 0 {
-		return false
-	}
-
-	if len(cmdSlice) == 1 {
-		_, err := cmdex.RunCommandAndReturnCombinedStdoutAndStderr(cmdSlice[0])
-		return (err == nil)
-	}
-
-	_, err := cmdex.RunCommandAndReturnCombinedStdoutAndStderr(cmdSlice[0], cmdSlice[1:]...)
-	return (err == nil)
-}
-
-// GemInstall ...
-func GemInstall(gem, version string) error {
-	whichRuby, err := cmdex.RunCommandAndReturnCombinedStdoutAndStderr("which", "ruby")
-	if err != nil {
-		return err
-	}
-
-	if whichRuby == osxSystemRubyPth {
-		log.Details("using system ruby - requires sudo")
-
-		gemInstallCocoapodsCmd := []string{"sudo", "gem", "install", "cocoapods", "-v", version, "--no-document"}
-		if err := CmdSlice("", false, gemInstallCocoapodsCmd); err != nil {
-			return err
-		}
-	} else if whichRuby == brewRubyPth {
-		log.Details("using brew %s ruby", brewRubyPth)
-
-		gemInstallCocoapodsCmd := []string{"gem", "install", "cocoapods", "-v", version, "--no-document"}
-		if err := CmdSlice("", false, gemInstallCocoapodsCmd); err != nil {
-			return err
-		}
-	} else if cmdExist([]string{"rvm", "-v"}) {
-		log.Details("installing with RVM")
-
-		gemInstallCocoapodsCmd := []string{"gem", "install", "cocoapods", "-v", version, "--no-document"}
-		if err := CmdSlice("", false, gemInstallCocoapodsCmd); err != nil {
-			return err
-		}
-	} else if cmdExist([]string{"rbenv", "-v"}) {
-		log.Details("installing with rbenv")
-
-		gemInstallCocoapodsCmd := []string{"gem", "install", "cocoapods", "-v", version, "--no-document"}
-		if err := CmdSlice("", false, gemInstallCocoapodsCmd); err != nil {
-			return err
-		}
-
-		rbenvRehashCmd := []string{"rbenv", "rehash"}
-		if err := CmdSlice("", false, rbenvRehashCmd); err != nil {
-			return err
-		}
-	} else {
-		return errors.New("no ruby is available")
 	}
 
 	return nil

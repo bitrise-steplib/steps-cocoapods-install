@@ -129,10 +129,12 @@ func main() {
 	sourceRootPath := os.Getenv("source_root_path")
 	podfilePath := os.Getenv("podfile_path")
 
-	systemCocoapodsVersion, err := run.GetPodVersion()
+	rubyCommand, err := run.NewRubyCommandModel()
 	if err != nil {
-		log.Fail("Failed to get system installed pod version, err: %s", err)
+		log.Fail("Failed to create ruby command, err: %s", err)
 	}
+
+	systemCocoapodsVersion := rubyCommand.GetPodVersion()
 
 	log.Configs(sourceRootPath, podfilePath, systemCocoapodsVersion)
 	validateRequiredInput("source_root_path", sourceRootPath)
@@ -179,7 +181,7 @@ func main() {
 			log.Done("Gemfile.lock defined cocoapods version: %s", version)
 
 			bundleInstallCmd := []string{"bundle", "install"}
-			if err := run.CmdSlice(podfileDir, false, bundleInstallCmd); err != nil {
+			if err := rubyCommand.Execute(podfileDir, false, bundleInstallCmd); err != nil {
 				log.Fail("Command failed, error: %s", err)
 			}
 
@@ -215,14 +217,14 @@ func main() {
 	// Install cocoapods version
 	podCmd := []string{"pod"}
 	if !useCocoapodsFromGemfile && useCocoapodsVersion != "" {
-		installed, err := run.CheckForGemInstalled("cocoapods", useCocoapodsVersion)
+		installed, err := rubyCommand.IsGemInstalled("cocoapods", useCocoapodsVersion)
 		if err != nil {
 			log.Fail("Command failed, error: %s", err)
 		}
 
 		if !installed {
 			log.Info("Installing cocoapods: %s", useCocoapodsVersion)
-			if err := run.GemInstall("cocoapods", useCocoapodsVersion); err != nil {
+			if err := rubyCommand.GemInstall("cocoapods", useCocoapodsVersion); err != nil {
 				log.Fail("Command failed, error: %s", err)
 			}
 		}
@@ -238,21 +240,21 @@ func main() {
 	}
 
 	podVersionCmd := append(podCmd, "--version")
-	if err := run.CmdSlice(podfileDir, useCocoapodsFromGemfile, podVersionCmd); err != nil {
+	if err := rubyCommand.Execute(podfileDir, useCocoapodsFromGemfile, podVersionCmd); err != nil {
 		log.Fail("Command failed, error: %s", err)
 	}
 
 	podInstallNoUpdateCmd := append(podCmd, "install", "--verbose", "--no-repo-update")
-	if err := run.CmdSlice(podfileDir, useCocoapodsFromGemfile, podInstallNoUpdateCmd); err != nil {
+	if err := rubyCommand.Execute(podfileDir, useCocoapodsFromGemfile, podInstallNoUpdateCmd); err != nil {
 		log.Warn("Command failed with error: %s, retrying without --no-repo-update ...", err)
 
 		podRepoUpdateCmd := append(podCmd, "repo", "update")
-		if err := run.CmdSlice(podfileDir, useCocoapodsFromGemfile, podRepoUpdateCmd); err != nil {
+		if err := rubyCommand.Execute(podfileDir, useCocoapodsFromGemfile, podRepoUpdateCmd); err != nil {
 			log.Fail("Command failed, error: %s", err)
 		}
 
 		podInstallCmd := append(podCmd, "install", "--verbose")
-		if err := run.CmdSlice(podfileDir, useCocoapodsFromGemfile, podInstallCmd); err != nil {
+		if err := rubyCommand.Execute(podfileDir, useCocoapodsFromGemfile, podInstallCmd); err != nil {
 			log.Fail("Command failed, error: %s", err)
 		}
 	}
