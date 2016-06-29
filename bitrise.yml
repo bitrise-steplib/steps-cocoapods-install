@@ -66,6 +66,31 @@ workflows:
     - test_without_gemfile
     - test_podfile_at_root
     - test_without_gemfile_with_podfile_path
+    steps:
+    - script:
+        title: Print go environment
+        inputs:
+        - content: |-
+            set -x
+            go version
+            echo $GO15VENDOREXPERIMENT
+    - script:
+        title: Print go environment
+        inputs:
+        - content: |-
+            set -x
+            envman add --key GOPATH --value "$BITRISE_SOURCE_DIR/go"
+    - script:
+        title: "Go Test"
+        inputs:
+        - working_dir: $BITRISE_SOURCE_DIR/go/src/github.com/bitrise-io/cocoapods-install
+        - content: |
+            set -ex
+            go test ./...
+    - script:
+        title: Step audit
+        inputs:
+        - content: stepman audit --step-yml=./step.yml
 
   # ----------------------------------------------------------------
   # --- workflows to create Release
