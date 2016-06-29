@@ -21,12 +21,30 @@ func validateRequiredInput(key, value string) {
 	}
 }
 
-func isRelevantPodfile(podfile string) bool {
-	if strings.Contains(podfile, ".git/") {
+func fileList(searchDir string) ([]string, error) {
+	fileList := []string{}
+
+	if err := filepath.Walk(searchDir, func(path string, f os.FileInfo, err error) error {
+		fileList = append(fileList, path)
+		return err
+	}); err != nil {
+		return []string{}, err
+	}
+
+	return fileList, nil
+}
+
+func isRelevantPodfile(pth string) bool {
+	basename := filepath.Base(pth)
+	if basename != "Podfile" {
 		return false
 	}
 
-	pathComponents := strings.Split(podfile, string(filepath.Separator))
+	if strings.Contains(pth, ".git/") {
+		return false
+	}
+
+	pathComponents := strings.Split(pth, string(filepath.Separator))
 	for _, component := range pathComponents {
 		if component == "Carthage" {
 			return false
@@ -36,26 +54,12 @@ func isRelevantPodfile(podfile string) bool {
 	return true
 }
 
-func findMostRootPodfile(sourceRootPth string) (string, error) {
-	// Search for Podfile in root dir
-	rootPodfilePath := filepath.Join(sourceRootPth, "Podfile")
-	if exist, err := pathutil.IsPathExists(rootPodfilePath); err != nil {
-		return "", err
-	} else if exist {
-		return rootPodfilePath, nil
-	}
-
-	// Search for most root Podfile
+func findMostRootPodfile(fileList []string) (string, error) {
 	podfiles := []string{}
-	pattern := filepath.Join(sourceRootPth, "*/Podfile")
-	matches, err := filepath.Glob(pattern)
-	if err != nil {
-		return "", err
-	}
 
-	for _, podfile := range matches {
-		if isRelevantPodfile(podfile) {
-			podfiles = append(podfiles, podfile)
+	for _, file := range fileList {
+		if isRelevantPodfile(file) {
+			podfiles = append(podfiles, file)
 		}
 	}
 
@@ -126,7 +130,7 @@ func cocoapodsVersionFromPodfileLock(podfileLockPth string) (string, error) {
 func main() {
 	//
 	// Inputs
-	if os.Getenv("is_update_cocoapods") != "" {
+	if os.Getenv("is_update_cocoapods") != "false" {
 		log.Warn("`is_update_cocoapods` is deprecated!")
 		log.Warn("CocoaPods version is determined based on the Gemfile.lock or the Podfile.lock in the Podfile's directory.")
 	}
@@ -153,10 +157,15 @@ func main() {
 	// Search for Podfile
 	if podfilePath == "" {
 		log.Info("Searching for Podfile")
-		var err error
-		podfilePath, err = findMostRootPodfile(sourceRootPath)
+
+		fileList, err := fileList(sourceRootPath)
 		if err != nil {
-			log.Fail("Failed to find podfiles, err: %s", err)
+			log.Fail("Failed to list files at: %s", sourceRootPath)
+		}
+
+		podfilePath, err = findMostRootPodfile(fileList)
+		if err != nil {
+			log.Fail("Failed to find root Podfile, err: %s", err)
 		}
 
 		if podfilePath == "" {

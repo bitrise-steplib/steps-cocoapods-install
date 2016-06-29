@@ -4,6 +4,12 @@ default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
 workflows:
   # ----------------------------------------------------------------
   # --- workflow to Step Test
+  simple_test:
+    steps:
+    - path::./:
+        inputs:
+        - podfile_path: $PODFILE_PTH
+
   _test_with_repo:
     envs:
     # define this!

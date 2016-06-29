@@ -93,7 +93,7 @@ func (command RubyCommandModel) ExecuteForOutput(workDir string, useBundle bool,
 
 // GemInstall ...
 func (command RubyCommandModel) GemInstall(gem, version string) error {
-	cmdSlice := []string{"gem", "install", gem, "-v", version}
+	cmdSlice := []string{"gem", "install", gem, "-v", version, "--no-document"}
 	if err := command.Execute("", false, cmdSlice); err != nil {
 		return err
 	}
