@@ -1,6 +1,12 @@
-## Changelog (Current version: 1.5.0)
+## Changelog (Current version: 1.5.1)
 
 -----------------
+
+### 1.5.1 (2016 Jun 29)
+
+* [93fc636] prepare for 1.5.1
+* [338fe08] Merge pull request #12 from bitrise-io/podfile_search_fix
+* [7e03b27] fixed Podfile search, install gem with "--no-document" flag
 
 ### 1.5.0 (2016 Jun 29)
 
