@@ -1,6 +1,16 @@
-## Changelog (Current version: 1.4.2)
+## Changelog (Current version: 1.5.0)
 
 -----------------
+
+### 1.5.0 (2016 Jun 29)
+
+* [7247d78] prepare for v1.5.0
+* [3103401] Merge pull request #11 from bitrise-io/review
+* [38f8ac8] PR fix
+* [6d0c715] ruby command
+* [234c2ab] typo fix
+* [b30a8b6] gem install fix
+* [63f915d] review, cleanup, gitignore
 
 ### 1.4.2 (2016 Jun 14)
 
@@ -63,4 +73,4 @@
 
 -----------------
 
-Updated: 2016 Jun 14
+Updated: 2016 Jun 29
