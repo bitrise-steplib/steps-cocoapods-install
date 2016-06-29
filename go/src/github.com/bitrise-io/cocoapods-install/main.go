@@ -126,6 +126,16 @@ func cocoapodsVersionFromPodfileLock(podfileLockPth string) (string, error) {
 func main() {
 	//
 	// Inputs
+	if os.Getenv("is_update_cocoapods") != "" {
+		log.Warn("`is_update_cocoapods` is deprecated!")
+		log.Warn("CocoaPods version is determined based on the Gemfile.lock or the Podfile.lock in the Podfile's directory.")
+	}
+
+	if os.Getenv("install_cocoapods_version") != "" {
+		log.Warn("`install_cocoapods_version` is deprecated!")
+		log.Warn("CocoaPods version is determined based on the Gemfile.lock or the Podfile.lock in the Podfile's directory.")
+	}
+
 	sourceRootPath := os.Getenv("source_root_path")
 	podfilePath := os.Getenv("podfile_path")
 

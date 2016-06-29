@@ -150,7 +150,7 @@ BUNDLED WITH
 }
 
 func TestCocoapodsVersionFromPodfileLockContent(t *testing.T) {
-	t.Log("Podfile.lock without cocoapods")
+	t.Log("Podfile.lock cocoapods")
 	{
 		content := `PODS:
   - Alamofire (3.4.0)
@@ -168,5 +168,23 @@ COCOAPODS: 1.0.0
 
 		actual := cocoapodsVersionFromPodfileLockContent(content)
 		require.Equal(t, "1.0.0", actual)
+	}
+
+	t.Log("Podfile.lock without cocoapods")
+	{
+		content := `PODS:
+	- Alamofire (3.4.0)
+
+DEPENDENCIES:
+	- Alamofire (~> 3.4)
+
+SPEC CHECKSUMS:
+	Alamofire: c19a627cefd6a95f840401c49ab1f124e07f54ee
+
+PODFILE CHECKSUM: f2a6f4eed25b89d16fc8e906af222b4e63afa6c3
+`
+
+		actual := cocoapodsVersionFromPodfileLockContent(content)
+		require.Equal(t, "", actual)
 	}
 }

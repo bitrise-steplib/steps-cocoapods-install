@@ -15,8 +15,8 @@ import (
 )
 
 const (
-	osxSystemRubyPth = "/usr/bin/ruby"
-	brewRubyPth      = "/usr/local/bin/ruby"
+	systemRubyPth = "/usr/bin/ruby"
+	brewRubyPth   = "/usr/local/bin/ruby"
 )
 
 // ----------------------
@@ -26,8 +26,8 @@ const (
 type RubyInstallType int8
 
 const (
-	// OsxSystemRuby ...
-	OsxSystemRuby RubyInstallType = iota
+	// SystemRuby ...
+	SystemRuby RubyInstallType = iota
 	// BrewRuby ...
 	BrewRuby
 	// RVMRuby ...
@@ -50,8 +50,8 @@ func NewRubyCommandModel() (RubyCommandModel, error) {
 
 	command := RubyCommandModel{}
 
-	if whichRuby == osxSystemRubyPth {
-		command.rubyInstallType = OsxSystemRuby
+	if whichRuby == systemRubyPth {
+		command.rubyInstallType = SystemRuby
 	} else if whichRuby == brewRubyPth {
 		command.rubyInstallType = BrewRuby
 	} else if cmdExist([]string{"rvm", "-v"}) {
@@ -71,7 +71,7 @@ func (command RubyCommandModel) Execute(workDir string, useBundle bool, cmdSlice
 		cmdSlice = append([]string{"bundle", "exec"}, cmdSlice...)
 	}
 
-	if command.rubyInstallType == OsxSystemRuby {
+	if command.rubyInstallType == SystemRuby {
 		cmdSlice = append([]string{"sudo"}, cmdSlice...)
 	}
 
@@ -84,7 +84,7 @@ func (command RubyCommandModel) ExecuteForOutput(workDir string, useBundle bool,
 		cmdSlice = append([]string{"bundle", "exec"}, cmdSlice...)
 	}
 
-	if command.rubyInstallType == OsxSystemRuby {
+	if command.rubyInstallType == SystemRuby {
 		cmdSlice = append([]string{"sudo"}, cmdSlice...)
 	}
 
@@ -153,12 +153,23 @@ func (command RubyCommandModel) GetPodVersion() string {
 // Common
 
 func execute(workDir string, bundleExec bool, cmdSlice []string) error {
+	if len(cmdSlice) == 0 {
+		return errors.New("no command specified")
+	}
+
 	if bundleExec {
 		cmdSlice = append([]string{"bundle", "exec"}, cmdSlice...)
 	}
 
 	prinatableCmd := cmdex.PrintableCommandArgs(false, cmdSlice)
 	log.Details("=> %s", prinatableCmd)
+
+	if len(cmdSlice) == 1 {
+		out, err := cmdex.RunCommandInDirAndReturnCombinedStdoutAndStderr(workDir, cmdSlice[0])
+		log.Details(out)
+
+		return err
+	}
 
 	out, err := cmdex.RunCommandInDirAndReturnCombinedStdoutAndStderr(workDir, cmdSlice[0], cmdSlice[1:len(cmdSlice)]...)
 	log.Details(out)
@@ -167,13 +178,19 @@ func execute(workDir string, bundleExec bool, cmdSlice []string) error {
 }
 
 func executeForOutput(workDir string, bundleExec bool, cmdSlice []string) (string, error) {
+	if len(cmdSlice) == 0 {
+		return "", errors.New("no command specified")
+	}
+
 	if bundleExec {
 		cmdSlice = append([]string{"bundle", "exec"}, cmdSlice...)
 	}
 
-	out, err := cmdex.RunCommandInDirAndReturnCombinedStdoutAndStderr(workDir, cmdSlice[0], cmdSlice[1:len(cmdSlice)]...)
+	if len(cmdSlice) == 1 {
+		return cmdex.RunCommandInDirAndReturnCombinedStdoutAndStderr(workDir, cmdSlice[0])
+	}
 
-	return out, err
+	return cmdex.RunCommandInDirAndReturnCombinedStdoutAndStderr(workDir, cmdSlice[0], cmdSlice[1:len(cmdSlice)]...)
 }
 
 func cmdExist(cmdSlice []string) bool {
