@@ -12,6 +12,59 @@ func TestIsRelevantPodfile(t *testing.T) {
 
 	require.Equal(t, false, isRelevantPodfile("Carthage/Podfile"))
 	require.Equal(t, false, isRelevantPodfile(".git/Podfile"))
+
+	require.Equal(t, false, isRelevantPodfile("Podfile.lock"))
+	require.Equal(t, false, isRelevantPodfile("Gemfile"))
+}
+
+func TestFindMostRootPodfile(t *testing.T) {
+	t.Log("single Podfile")
+	{
+		fileList := []string{
+			"./Podfile",
+		}
+
+		podfile, err := findMostRootPodfile(fileList)
+		require.NoError(t, err)
+		require.Equal(t, "./Podfile", podfile)
+	}
+
+	t.Log("single Podfile")
+	{
+		fileList := []string{
+			"/Users/bitrise/my/podfile/dir/Podfile",
+		}
+
+		podfile, err := findMostRootPodfile(fileList)
+		require.NoError(t, err)
+		require.Equal(t, "/Users/bitrise/my/podfile/dir/Podfile", podfile)
+	}
+
+	t.Log("multiple Podfile")
+	{
+		fileList := []string{
+			"/Users/bitrise/my/podfile/dir/Podfile",
+			"/Users/bitrise/my/dir/Podfile",
+			"/Users/bitrise/dir/Podfile",
+		}
+
+		podfile, err := findMostRootPodfile(fileList)
+		require.NoError(t, err)
+		require.Equal(t, "/Users/bitrise/dir/Podfile", podfile)
+	}
+
+	t.Log("multiple Podfile")
+	{
+		fileList := []string{
+			"./my/podfile/dir/Podfile",
+			"./my/dir/Podfile",
+			"./dir/Podfile",
+		}
+
+		podfile, err := findMostRootPodfile(fileList)
+		require.NoError(t, err)
+		require.Equal(t, "./dir/Podfile", podfile)
+	}
 }
 
 func TestCocoapodsVersionFromGemfileLockContent(t *testing.T) {
