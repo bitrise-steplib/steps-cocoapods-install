@@ -1,6 +1,12 @@
-## Changelog (Current version: 1.5.1)
+## Changelog (Current version: 1.5.2)
 
 -----------------
+
+### 1.5.2 (2016 Jun 30)
+
+* [c620a89] prepare for 1.5.2
+* [cf969de] Merge pull request #13 from bitrise-io/logging
+* [76bf59d] log improvements
 
 ### 1.5.1 (2016 Jun 29)
 
@@ -79,4 +85,4 @@
 
 -----------------
 
-Updated: 2016 Jun 29
+Updated: 2016 Jun 30
