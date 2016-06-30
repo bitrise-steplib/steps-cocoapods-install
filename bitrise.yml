@@ -81,7 +81,7 @@ workflows:
             go version
             echo $GO15VENDOREXPERIMENT
     - script:
-        title: Print go environment
+        title: Export GOPATH
         inputs:
         - content: |-
             set -x
