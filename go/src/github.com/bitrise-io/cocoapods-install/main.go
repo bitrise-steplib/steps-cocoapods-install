@@ -206,9 +206,12 @@ func main() {
 
 			useCocoapodsFromGemfile = true
 		}
+	} else {
+		log.Details("No Gemfile.lock with cocoapods gem found at: %s", gemfileLockPth)
 	}
 
 	if !useCocoapodsFromGemfile {
+		fmt.Println("")
 		log.Details("Searching for Podfile.lock")
 		// Check Podfile.lock for CocoaPods version
 		podfileLockPth := filepath.Join(podfileDir, "Podfile.lock")
@@ -229,6 +232,8 @@ func main() {
 			}
 		} else {
 			// Use system installed cocoapods
+			log.Warn("No Podfile.lock found at: %s", podfileLockPth)
+			log.Warn("Make sure it's committed into your repository!")
 			log.Done("Using system installed CocoaPods version")
 		}
 	}
