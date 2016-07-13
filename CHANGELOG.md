@@ -1,6 +1,12 @@
-## Changelog (Current version: 1.5.2)
+## Changelog (Current version: 1.5.3)
 
 -----------------
+
+### 1.5.3 (2016 Jul 13)
+
+* [4ad778d] prepare for 1.5.3
+* [6e9e930] Merge pull request #14 from bitrise-io/remove_ssh_fix
+* [218fcd2] private repo ssh issue fixed in cocoapods 0.35 https://github.com/CocoaPods/CocoaPods/issues/2827#issuecomment-62972054
 
 ### 1.5.2 (2016 Jun 30)
 
@@ -85,4 +91,4 @@
 
 -----------------
 
-Updated: 2016 Jun 30
+Updated: 2016 Jul 13
