@@ -259,10 +259,6 @@ func main() {
 	// Run pod install
 	log.Info("Installing Pods")
 
-	if err := run.FixCocoapodsSSHSourceInDir(podfilePath); err != nil {
-		log.Fail("Failed to fix CocoaPods ssh source, err: %s", err)
-	}
-
 	podVersionCmd := append(podCmd, "--version")
 	if err := rubyCommand.Execute(podfileDir, useCocoapodsFromGemfile, podVersionCmd); err != nil {
 		log.Fail("Command failed, error: %s", err)
