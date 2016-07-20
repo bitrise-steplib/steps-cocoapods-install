@@ -15,6 +15,16 @@ import (
 	"github.com/bitrise-io/go-utils/pathutil"
 )
 
+var (
+	gitFolderName           = ".git"
+	podsFolderName          = "Pods"
+	carthageFolderName      = "Carthage"
+	scanFolderNameBlackList = []string{gitFolderName, podsFolderName, carthageFolderName}
+
+	frameworkExt           = ".framework"
+	scanFolderExtBlackList = []string{frameworkExt}
+)
+
 func validateRequiredInput(key, value string) {
 	if value == "" {
 		log.Fail("Missing required input: %s", key)
@@ -34,19 +44,46 @@ func fileList(searchDir string) ([]string, error) {
 	return fileList, nil
 }
 
+func caseInsensitiveEquals(s1, s2 string) bool {
+	s1, s2 = strings.ToLower(s1), strings.ToLower(s2)
+	return s1 == s2
+}
+
+func isPathContainsComponent(pth, component string) bool {
+	pathComponents := strings.Split(pth, string(filepath.Separator))
+	for _, c := range pathComponents {
+		if c == component {
+			return true
+		}
+	}
+	return false
+}
+
+func isPathContainsComponentWithExtension(pth, ext string) bool {
+	pathComponents := strings.Split(pth, string(filepath.Separator))
+	for _, c := range pathComponents {
+		e := filepath.Ext(c)
+		if e == ext {
+			return true
+		}
+	}
+	return false
+}
+
 func isRelevantPodfile(pth string) bool {
 	basename := filepath.Base(pth)
-	if basename != "Podfile" {
+	if !caseInsensitiveEquals(basename, "podfile") {
 		return false
 	}
 
-	if strings.Contains(pth, ".git/") {
-		return false
+	for _, folderName := range scanFolderNameBlackList {
+		if isPathContainsComponent(pth, folderName) {
+			return false
+		}
 	}
 
-	pathComponents := strings.Split(pth, string(filepath.Separator))
-	for _, component := range pathComponents {
-		if component == "Carthage" {
+	for _, folderExt := range scanFolderExtBlackList {
+		if isPathContainsComponentWithExtension(pth, folderExt) {
 			return false
 		}
 	}
