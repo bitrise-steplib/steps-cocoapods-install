@@ -91,7 +91,7 @@ func isRelevantPodfile(pth string) bool {
 	return true
 }
 
-func findMostRootPodfile(fileList []string) (string, error) {
+func findMostRootPodfile(fileList []string) string {
 	podfiles := []string{}
 
 	for _, file := range fileList {
@@ -101,11 +101,11 @@ func findMostRootPodfile(fileList []string) (string, error) {
 	}
 
 	if len(podfiles) == 0 {
-		return "", nil
+		return ""
 	}
 
 	sort.Sort(sorting.ByComponents(podfiles))
-	return podfiles[0], nil
+	return podfiles[0]
 }
 
 func cocoapodsVersionFromGemfileLockContent(content string) string {
@@ -200,11 +200,7 @@ func main() {
 			log.Fail("Failed to list files at: %s", sourceRootPath)
 		}
 
-		podfilePath, err = findMostRootPodfile(fileList)
-		if err != nil {
-			log.Fail("Failed to find root Podfile, err: %s", err)
-		}
-
+		podfilePath = findMostRootPodfile(fileList)
 		if podfilePath == "" {
 			log.Fail("No Podfile found")
 		}
