@@ -1,6 +1,11 @@
-## Changelog (Current version: 1.5.3)
+## Changelog (Current version: 1.5.4)
 
 -----------------
+
+### 1.5.4 (2016 Jul 20)
+
+* [b5432d6] prepare for 1.5.4
+* [de74814] case insensitive search for podfile (#15)
 
 ### 1.5.3 (2016 Jul 13)
 
@@ -91,4 +96,4 @@
 
 -----------------
 
-Updated: 2016 Jul 13
+Updated: 2016 Jul 20
