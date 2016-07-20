@@ -190,8 +190,7 @@ func TestFindMostRootPodfile(t *testing.T) {
 			"./Podfile",
 		}
 
-		podfile, err := findMostRootPodfile(fileList)
-		require.NoError(t, err)
+		podfile := findMostRootPodfile(fileList)
 		require.Equal(t, "./Podfile", podfile)
 	}
 
@@ -201,8 +200,7 @@ func TestFindMostRootPodfile(t *testing.T) {
 			"/Users/bitrise/my/podfile/dir/Podfile",
 		}
 
-		podfile, err := findMostRootPodfile(fileList)
-		require.NoError(t, err)
+		podfile := findMostRootPodfile(fileList)
 		require.Equal(t, "/Users/bitrise/my/podfile/dir/Podfile", podfile)
 	}
 
@@ -212,8 +210,7 @@ func TestFindMostRootPodfile(t *testing.T) {
 			"/Users/bitrise/my/podfile/dir/podfile",
 		}
 
-		podfile, err := findMostRootPodfile(fileList)
-		require.NoError(t, err)
+		podfile := findMostRootPodfile(fileList)
 		require.Equal(t, "/Users/bitrise/my/podfile/dir/podfile", podfile)
 	}
 
@@ -223,8 +220,7 @@ func TestFindMostRootPodfile(t *testing.T) {
 			"/Users/bitrise/my/podfile/dir/poDfile",
 		}
 
-		podfile, err := findMostRootPodfile(fileList)
-		require.NoError(t, err)
+		podfile := findMostRootPodfile(fileList)
 		require.Equal(t, "/Users/bitrise/my/podfile/dir/poDfile", podfile)
 	}
 
@@ -236,8 +232,7 @@ func TestFindMostRootPodfile(t *testing.T) {
 			"/Users/bitrise/dir/Podfile",
 		}
 
-		podfile, err := findMostRootPodfile(fileList)
-		require.NoError(t, err)
+		podfile := findMostRootPodfile(fileList)
 		require.Equal(t, "/Users/bitrise/dir/Podfile", podfile)
 	}
 
@@ -249,8 +244,7 @@ func TestFindMostRootPodfile(t *testing.T) {
 			"./dir/Podfile",
 		}
 
-		podfile, err := findMostRootPodfile(fileList)
-		require.NoError(t, err)
+		podfile := findMostRootPodfile(fileList)
 		require.Equal(t, "./dir/Podfile", podfile)
 	}
 }
