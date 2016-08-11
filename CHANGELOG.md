@@ -1,6 +1,11 @@
-## Changelog (Current version: 1.5.4)
+## Changelog (Current version: 1.5.5)
 
 -----------------
+
+### 1.5.5 (2016 Aug 11)
+
+* [2e3a6b1] prepare for 1.5.5
+* [4065235] use sudo for gem managemnt install/uninstall commands if system ruby used (#17)
 
 ### 1.5.4 (2016 Jul 20)
 
@@ -96,4 +101,4 @@
 
 -----------------
 
-Updated: 2016 Jul 20
+Updated: 2016 Aug 11
