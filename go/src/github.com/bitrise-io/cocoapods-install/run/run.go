@@ -66,7 +66,7 @@ func (command RubyCommandModel) Execute(workDir string, useBundle bool, cmdSlice
 		cmdSlice = append([]string{"bundle", "exec"}, cmdSlice...)
 	}
 
-	if command.rubyInstallType == SystemRuby {
+	if command.sudoNeeded(cmdSlice) {
 		cmdSlice = append([]string{"sudo"}, cmdSlice...)
 	}
 
@@ -79,11 +79,26 @@ func (command RubyCommandModel) ExecuteForOutput(workDir string, useBundle bool,
 		cmdSlice = append([]string{"bundle", "exec"}, cmdSlice...)
 	}
 
-	if command.rubyInstallType == SystemRuby {
+	if command.sudoNeeded(cmdSlice) {
 		cmdSlice = append([]string{"sudo"}, cmdSlice...)
 	}
 
 	return executeForOutput(workDir, false, cmdSlice)
+}
+
+func (command RubyCommandModel) sudoNeeded(cmdSlice []string) bool {
+	if command.rubyInstallType != SystemRuby {
+		return false
+	}
+
+	if len(cmdSlice) < 2 {
+		return false
+	}
+
+	isGemManagementCmd := (cmdSlice[0] == "gem" || cmdSlice[0] == "bundle")
+	isInstallOrUnintsallCmd := (cmdSlice[1] == "install" || cmdSlice[1] == "uninstall")
+
+	return (isGemManagementCmd && isInstallOrUnintsallCmd)
 }
 
 // GemInstall ...
