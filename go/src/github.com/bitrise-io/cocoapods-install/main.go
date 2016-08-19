@@ -232,7 +232,7 @@ func main() {
 			log.Details("Found Gemfile.lock: %s", gemfileLockPth)
 			log.Done("Gemfile.lock defined cocoapods version: %s", version)
 
-			bundleInstallCmd := []string{"bundle", "install"}
+			bundleInstallCmd := []string{"bundle", "install", "--jobs", "20", "--retry", "5"}
 			if err := rubyCommand.Execute(podfileDir, false, bundleInstallCmd); err != nil {
 				log.Fail("Command failed, error: %s", err)
 			}
