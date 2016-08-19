@@ -1,6 +1,12 @@
-## Changelog (Current version: 1.5.5)
+## Changelog (Current version: 1.5.6)
 
 -----------------
+
+### 1.5.6 (2016 Aug 19)
+
+* [8c93dea] prep for v1.5.6
+* [d687de9] Merge pull request #18 from bitrise-io/feature/bundle-install-retry-and-parallel
+* [3284714] bundle install - parallel and retry
 
 ### 1.5.5 (2016 Aug 11)
 
@@ -101,4 +107,4 @@
 
 -----------------
 
-Updated: 2016 Aug 11
+Updated: 2016 Aug 19
