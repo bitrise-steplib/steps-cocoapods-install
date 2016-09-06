@@ -297,7 +297,12 @@ func main() {
 		log.Fail("Command failed, error: %s", err)
 	}
 
-	podInstallNoUpdateCmd := append(podCmd, "install", "--verbose", "--no-repo-update")
+	podInstallNoUpdateCmd := append(podCmd, "install", "--no-repo-update")
+
+	if os.Getenv("verbose") == "true" || os.Getenv("verbose") == "" {
+		podInstallNoUpdateCmd = append(podInstallNoUpdateCmd, "--verbose")
+	}
+
 	if err := rubyCommand.Execute(podfileDir, useCocoapodsFromGemfile, podInstallNoUpdateCmd); err != nil {
 		log.Warn("Command failed with error: %s, retrying without --no-repo-update ...", err)
 

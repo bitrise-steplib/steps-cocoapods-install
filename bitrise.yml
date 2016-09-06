@@ -66,6 +66,13 @@ workflows:
     after_run:
     - _test_with_repo
 
+  test_without_verbose:
+    steps:
+    - path::./:
+        inputs:
+        - podfile_path: $PODFILE_PTH
+        - verbose: false
+
   test:
     after_run:
     - test_with_gemfile
