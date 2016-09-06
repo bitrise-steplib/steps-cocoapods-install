@@ -299,7 +299,7 @@ func main() {
 
 	podInstallNoUpdateCmd := append(podCmd, "install", "--no-repo-update")
 
-	if os.Getenv("verbose") == "true" || os.Getenv("verbose") == "" {
+	if os.Getenv("verbose") != "false" {
 		podInstallNoUpdateCmd = append(podInstallNoUpdateCmd, "--verbose")
 	}
 
