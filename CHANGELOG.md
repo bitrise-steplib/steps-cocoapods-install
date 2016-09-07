@@ -1,6 +1,13 @@
-## Changelog (Current version: 1.5.6)
+## Changelog (Current version: 1.5.7)
 
 -----------------
+
+### 1.5.7 (2016 Sep 07)
+
+* [a35d4ff] prepare for 1.5.7
+* [10b21bd] log config: verbose; added test_without_verbose to test wf (#20)
+* [b97c058] Add option to disable verbose (#19)
+* [d2fdc1e] removed `create-release` workflow
 
 ### 1.5.6 (2016 Aug 19)
 
@@ -107,4 +114,4 @@
 
 -----------------
 
-Updated: 2016 Aug 19
+Updated: 2016 Sep 07
