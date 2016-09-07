@@ -49,3 +49,11 @@ inputs:
         __Deprecated!__
 
         CocoaPods version is determined based on the Gemfile.lock or the Podfile.lock in the Podfile's directory.
+  - verbose: "true"
+    opts:
+      title: "Execute cocoapods in verbose mode?"
+      description: |
+        (optional) True to execute the command in verbose mode or false to execute it without verbose
+      value_options: ["true", "false"]
+      is_expand: false
+      is_required: false
