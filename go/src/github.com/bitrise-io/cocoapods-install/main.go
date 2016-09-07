@@ -179,6 +179,7 @@ func main() {
 
 	sourceRootPath := os.Getenv("source_root_path")
 	podfilePath := os.Getenv("podfile_path")
+	isVerbose := (os.Getenv("verbose") != "false")
 
 	rubyCommand, err := run.NewRubyCommandModel()
 	if err != nil {
@@ -187,7 +188,8 @@ func main() {
 
 	systemCocoapodsVersion := rubyCommand.GetPodVersion()
 
-	log.Configs(sourceRootPath, podfilePath, systemCocoapodsVersion)
+	log.Configs(sourceRootPath, podfilePath, systemCocoapodsVersion, isVerbose)
+
 	validateRequiredInput("source_root_path", sourceRootPath)
 
 	//
@@ -299,7 +301,7 @@ func main() {
 
 	podInstallNoUpdateCmd := append(podCmd, "install", "--no-repo-update")
 
-	if os.Getenv("verbose") != "false" {
+	if isVerbose {
 		podInstallNoUpdateCmd = append(podInstallNoUpdateCmd, "--verbose")
 	}
 
