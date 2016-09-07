@@ -38,9 +38,10 @@ func Done(format string, v ...interface{}) {
 }
 
 // Configs ...
-func Configs(sourceRootPath, podfilePath, systemCocoapodsVersion string) {
+func Configs(sourceRootPath, podfilePath, systemCocoapodsVersion string, isVerbose bool) {
 	Info("Configs:")
 	Details("* source_root_path: %s", sourceRootPath)
 	Details("* podfile_path: %s", podfilePath)
 	Details("* system_cocoapods_version: %s", systemCocoapodsVersion)
+	Details("* verbose: %v", isVerbose)
 }

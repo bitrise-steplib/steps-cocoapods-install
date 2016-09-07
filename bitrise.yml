@@ -65,7 +65,6 @@ workflows:
     - PODFILE_PTH: ''
     after_run:
     - _test_with_repo
-
   test_without_verbose:
     steps:
     - path::./:
@@ -79,6 +78,7 @@ workflows:
     - test_without_gemfile
     - test_podfile_at_root
     - test_without_gemfile_with_podfile_path
+    - test_without_verbose
     steps:
     - script:
         title: Print go environment
