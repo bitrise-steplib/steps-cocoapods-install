@@ -1,6 +1,11 @@
-## Changelog (Current version: 1.5.7)
+## Changelog (Current version: 1.5.8)
 
 -----------------
+
+### 1.5.8 (2016 Dec 05)
+
+* [7e4636f] prepare for 1.5.8
+* [517905d] Go toolkit (#23)
 
 ### 1.5.7 (2016 Sep 07)
 
@@ -114,4 +119,4 @@
 
 -----------------
 
-Updated: 2016 Sep 07
+Updated: 2016 Dec 05
