@@ -4,6 +4,9 @@ summary: |-
   and Bitrise will do the pod install for you on the VM!
 description: |-
   Run CocoaPods install (`$ pod install`) in your App's directory.
+
+  CocoaPods version is determined based on the Gemfile.lock or (if not exists or does not contain cocoapods gem)  
+  on the Podfile.lock in the Podfile's directory.
 website: https://github.com/bitrise-io/steps-cocoapods-install
 source_code_url: https://github.com/bitrise-io/steps-cocoapods-install
 support_url: https://github.com/bitrise-io/steps-cocoapods-install/issues
@@ -18,6 +21,15 @@ type_tags:
 is_requires_admin_user: true
 is_always_run: false
 is_skippable: false
+deps:
+  brew:
+  - name: go
+  apt_get:
+  - name: golang
+    bin_name: go
+toolkit:
+  go:
+    package_name: github.com/bitrise-io/steps-cocoapods-install
 inputs:
   - source_root_path: "$BITRISE_SOURCE_DIR"
     opts:
