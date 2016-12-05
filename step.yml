@@ -4,6 +4,9 @@ summary: |-
   and Bitrise will do the pod install for you on the VM!
 description: |-
   Run CocoaPods install (`$ pod install`) in your App's directory.
+
+  CocoaPods version is determined based on the Gemfile.lock or (if not exists or does not contain cocoapods gem)  
+  on the Podfile.lock in the Podfile's directory.
 website: https://github.com/bitrise-io/steps-cocoapods-install
 source_code_url: https://github.com/bitrise-io/steps-cocoapods-install
 support_url: https://github.com/bitrise-io/steps-cocoapods-install/issues
