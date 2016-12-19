@@ -1,6 +1,11 @@
-## Changelog (Current version: 1.5.8)
+## Changelog (Current version: 1.5.9)
 
 -----------------
+
+### 1.5.9 (2016 Dec 19)
+
+* [95cdca8] prepare for 1.5.9
+* [0508c48] add macos tag (#24)
 
 ### 1.5.8 (2016 Dec 05)
 
@@ -119,4 +124,4 @@
 
 -----------------
 
-Updated: 2016 Dec 05
+Updated: 2016 Dec 19
