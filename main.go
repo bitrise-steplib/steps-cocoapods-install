@@ -231,7 +231,7 @@ func main() {
 
 		version, err := cocoapodsVersionFromPodfileLock(podfileLockPth)
 		if err != nil {
-			log.Fail("Failed to determin CocoaPods version, error: %s", err)
+			log.Fail("Failed to determine CocoaPods version, error: %s", err)
 		}
 
 		if version != "" {
