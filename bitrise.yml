@@ -18,6 +18,7 @@ workflows:
     envs:
     # define this!
     - REPO_URL: $REPO_URL
+    - TEST_REPO_BRANCH: $TEST_REPO_BRANCH
     - PODFILE_PTH: $PODFILE_PTH
     steps:
     - script:
@@ -27,7 +28,7 @@ workflows:
             set -ex
             rm -rf ./_tmp
 
-            git clone "${REPO_URL}" ./_tmp
+            git clone "${REPO_URL}" ./_tmp --branch "${TEST_REPO_BRANCH}"
     - script:
         title: Switch working dir to test/_tmp dir
         description: |-
@@ -38,13 +39,21 @@ workflows:
         - content: envman add --key BITRISE_SOURCE_DIR --value "$(pwd)/_tmp"
     - path::./:
         inputs:
-        - is_update_cocoapods: "false"
         - podfile_path: $PODFILE_PTH
 
   test_with_gemfile:
     envs:
     # With Gemfile:
     - REPO_URL: https://github.com/bitrise-samples/ios-cocoapods-1.x-Gemfile.git
+    - TEST_REPO_BRANCH: master
+    - PODFILE_PTH: ''
+    after_run:
+    - _test_with_repo
+  test_with_no_podfile_lock:
+    envs:
+    # With Only Gemfile (no Podfile.lock):
+    - REPO_URL: https://github.com/bitrise-samples/ios-cocoapods-1.x-Gemfile.git
+    - TEST_REPO_BRANCH: no-podfile-lock
     - PODFILE_PTH: ''
     after_run:
     - _test_with_repo
@@ -52,6 +61,7 @@ workflows:
     envs:
     # Without Gemfile:
     - REPO_URL: https://github.com/bitrise-samples/ios-cocoapods-1.x.git
+    - TEST_REPO_BRANCH: master
     - PODFILE_PTH: ''
     after_run:
     - _test_with_repo
@@ -59,6 +69,7 @@ workflows:
     envs:
     # Without Gemfile:
     - REPO_URL: https://github.com/bitrise-samples/ios-cocoapods-1.x.git
+    - TEST_REPO_BRANCH: master
     - PODFILE_PTH: 'CocoaPods1X/Podfile'
     after_run:
     - _test_with_repo
@@ -66,6 +77,7 @@ workflows:
     envs:
     # Podfile is in repo root
     - REPO_URL: https://github.com/bitrise-samples/ios-cocoapods-at-root.git
+    - TEST_REPO_BRANCH: master
     - PODFILE_PTH: ''
     after_run:
     - _test_with_repo
@@ -80,6 +92,7 @@ workflows:
     before_run:
     - go-tests
     after_run:
+    - test_with_no_podfile_lock
     - test_with_gemfile
     - test_without_gemfile
     - test_podfile_at_root
