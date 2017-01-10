@@ -1,6 +1,17 @@
-## Changelog (Current version: 1.5.9)
+## Changelog (Current version: 1.6.0)
 
 -----------------
+
+### 1.6.0 (2017 Jan 10)
+
+* [f554e88] Merge pull request #26 from bitrise-io/feature/go-deps-update
+* [325d9b9] go deps update
+* [cb7bf87] gows init
+* [6354673] STEP_VERSION: 1.6.0
+* [7f51312] Merge pull request #25 from bitrise-io/feature/podfile-lock-priority-before-gemfile-lock
+* [2c44ee9] fixing the test workflow's change dir
+* [0639a84] Typo fix - determinE
+* [4ec9ea4] If Podfile.lock found use that, not Gemfile.lock
 
 ### 1.5.9 (2016 Dec 19)
 
@@ -124,4 +135,4 @@
 
 -----------------
 
-Updated: 2016 Dec 19
+Updated: 2017 Jan 10
