@@ -5,8 +5,10 @@ summary: |-
 description: |-
   Run CocoaPods install (`$ pod install`) in your App's directory.
 
-  CocoaPods version is determined based on the Gemfile.lock or (if not exists or does not contain cocoapods gem)  
-  on the Podfile.lock in the Podfile's directory.
+  CocoaPods version is determined based on the Podfile.lock or
+  on the Gemfile.lock (if Podfile.lock does not exist in the Podfile's
+  directory and Gemfile.lock contains cocoapods gem)
+  in the Podfile's directory.
 website: https://github.com/bitrise-io/steps-cocoapods-install
 source_code_url: https://github.com/bitrise-io/steps-cocoapods-install
 support_url: https://github.com/bitrise-io/steps-cocoapods-install/issues
@@ -51,7 +53,7 @@ inputs:
       description: |
         __Deprecated!__
 
-        CocoaPods version is determined based on the Gemfile.lock or the Podfile.lock in the Podfile's directory.
+        CocoaPods version is determined based on the Podfile.lock or the Gemfile.lock in the Podfile's directory.
       value_options: ["true", "false"]
       is_expand: false
       is_required: true
@@ -61,7 +63,7 @@ inputs:
       description: |
         __Deprecated!__
 
-        CocoaPods version is determined based on the Gemfile.lock or the Podfile.lock in the Podfile's directory.
+        CocoaPods version is determined based on the Podfile.lock or the Gemfile.lock in the Podfile's directory.
   - verbose: "true"
     opts:
       title: "Execute cocoapods in verbose mode?"

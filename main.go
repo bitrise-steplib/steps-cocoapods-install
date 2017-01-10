@@ -169,12 +169,12 @@ func main() {
 	// Inputs
 	if os.Getenv("is_update_cocoapods") != "false" {
 		log.Warn("`is_update_cocoapods` is deprecated!")
-		log.Warn("CocoaPods version is determined based on the Gemfile.lock or the Podfile.lock in the Podfile's directory.")
+		log.Warn("CocoaPods version is determined based on the Podfile.lock or the Gemfile.lock in the Podfile's directory.")
 	}
 
 	if os.Getenv("install_cocoapods_version") != "" {
 		log.Warn("`install_cocoapods_version` is deprecated!")
-		log.Warn("CocoaPods version is determined based on the Gemfile.lock or the Podfile.lock in the Podfile's directory.")
+		log.Warn("CocoaPods version is determined based on the Podfile.lock or the Gemfile.lock in the Podfile's directory.")
 	}
 
 	sourceRootPath := os.Getenv("source_root_path")
@@ -219,56 +219,57 @@ func main() {
 	useCocoapodsFromGemfile := false
 	useCocoapodsVersion := ""
 
-	gemfileLockPth := filepath.Join(podfileDir, "Gemfile.lock")
-	log.Details("Searching for Gemfile.lock with cocoapods gem")
-
-	if exist, err := pathutil.IsPathExists(gemfileLockPth); err != nil {
-		log.Fail("Failed to check Gemfile.lock at: %s, error: %s", gemfileLockPth, err)
+	fmt.Println("")
+	log.Details("Searching for Podfile.lock")
+	// Check Podfile.lock for CocoaPods version
+	podfileLockPth := filepath.Join(podfileDir, "Podfile.lock")
+	if exist, err := pathutil.IsPathExists(podfileLockPth); err != nil {
+		log.Fail("Failed to check Podfile.lock at: %s, error: %s", podfileLockPth, err)
 	} else if exist {
-		version, err := cocoapodsVersionFromGemfileLock(gemfileLockPth)
+		// Podfile.lock exist scearch for version
+		log.Details("Found Podfile.lock: %s", podfileLockPth)
+
+		version, err := cocoapodsVersionFromPodfileLock(podfileLockPth)
 		if err != nil {
-			log.Fail("Failed to check if Gemfile.lock contains cocopods, error: %s", err)
+			log.Fail("Failed to determine CocoaPods version, error: %s", err)
 		}
 
 		if version != "" {
-			log.Details("Found Gemfile.lock: %s", gemfileLockPth)
-			log.Done("Gemfile.lock defined cocoapods version: %s", version)
-
-			bundleInstallCmd := []string{"bundle", "install", "--jobs", "20", "--retry", "5"}
-			if err := rubyCommand.Execute(podfileDir, false, bundleInstallCmd); err != nil {
-				log.Fail("Command failed, error: %s", err)
-			}
-
-			useCocoapodsFromGemfile = true
+			useCocoapodsVersion = version
+			log.Done("Required CocoaPods version (from Podfile.lock): %s", useCocoapodsVersion)
+		} else {
+			log.Warn("No CocoaPods version found in Podfile.lock! (%s)", podfileLockPth)
 		}
 	} else {
-		log.Details("No Gemfile.lock with cocoapods gem found at: %s", gemfileLockPth)
+		log.Warn("No Podfile.lock found at: %s", podfileLockPth)
+		log.Warn("Make sure it's committed into your repository!")
 	}
 
-	if !useCocoapodsFromGemfile {
-		fmt.Println("")
-		log.Details("Searching for Podfile.lock")
-		// Check Podfile.lock for CocoaPods version
-		podfileLockPth := filepath.Join(podfileDir, "Podfile.lock")
-		if exist, err := pathutil.IsPathExists(podfileLockPth); err != nil {
-			log.Fail("Failed to check Podfile.lock at: %s, error: %s", podfileLockPth, err)
-		} else if exist {
-			// Podfile.lock exist scearch for version
-			log.Details("Found Podfile.lock: %s", podfileLockPth)
+	if useCocoapodsVersion == "" {
+		gemfileLockPth := filepath.Join(podfileDir, "Gemfile.lock")
+		log.Details("Searching for Gemfile.lock with cocoapods gem")
 
-			version, err := cocoapodsVersionFromPodfileLock(podfileLockPth)
+		if exist, err := pathutil.IsPathExists(gemfileLockPth); err != nil {
+			log.Fail("Failed to check Gemfile.lock at: %s, error: %s", gemfileLockPth, err)
+		} else if exist {
+			version, err := cocoapodsVersionFromGemfileLock(gemfileLockPth)
 			if err != nil {
-				log.Fail("Failed to determin CocoaPods version, error: %s", err)
+				log.Fail("Failed to check if Gemfile.lock contains cocopods, error: %s", err)
 			}
 
-			log.Done("CocoaPods version: %s", version)
-			if version != systemCocoapodsVersion {
-				useCocoapodsVersion = version
+			if version != "" {
+				log.Details("Found Gemfile.lock: %s", gemfileLockPth)
+				log.Done("Gemfile.lock defined cocoapods version: %s", version)
+
+				bundleInstallCmd := []string{"bundle", "install", "--jobs", "20", "--retry", "5"}
+				if err := rubyCommand.Execute(podfileDir, false, bundleInstallCmd); err != nil {
+					log.Fail("Command failed, error: %s", err)
+				}
+
+				useCocoapodsFromGemfile = true
 			}
 		} else {
-			// Use system installed cocoapods
-			log.Warn("No Podfile.lock found at: %s", podfileLockPth)
-			log.Warn("Make sure it's committed into your repository!")
+			log.Details("No Gemfile.lock with cocoapods gem found at: %s", gemfileLockPth)
 			log.Done("Using system installed CocoaPods version")
 		}
 	}

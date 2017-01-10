@@ -4,6 +4,7 @@ default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
 app:
   envs:
   - STEP_VERSION: 1.5.9
+  - ORIG_BITRISE_SOURCE_DIR: $BITRISE_SOURCE_DIR
 
 workflows:
   # ----------------------------------------------------------------
@@ -18,8 +19,13 @@ workflows:
     envs:
     # define this!
     - REPO_URL: $REPO_URL
+    - TEST_REPO_BRANCH: $TEST_REPO_BRANCH
     - PODFILE_PTH: $PODFILE_PTH
     steps:
+    - change-workdir:
+        inputs:
+        - path: "${ORIG_BITRISE_SOURCE_DIR}"
+        - is_create_path: "false"
     - script:
         inputs:
         - content: |-
@@ -27,24 +33,33 @@ workflows:
             set -ex
             rm -rf ./_tmp
 
-            git clone "${REPO_URL}" ./_tmp
-    - script:
+            git clone "${REPO_URL}" ./_tmp --branch "${TEST_REPO_BRANCH}"
+    - change-workdir:
         title: Switch working dir to test/_tmp dir
         description: |-
           To prevent step testing issues, like referencing relative
           files with just './some-file', which would work for local tests
           but not if the step is included in another bitrise.yml!
         inputs:
-        - content: envman add --key BITRISE_SOURCE_DIR --value "$(pwd)/_tmp"
+        - path: "${ORIG_BITRISE_SOURCE_DIR}/_tmp"
+        - is_create_path: "false"
     - path::./:
         inputs:
-        - is_update_cocoapods: "false"
         - podfile_path: $PODFILE_PTH
 
   test_with_gemfile:
     envs:
     # With Gemfile:
     - REPO_URL: https://github.com/bitrise-samples/ios-cocoapods-1.x-Gemfile.git
+    - TEST_REPO_BRANCH: master
+    - PODFILE_PTH: ''
+    after_run:
+    - _test_with_repo
+  test_with_no_podfile_lock:
+    envs:
+    # With Only Gemfile (no Podfile.lock):
+    - REPO_URL: https://github.com/bitrise-samples/ios-cocoapods-1.x-Gemfile.git
+    - TEST_REPO_BRANCH: no-podfile-lock
     - PODFILE_PTH: ''
     after_run:
     - _test_with_repo
@@ -52,6 +67,7 @@ workflows:
     envs:
     # Without Gemfile:
     - REPO_URL: https://github.com/bitrise-samples/ios-cocoapods-1.x.git
+    - TEST_REPO_BRANCH: master
     - PODFILE_PTH: ''
     after_run:
     - _test_with_repo
@@ -59,6 +75,7 @@ workflows:
     envs:
     # Without Gemfile:
     - REPO_URL: https://github.com/bitrise-samples/ios-cocoapods-1.x.git
+    - TEST_REPO_BRANCH: master
     - PODFILE_PTH: 'CocoaPods1X/Podfile'
     after_run:
     - _test_with_repo
@@ -66,6 +83,7 @@ workflows:
     envs:
     # Podfile is in repo root
     - REPO_URL: https://github.com/bitrise-samples/ios-cocoapods-at-root.git
+    - TEST_REPO_BRANCH: master
     - PODFILE_PTH: ''
     after_run:
     - _test_with_repo
@@ -80,6 +98,7 @@ workflows:
     before_run:
     - go-tests
     after_run:
+    - test_with_no_podfile_lock
     - test_with_gemfile
     - test_without_gemfile
     - test_podfile_at_root
