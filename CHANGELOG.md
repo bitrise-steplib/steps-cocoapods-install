@@ -1,6 +1,11 @@
-## Changelog (Current version: 1.6.0)
+## Changelog (Current version: 1.6.1)
 
 -----------------
+
+### 1.6.1 (2017 Jan 16)
+
+* [37291fd] prepare for 1.6.1
+* [8e6b6e0] Rubycommand (#28)
 
 ### 1.6.0 (2017 Jan 10)
 
@@ -135,4 +140,4 @@
 
 -----------------
 
-Updated: 2017 Jan 10
+Updated: 2017 Jan 16
