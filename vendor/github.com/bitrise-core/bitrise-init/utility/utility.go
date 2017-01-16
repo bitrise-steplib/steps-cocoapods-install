@@ -17,7 +17,7 @@ func CaseInsensitiveContains(s, substr string) bool {
 }
 
 // ListPathInDirSortedByComponents ...
-func ListPathInDirSortedByComponents(searchDir string) ([]string, error) {
+func ListPathInDirSortedByComponents(searchDir string, relPath bool) ([]string, error) {
 	searchDir, err := filepath.Abs(searchDir)
 	if err != nil {
 		return []string{}, err
@@ -26,12 +26,15 @@ func ListPathInDirSortedByComponents(searchDir string) ([]string, error) {
 	fileList := []string{}
 
 	if err := filepath.Walk(searchDir, func(path string, f os.FileInfo, err error) error {
-		rel, err := filepath.Rel(searchDir, path)
-		if err != nil {
-			return err
+		if relPath {
+			rel, err := filepath.Rel(searchDir, path)
+			if err != nil {
+				return err
+			}
+			path = rel
 		}
 
-		fileList = append(fileList, rel)
+		fileList = append(fileList, path)
 
 		return nil
 	}); err != nil {

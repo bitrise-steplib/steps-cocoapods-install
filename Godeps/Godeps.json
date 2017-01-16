@@ -1,15 +1,15 @@
 {
 	"ImportPath": "github.com/bitrise-io/steps-cocoapods-install",
 	"GoVersion": "go1.7",
-	"GodepVersion": "v76",
+	"GodepVersion": "v77",
 	"Packages": [
 		"./..."
 	],
 	"Deps": [
 		{
 			"ImportPath": "github.com/bitrise-core/bitrise-init/utility",
-			"Comment": "0.12.0-2-g0383a2d",
-			"Rev": "0383a2dc39d182431ceaa505ef8163c21ff3c1cb"
+			"Comment": "0.12.0-3-g579eae8",
+			"Rev": "579eae8ef9b4c7fecf840fc0c917bb1c2cfe9768"
 		},
 		{
 			"ImportPath": "github.com/bitrise-io/go-utils/colorstring",

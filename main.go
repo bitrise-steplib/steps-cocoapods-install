@@ -104,7 +104,7 @@ func findMostRootPodfileInFileList(fileList []string) (string, error) {
 }
 
 func findMostRootPodfile(dir string) (string, error) {
-	fileList, err := utility.ListPathInDirSortedByComponents(dir)
+	fileList, err := utility.ListPathInDirSortedByComponents(dir, false)
 	if err != nil {
 		return "", err
 	}
