@@ -47,14 +47,6 @@ workflows:
         inputs:
         - podfile_path: $PODFILE_PTH
 
-  test_with_gemfile:
-    envs:
-    # With Gemfile:
-    - REPO_URL: https://github.com/bitrise-samples/ios-cocoapods-1.x-Gemfile.git
-    - TEST_REPO_BRANCH: master
-    - PODFILE_PTH: ''
-    after_run:
-    - _test_with_repo
   test_with_no_podfile_lock:
     envs:
     # With Only Gemfile (no Podfile.lock):
@@ -63,10 +55,26 @@ workflows:
     - PODFILE_PTH: ''
     after_run:
     - _test_with_repo
+  test_with_gemfile:
+    envs:
+    # With Gemfile:
+    - REPO_URL: https://github.com/bitrise-samples/ios-cocoapods-1.x-Gemfile.git
+    - TEST_REPO_BRANCH: master
+    - PODFILE_PTH: ''
+    after_run:
+    - _test_with_repo
   test_without_gemfile:
     envs:
     # Without Gemfile:
     - REPO_URL: https://github.com/bitrise-samples/ios-cocoapods-1.x.git
+    - TEST_REPO_BRANCH: master
+    - PODFILE_PTH: ''
+    after_run:
+    - _test_with_repo
+  test_podfile_at_root:
+    envs:
+    # Podfile is in repo root
+    - REPO_URL: https://github.com/bitrise-samples/ios-cocoapods-at-root.git
     - TEST_REPO_BRANCH: master
     - PODFILE_PTH: ''
     after_run:
@@ -79,14 +87,7 @@ workflows:
     - PODFILE_PTH: 'CocoaPods1X/Podfile'
     after_run:
     - _test_with_repo
-  test_podfile_at_root:
-    envs:
-    # Podfile is in repo root
-    - REPO_URL: https://github.com/bitrise-samples/ios-cocoapods-at-root.git
-    - TEST_REPO_BRANCH: master
-    - PODFILE_PTH: ''
-    after_run:
-    - _test_with_repo
+
   test_without_verbose:
     steps:
     - path::./:

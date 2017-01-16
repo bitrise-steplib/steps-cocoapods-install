@@ -1,26 +1,47 @@
 {
 	"ImportPath": "github.com/bitrise-io/steps-cocoapods-install",
 	"GoVersion": "go1.7",
-	"GodepVersion": "v75",
+	"GodepVersion": "v77",
 	"Packages": [
 		"./..."
 	],
 	"Deps": [
 		{
-			"ImportPath": "github.com/bitrise-io/go-utils/cmdex",
-			"Rev": "9293e3cd2183fa777cd956af436309872de0f2ec"
+			"ImportPath": "github.com/bitrise-core/bitrise-init/utility",
+			"Comment": "0.12.0-3-g579eae8",
+			"Rev": "579eae8ef9b4c7fecf840fc0c917bb1c2cfe9768"
+		},
+		{
+			"ImportPath": "github.com/bitrise-io/go-utils/colorstring",
+			"Rev": "e9b911a4cdf5eda62401973d0c299e7e42637315"
+		},
+		{
+			"ImportPath": "github.com/bitrise-io/go-utils/command",
+			"Rev": "e9b911a4cdf5eda62401973d0c299e7e42637315"
+		},
+		{
+			"ImportPath": "github.com/bitrise-io/go-utils/command/rubycommand",
+			"Rev": "e9b911a4cdf5eda62401973d0c299e7e42637315"
 		},
 		{
 			"ImportPath": "github.com/bitrise-io/go-utils/errorutil",
-			"Rev": "9293e3cd2183fa777cd956af436309872de0f2ec"
+			"Rev": "e9b911a4cdf5eda62401973d0c299e7e42637315"
 		},
 		{
 			"ImportPath": "github.com/bitrise-io/go-utils/fileutil",
-			"Rev": "9293e3cd2183fa777cd956af436309872de0f2ec"
+			"Rev": "e9b911a4cdf5eda62401973d0c299e7e42637315"
+		},
+		{
+			"ImportPath": "github.com/bitrise-io/go-utils/log",
+			"Rev": "e9b911a4cdf5eda62401973d0c299e7e42637315"
 		},
 		{
 			"ImportPath": "github.com/bitrise-io/go-utils/pathutil",
-			"Rev": "9293e3cd2183fa777cd956af436309872de0f2ec"
+			"Rev": "e9b911a4cdf5eda62401973d0c299e7e42637315"
+		},
+		{
+			"ImportPath": "github.com/bitrise-tools/go-xcode/xcodeproj",
+			"Rev": "3f50256af6281dbf2b3b688abe153432a089d8d4"
 		},
 		{
 			"ImportPath": "github.com/davecgh/go-spew/spew",
@@ -34,13 +55,13 @@
 		},
 		{
 			"ImportPath": "github.com/stretchr/testify/assert",
-			"Comment": "v1.1.4-25-g2402e8e",
-			"Rev": "2402e8e7a02fc811447d11f881aa9746cdc57983"
+			"Comment": "v1.1.4-6-g18a02ba",
+			"Rev": "18a02ba4a312f95da08ff4cfc0055750ce50ae9e"
 		},
 		{
 			"ImportPath": "github.com/stretchr/testify/require",
-			"Comment": "v1.1.4-25-g2402e8e",
-			"Rev": "2402e8e7a02fc811447d11f881aa9746cdc57983"
+			"Comment": "v1.1.4-6-g18a02ba",
+			"Rev": "18a02ba4a312f95da08ff4cfc0055750ce50ae9e"
 		}
 	]
 }

@@ -6,183 +6,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestIsPathContainsComponent(t *testing.T) {
-	// Should filter .git folder
-	t.Log("not inside .git workspace")
-	{
-		actual := isPathContainsComponent("/Users/bitrise/sample-apps-ios-cocoapods/CarthageSampleAppWithCocoapods.xcworkspace", gitFolderName)
-		require.Equal(t, false, actual)
-	}
-
-	t.Log("not .git project - relative path")
-	{
-		actual := isPathContainsComponent("CarthageSampleAppWithCocoapods.xcodeproj", gitFolderName)
-		require.Equal(t, false, actual)
-	}
-
-	t.Log(".git project")
-	{
-		actual := isPathContainsComponent("/Users/bitrise/ios-no-shared-schemes/.git/Checkouts/Result/Result.xcodeproj", gitFolderName)
-		require.Equal(t, true, actual)
-	}
-
-	t.Log(".git workspace - relative path")
-	{
-		actual := isPathContainsComponent(".git/Checkouts/Result/Result.xcworkspace", gitFolderName)
-		require.Equal(t, true, actual)
-	}
-
-	t.Log(".git workspace - relative path")
-	{
-		actual := isPathContainsComponent("./sub/dir/.git/Checkouts/Result/Result.xcworkspace", gitFolderName)
-		require.Equal(t, true, actual)
-	}
-
-	t.Log(".git workspace - relative path")
-	{
-		actual := isPathContainsComponent("sub/dir/.git/Checkouts/Result/Result.xcworkspace", gitFolderName)
-		require.Equal(t, true, actual)
-	}
-
-	// Should filter Pods folder
-	t.Log("not pod workspace")
-	{
-		actual := isPathContainsComponent("/Users/bitrise/sample-apps-ios-cocoapods/PodsSampleAppWithCocoapods.xcworkspace", podsFolderName)
-		require.Equal(t, false, actual)
-	}
-
-	t.Log("not pod project - relative path")
-	{
-		actual := isPathContainsComponent("PodsSampleAppWithCocoapods.xcodeproj", podsFolderName)
-		require.Equal(t, false, actual)
-	}
-
-	t.Log("pod project")
-	{
-		actual := isPathContainsComponent("/Users/bitrise/sample-apps-ios-cocoapods/Pods/Pods.xcodeproj", podsFolderName)
-		require.Equal(t, true, actual)
-	}
-
-	t.Log("pod workspace - relative path")
-	{
-		actual := isPathContainsComponent("Pods/Pods.xcworkspace", podsFolderName)
-		require.Equal(t, true, actual)
-	}
-
-	t.Log("pod workspace - relative path")
-	{
-		actual := isPathContainsComponent("./sub/dir/Pods/Pods.xcworkspace", podsFolderName)
-		require.Equal(t, true, actual)
-	}
-
-	t.Log("pod workspace - relative path")
-	{
-		actual := isPathContainsComponent("sub/dir/Pods/Pods.xcworkspace", podsFolderName)
-		require.Equal(t, true, actual)
-	}
-
-	// Should filter Carthage folder
-	t.Log("not Carthage workspace")
-	{
-		actual := isPathContainsComponent("/Users/bitrise/sample-apps-ios-cocoapods/CarthageSampleAppWithCocoapods.xcworkspace", carthageFolderName)
-		require.Equal(t, false, actual)
-	}
-
-	t.Log("not Carthage project - relative path")
-	{
-		actual := isPathContainsComponent("CarthageSampleAppWithCocoapods.xcodeproj", carthageFolderName)
-		require.Equal(t, false, actual)
-	}
-
-	t.Log("Carthage project")
-	{
-		actual := isPathContainsComponent("/Users/bitrise/ios-no-shared-schemes/Carthage/Checkouts/Result/Result.xcodeproj", carthageFolderName)
-		require.Equal(t, true, actual)
-	}
-
-	t.Log("Carthage workspace - relative path")
-	{
-		actual := isPathContainsComponent("Carthage/Checkouts/Result/Result.xcworkspace", carthageFolderName)
-		require.Equal(t, true, actual)
-	}
-
-	t.Log("Carthage workspace - relative path")
-	{
-		actual := isPathContainsComponent("./sub/dir/Carthage/Checkouts/Result/Result.xcworkspace", carthageFolderName)
-		require.Equal(t, true, actual)
-	}
-
-	t.Log("Carthage workspace - relative path")
-	{
-		actual := isPathContainsComponent("sub/dir/Carthage/Checkouts/Result/Result.xcworkspace", carthageFolderName)
-		require.Equal(t, true, actual)
-	}
-}
-
-func TestIsPathContainsComponentWithExtension(t *testing.T) {
-	// Should filter .framework folder
-	t.Log("not .framework workspace")
-	{
-		actual := isPathContainsComponentWithExtension("/Users/bitrise/sample-apps-ios-cocoapods/CarthageSampleAppWithCocoapods.xcworkspace", frameworkExt)
-		require.Equal(t, false, actual)
-	}
-
-	t.Log("not .framework project - relative path")
-	{
-		actual := isPathContainsComponentWithExtension("CarthageSampleAppWithCocoapods.xcodeproj", frameworkExt)
-		require.Equal(t, false, actual)
-	}
-
-	t.Log(".framework project")
-	{
-		actual := isPathContainsComponentWithExtension("/Users/bitrise/ios-no-shared-schemes/test.framework/Checkouts/Result/Result.xcodeproj", frameworkExt)
-		require.Equal(t, true, actual)
-	}
-
-	t.Log(".framework workspace - relative path")
-	{
-		actual := isPathContainsComponentWithExtension("test.framework/Checkouts/Result/Result.xcworkspace", frameworkExt)
-		require.Equal(t, true, actual)
-	}
-
-	t.Log(".framework workspace - relative path")
-	{
-		actual := isPathContainsComponentWithExtension("./sub/dir/test.framework/Checkouts/Result/Result.xcworkspace", frameworkExt)
-		require.Equal(t, true, actual)
-	}
-
-	t.Log(".framework workspace - relative path")
-	{
-		actual := isPathContainsComponentWithExtension("sub/dir/test.framework/Checkouts/Result/Result.xcworkspace", frameworkExt)
-		require.Equal(t, true, actual)
-	}
-}
-
-func TestIsRelevantPodfile(t *testing.T) {
-	t.Log(`.git, pod, carthage, .framework - not relevant`)
-	{
-		fileList := []string{
-			"/Users/bitrise/.git/Podfile",
-			"/Users/bitrise/sample-apps-ios-cocoapods/Pods/Podfile",
-			"/Users/bitrise/ios-no-shared-schemes/Carthage/Checkouts/Result/Podfile",
-			"/Users/bitrise/ios-no-shared-schemes/test.framework/Checkouts/Result/Podfile",
-		}
-
-		for _, file := range fileList {
-			require.Equal(t, false, isRelevantPodfile(file))
-		}
-	}
-
-	require.Equal(t, true, isRelevantPodfile("Podfile"))
-	require.Equal(t, true, isRelevantPodfile("/Podfile"))
-
-	require.Equal(t, false, isRelevantPodfile("Carthage/Podfile"))
-	require.Equal(t, false, isRelevantPodfile(".git/Podfile"))
-
-	require.Equal(t, false, isRelevantPodfile("Podfile.lock"))
-	require.Equal(t, false, isRelevantPodfile("Gemfile"))
-}
-
 func TestFindMostRootPodfile(t *testing.T) {
 	t.Log("single Podfile")
 	{
@@ -190,7 +13,8 @@ func TestFindMostRootPodfile(t *testing.T) {
 			"./Podfile",
 		}
 
-		podfile := findMostRootPodfile(fileList)
+		podfile, err := findMostRootPodfileInFileList(fileList)
+		require.NoError(t, err)
 		require.Equal(t, "./Podfile", podfile)
 	}
 
@@ -200,7 +24,8 @@ func TestFindMostRootPodfile(t *testing.T) {
 			"/Users/bitrise/my/podfile/dir/Podfile",
 		}
 
-		podfile := findMostRootPodfile(fileList)
+		podfile, err := findMostRootPodfileInFileList(fileList)
+		require.NoError(t, err)
 		require.Equal(t, "/Users/bitrise/my/podfile/dir/Podfile", podfile)
 	}
 
@@ -210,7 +35,8 @@ func TestFindMostRootPodfile(t *testing.T) {
 			"/Users/bitrise/my/podfile/dir/podfile",
 		}
 
-		podfile := findMostRootPodfile(fileList)
+		podfile, err := findMostRootPodfileInFileList(fileList)
+		require.NoError(t, err)
 		require.Equal(t, "/Users/bitrise/my/podfile/dir/podfile", podfile)
 	}
 
@@ -220,7 +46,8 @@ func TestFindMostRootPodfile(t *testing.T) {
 			"/Users/bitrise/my/podfile/dir/poDfile",
 		}
 
-		podfile := findMostRootPodfile(fileList)
+		podfile, err := findMostRootPodfileInFileList(fileList)
+		require.NoError(t, err)
 		require.Equal(t, "/Users/bitrise/my/podfile/dir/poDfile", podfile)
 	}
 
@@ -232,7 +59,8 @@ func TestFindMostRootPodfile(t *testing.T) {
 			"/Users/bitrise/dir/Podfile",
 		}
 
-		podfile := findMostRootPodfile(fileList)
+		podfile, err := findMostRootPodfileInFileList(fileList)
+		require.NoError(t, err)
 		require.Equal(t, "/Users/bitrise/dir/Podfile", podfile)
 	}
 
@@ -242,9 +70,11 @@ func TestFindMostRootPodfile(t *testing.T) {
 			"./my/podfile/dir/Podfile",
 			"./my/dir/Podfile",
 			"./dir/Podfile",
+			"./",
 		}
 
-		podfile := findMostRootPodfile(fileList)
+		podfile, err := findMostRootPodfileInFileList(fileList)
+		require.NoError(t, err)
 		require.Equal(t, "./dir/Podfile", podfile)
 	}
 }

@@ -1,111 +1,115 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
-	"sort"
 	"strings"
 
+	"github.com/bitrise-core/bitrise-init/utility"
+	"github.com/bitrise-io/go-utils/command"
+	"github.com/bitrise-io/go-utils/command/rubycommand"
 	"github.com/bitrise-io/go-utils/fileutil"
+	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-io/go-utils/pathutil"
-	log "github.com/bitrise-io/steps-cocoapods-install/logger"
-	"github.com/bitrise-io/steps-cocoapods-install/run"
-	"github.com/bitrise-io/steps-cocoapods-install/sorting"
 )
 
-var (
-	gitFolderName           = ".git"
-	podsFolderName          = "Pods"
-	carthageFolderName      = "Carthage"
-	scanFolderNameBlackList = []string{gitFolderName, podsFolderName, carthageFolderName}
+// ConfigsModel ...
+type ConfigsModel struct {
+	SourceRootPath          string
+	PodfilePath             string
+	IsUpdateCocoapods       string
+	InstallCocoapodsVersion string
+	Verbose                 string
+}
 
-	frameworkExt           = ".framework"
-	scanFolderExtBlackList = []string{frameworkExt}
-)
-
-func validateRequiredInput(key, value string) {
-	if value == "" {
-		log.Fail("Missing required input: %s", key)
+func createConfigsModelFromEnvs() ConfigsModel {
+	return ConfigsModel{
+		SourceRootPath:          os.Getenv("source_root_path"),
+		PodfilePath:             os.Getenv("podfile_path"),
+		IsUpdateCocoapods:       os.Getenv("is_update_cocoapods"),
+		InstallCocoapodsVersion: os.Getenv("install_cocoapods_version"),
+		Verbose:                 os.Getenv("verbose"),
 	}
 }
 
-func fileList(searchDir string) ([]string, error) {
-	fileList := []string{}
-
-	if err := filepath.Walk(searchDir, func(path string, f os.FileInfo, err error) error {
-		fileList = append(fileList, path)
-		return err
-	}); err != nil {
-		return []string{}, err
-	}
-
-	return fileList, nil
+func (configs ConfigsModel) print() {
+	log.Infof("Configs:")
+	log.Printf("- SourceRootPath: %s", configs.SourceRootPath)
+	log.Printf("- PodfilePath: %s", configs.PodfilePath)
+	log.Printf("- IsUpdateCocoapods: %s", configs.IsUpdateCocoapods)
+	log.Printf("- InstallCocoapodsVersion: %s", configs.InstallCocoapodsVersion)
+	log.Printf("- Verbose: %s", configs.Verbose)
 }
 
-func caseInsensitiveEquals(s1, s2 string) bool {
-	s1, s2 = strings.ToLower(s1), strings.ToLower(s2)
-	return s1 == s2
-}
-
-func isPathContainsComponent(pth, component string) bool {
-	pathComponents := strings.Split(pth, string(filepath.Separator))
-	for _, c := range pathComponents {
-		if c == component {
-			return true
-		}
+func (configs ConfigsModel) validate() error {
+	if configs.SourceRootPath == "" {
+		return errors.New("no SourceRootPath parameter specified")
 	}
-	return false
-}
-
-func isPathContainsComponentWithExtension(pth, ext string) bool {
-	pathComponents := strings.Split(pth, string(filepath.Separator))
-	for _, c := range pathComponents {
-		e := filepath.Ext(c)
-		if e == ext {
-			return true
-		}
-	}
-	return false
-}
-
-func isRelevantPodfile(pth string) bool {
-	basename := filepath.Base(pth)
-	if !caseInsensitiveEquals(basename, "podfile") {
-		return false
+	if exist, err := pathutil.IsDirExists(configs.SourceRootPath); err != nil {
+		return fmt.Errorf("failed to check if SourceRootPath exists at: %s, error: %s", configs.SourceRootPath, err)
+	} else if !exist {
+		return fmt.Errorf("SourceRootPath does not exist at: %s", configs.SourceRootPath)
 	}
 
-	for _, folderName := range scanFolderNameBlackList {
-		if isPathContainsComponent(pth, folderName) {
-			return false
+	if configs.PodfilePath != "" {
+		if exist, err := pathutil.IsPathExists(configs.PodfilePath); err != nil {
+			return fmt.Errorf("failed to check if PodfilePath exists at: %s, error: %s", configs.PodfilePath, err)
+		} else if !exist {
+			return fmt.Errorf("PodfilePath does not exist at: %s", configs.PodfilePath)
 		}
 	}
 
-	for _, folderExt := range scanFolderExtBlackList {
-		if isPathContainsComponentWithExtension(pth, folderExt) {
-			return false
+	if configs.IsUpdateCocoapods != "true" && configs.IsUpdateCocoapods != "false" {
+		return fmt.Errorf("IsUpdateCocoapods invalid value: %s, available: [true false]", configs.IsUpdateCocoapods)
+	}
+
+	if configs.Verbose != "" {
+		if configs.Verbose != "true" && configs.Verbose != "false" {
+			return fmt.Errorf(`invalid Verbose parameter specified: %s, available: ["true", "false"]`, configs.Verbose)
 		}
 	}
 
-	return true
+	return nil
 }
 
-func findMostRootPodfile(fileList []string) string {
-	podfiles := []string{}
+func failf(format string, v ...interface{}) {
+	log.Errorf(format, v...)
+	os.Exit(1)
+}
 
-	for _, file := range fileList {
-		if isRelevantPodfile(file) {
-			podfiles = append(podfiles, file)
-		}
+func findMostRootPodfileInFileList(fileList []string) (string, error) {
+	podfiles, err := utility.FilterPaths(fileList,
+		utility.AllowPodfileBaseFilter,
+		utility.ForbidGitDirComponentFilter,
+		utility.ForbidPodsDirComponentFilter,
+		utility.ForbidCarthageDirComponentFilter,
+		utility.ForbidFramworkComponentWithExtensionFilter)
+	if err != nil {
+		return "", err
 	}
 
-	if len(podfiles) == 0 {
-		return ""
+	podfiles, err = utility.SortPathsByComponents(podfiles)
+	if err != nil {
+		return "", err
 	}
 
-	sort.Sort(sorting.ByComponents(podfiles))
-	return podfiles[0]
+	if len(podfiles) < 1 {
+		return "", nil
+	}
+
+	return podfiles[0], nil
+}
+
+func findMostRootPodfile(dir string) (string, error) {
+	fileList, err := utility.ListPathInDirSortedByComponents(dir, false)
+	if err != nil {
+		return "", err
+	}
+
+	return findMostRootPodfileInFileList(fileList)
 }
 
 func cocoapodsVersionFromGemfileLockContent(content string) string {
@@ -165,159 +169,269 @@ func cocoapodsVersionFromPodfileLock(podfileLockPth string) (string, error) {
 }
 
 func main() {
-	//
-	// Inputs
-	if os.Getenv("is_update_cocoapods") != "false" {
-		log.Warn("`is_update_cocoapods` is deprecated!")
-		log.Warn("CocoaPods version is determined based on the Podfile.lock or the Gemfile.lock in the Podfile's directory.")
+	configs := createConfigsModelFromEnvs()
+
+	fmt.Println()
+	configs.print()
+
+	if err := configs.validate(); err != nil {
+		failf("Issue with input: %s", err)
 	}
 
-	if os.Getenv("install_cocoapods_version") != "" {
-		log.Warn("`install_cocoapods_version` is deprecated!")
-		log.Warn("CocoaPods version is determined based on the Podfile.lock or the Gemfile.lock in the Podfile's directory.")
+	if configs.IsUpdateCocoapods != "false" {
+		log.Warnf("`is_update_cocoapods` is deprecated!")
+		log.Warnf("CocoaPods version is determined based on the Podfile.lock or the Gemfile.lock in the Podfile's directory.")
 	}
 
-	sourceRootPath := os.Getenv("source_root_path")
-	podfilePath := os.Getenv("podfile_path")
-	isVerbose := (os.Getenv("verbose") != "false")
+	if configs.InstallCocoapodsVersion != "" {
+		log.Warnf("`install_cocoapods_version` is deprecated!")
+		log.Warnf("CocoaPods version is determined based on the Podfile.lock or the Gemfile.lock in the Podfile's directory.")
+	}
 
-	rubyCommand, err := run.NewRubyCommandModel()
+	fmt.Println()
+	log.Printf("System installed cocoapods version:")
+
+	podVersionCmdSlice := []string{"pod", "--version"}
+
+	log.Donef("$ %s", command.PrintableCommandArgs(false, podVersionCmdSlice))
+
+	cmd, err := rubycommand.New("pod", "--version")
 	if err != nil {
-		log.Fail("Failed to create ruby command, err: %s", err)
+		failf("Failed to create command model, error: %s", err)
 	}
 
-	systemCocoapodsVersion := rubyCommand.GetPodVersion()
+	cmd.SetStdout(os.Stdout).SetStderr(os.Stderr)
 
-	log.Configs(sourceRootPath, podfilePath, systemCocoapodsVersion, isVerbose)
-
-	validateRequiredInput("source_root_path", sourceRootPath)
+	if err := cmd.Run(); err != nil {
+		failf("Command failed, error: %s", err)
+	}
 
 	//
 	// Search for Podfile
-	if podfilePath == "" {
-		log.Info("Searching for Podfile")
+	podfilePath := ""
 
-		fileList, err := fileList(sourceRootPath)
+	if configs.PodfilePath == "" {
+		fmt.Println()
+		log.Infof("Searching for Podfile")
+
+		absSourceRootPath, err := pathutil.AbsPath(configs.SourceRootPath)
 		if err != nil {
-			log.Fail("Failed to list files at: %s", sourceRootPath)
+			failf("Failed to expand (%s), error: %s", configs.SourceRootPath, err)
 		}
 
-		podfilePath = findMostRootPodfile(fileList)
-		if podfilePath == "" {
-			log.Fail("No Podfile found")
+		absPodfilePath, err := findMostRootPodfile(absSourceRootPath)
+		if err != nil {
+			failf("Failed to find Podfile, error: %s", err)
+		}
+		if absPodfilePath == "" {
+			failf("No Podfile found")
 		}
 
-		log.Done("Found Podfile: %s", podfilePath)
+		log.Donef("Found Podfile: %s", absPodfilePath)
+
+		podfilePath = absPodfilePath
+	} else {
+		absPodfilePath, err := pathutil.AbsPath(configs.PodfilePath)
+		if err != nil {
+			failf("Failed to expand (%s), error: %s", configs.PodfilePath, err)
+		}
+
+		fmt.Println()
+		log.Infof("Using Podfile: %s", absPodfilePath)
+
+		podfilePath = absPodfilePath
 	}
 
 	podfileDir := filepath.Dir(podfilePath)
 
 	//
 	// Install required cocoapods version
-	log.Info("Determining required cocoapods version")
+	fmt.Println()
+	log.Infof("Determining required cocoapods version")
 
-	useCocoapodsFromGemfile := false
+	useBundler := false
 	useCocoapodsVersion := ""
 
-	fmt.Println("")
-	log.Details("Searching for Podfile.lock")
+	log.Printf("Searching for Podfile.lock")
+
 	// Check Podfile.lock for CocoaPods version
 	podfileLockPth := filepath.Join(podfileDir, "Podfile.lock")
 	if exist, err := pathutil.IsPathExists(podfileLockPth); err != nil {
-		log.Fail("Failed to check Podfile.lock at: %s, error: %s", podfileLockPth, err)
+		failf("Failed to check Podfile.lock at: %s, error: %s", podfileLockPth, err)
 	} else if exist {
 		// Podfile.lock exist scearch for version
-		log.Details("Found Podfile.lock: %s", podfileLockPth)
+		log.Printf("Found Podfile.lock: %s", podfileLockPth)
 
 		version, err := cocoapodsVersionFromPodfileLock(podfileLockPth)
 		if err != nil {
-			log.Fail("Failed to determine CocoaPods version, error: %s", err)
+			failf("Failed to determine CocoaPods version, error: %s", err)
 		}
 
 		if version != "" {
 			useCocoapodsVersion = version
-			log.Done("Required CocoaPods version (from Podfile.lock): %s", useCocoapodsVersion)
+			log.Donef("Required CocoaPods version (from Podfile.lock): %s", useCocoapodsVersion)
 		} else {
-			log.Warn("No CocoaPods version found in Podfile.lock! (%s)", podfileLockPth)
+			log.Warnf("No CocoaPods version found in Podfile.lock! (%s)", podfileLockPth)
 		}
 	} else {
-		log.Warn("No Podfile.lock found at: %s", podfileLockPth)
-		log.Warn("Make sure it's committed into your repository!")
+		log.Warnf("No Podfile.lock found at: %s", podfileLockPth)
+		log.Warnf("Make sure it's committed into your repository!")
 	}
 
 	if useCocoapodsVersion == "" {
 		gemfileLockPth := filepath.Join(podfileDir, "Gemfile.lock")
-		log.Details("Searching for Gemfile.lock with cocoapods gem")
+		log.Printf("Searching for Gemfile.lock with cocoapods gem")
 
 		if exist, err := pathutil.IsPathExists(gemfileLockPth); err != nil {
-			log.Fail("Failed to check Gemfile.lock at: %s, error: %s", gemfileLockPth, err)
+			failf("Failed to check Gemfile.lock at: %s, error: %s", gemfileLockPth, err)
 		} else if exist {
 			version, err := cocoapodsVersionFromGemfileLock(gemfileLockPth)
 			if err != nil {
-				log.Fail("Failed to check if Gemfile.lock contains cocopods, error: %s", err)
+				failf("Failed to check if Gemfile.lock contains cocopods, error: %s", err)
 			}
 
 			if version != "" {
-				log.Details("Found Gemfile.lock: %s", gemfileLockPth)
-				log.Done("Gemfile.lock defined cocoapods version: %s", version)
+				log.Printf("Found Gemfile.lock: %s", gemfileLockPth)
+				log.Donef("Gemfile.lock defined cocoapods version: %s", version)
 
-				bundleInstallCmd := []string{"bundle", "install", "--jobs", "20", "--retry", "5"}
-				if err := rubyCommand.Execute(podfileDir, false, bundleInstallCmd); err != nil {
-					log.Fail("Command failed, error: %s", err)
-				}
-
-				useCocoapodsFromGemfile = true
+				useBundler = true
 			}
 		} else {
-			log.Details("No Gemfile.lock with cocoapods gem found at: %s", gemfileLockPth)
-			log.Done("Using system installed CocoaPods version")
+			log.Printf("No Gemfile.lock with cocoapods gem found at: %s", gemfileLockPth)
+			log.Donef("Using system installed CocoaPods version")
 		}
 	}
 
 	// Install cocoapods version
-	podCmd := []string{"pod"}
-	if !useCocoapodsFromGemfile && useCocoapodsVersion != "" {
-		installed, err := rubyCommand.IsGemInstalled("cocoapods", useCocoapodsVersion)
+	fmt.Println()
+	log.Infof("Install cocoapods version")
+
+	podCmdSlice := []string{"pod"}
+
+	if useBundler {
+		log.Printf("Install cocoapods with bundler")
+
+		bundleInstallCmd := []string{"bundle", "install", "--jobs", "20", "--retry", "5"}
+
+		log.Donef("$ %s", command.PrintableCommandArgs(false, bundleInstallCmd))
+
+		cmd, err := rubycommand.NewFromSlice(bundleInstallCmd...)
 		if err != nil {
-			log.Fail("Command failed, error: %s", err)
+			failf("Failed to create command model, error: %s", err)
+		}
+
+		cmd.SetDir(podfileDir)
+
+		if err := cmd.Run(); err != nil {
+			failf("Command failed, error: %s", err)
+		}
+	} else if useCocoapodsVersion != "" {
+		log.Printf("Checking cocoapods %s gem", useCocoapodsVersion)
+
+		installed, err := rubycommand.IsGemInstalled("cocoapods", useCocoapodsVersion)
+		if err != nil {
+			failf("Failed to check if cocoapods %s installed, error: %s", useCocoapodsVersion, err)
 		}
 
 		if !installed {
-			log.Info("Installing cocoapods: %s", useCocoapodsVersion)
-			if err := rubyCommand.GemInstall("cocoapods", useCocoapodsVersion); err != nil {
-				log.Fail("Command failed, error: %s", err)
+			log.Printf("Installing")
+
+			cmds, err := rubycommand.GemInstall("cocoapods", useCocoapodsVersion)
+			if err != nil {
+				failf("Failed to create command model, error: %s", err)
 			}
+
+			for _, cmd := range cmds {
+				log.Donef("$ %s", cmd.PrintableCommandArgs())
+
+				cmd.SetDir(podfileDir)
+
+				if err := cmd.Run(); err != nil {
+					failf("Command failed, error: %s", err)
+				}
+			}
+		} else {
+			log.Printf("Installed")
 		}
 
-		podCmd = append(podCmd, fmt.Sprintf("_%s_", useCocoapodsVersion))
+		podCmdSlice = append(podCmdSlice, fmt.Sprintf("_%s_", useCocoapodsVersion))
+	} else {
+		log.Printf("Using system installed cocoapods")
 	}
 
 	// Run pod install
-	log.Info("Installing Pods")
+	fmt.Println()
+	log.Infof("Installing Pods")
 
-	podVersionCmd := append(podCmd, "--version")
-	if err := rubyCommand.Execute(podfileDir, useCocoapodsFromGemfile, podVersionCmd); err != nil {
-		log.Fail("Command failed, error: %s", err)
+	podInstallCmdSlice := append(podCmdSlice, "install", "--no-repo-update")
+
+	if configs.Verbose == "true" {
+		podInstallCmdSlice = append(podInstallCmdSlice, "--verbose")
 	}
 
-	podInstallNoUpdateCmd := append(podCmd, "install", "--no-repo-update")
-
-	if isVerbose {
-		podInstallNoUpdateCmd = append(podInstallNoUpdateCmd, "--verbose")
+	if useBundler {
+		podInstallCmdSlice = append([]string{"bundle", "exec"}, podInstallCmdSlice...)
 	}
 
-	if err := rubyCommand.Execute(podfileDir, useCocoapodsFromGemfile, podInstallNoUpdateCmd); err != nil {
-		log.Warn("Command failed with error: %s, retrying without --no-repo-update ...", err)
+	log.Donef("$ %s", command.PrintableCommandArgs(false, podInstallCmdSlice))
 
-		podRepoUpdateCmd := append(podCmd, "repo", "update")
-		if err := rubyCommand.Execute(podfileDir, useCocoapodsFromGemfile, podRepoUpdateCmd); err != nil {
-			log.Fail("Command failed, error: %s", err)
+	cmd, err = rubycommand.NewFromSlice(podInstallCmdSlice...)
+	if err != nil {
+		failf("Failed to create command model, error: %s", err)
+	}
+
+	cmd.SetStdout(os.Stdout).SetStderr(os.Stderr)
+	cmd.SetDir(podfileDir)
+
+	if err := cmd.Run(); err != nil {
+		log.Warnf("Command failed, error: %s, retrying without --no-repo-update ...", err)
+
+		// Repo update
+		podRepoUpdateCmdSlice := append(podCmdSlice, "repo", "update")
+
+		if useBundler {
+			podInstallCmdSlice = append([]string{"bundle", "exec"}, podRepoUpdateCmdSlice...)
 		}
 
-		podInstallCmd := append(podCmd, "install", "--verbose")
-		if err := rubyCommand.Execute(podfileDir, useCocoapodsFromGemfile, podInstallCmd); err != nil {
-			log.Fail("Command failed, error: %s", err)
+		log.Donef("$ %s", command.PrintableCommandArgs(false, podRepoUpdateCmdSlice))
+
+		cmd, err = rubycommand.NewFromSlice(podRepoUpdateCmdSlice...)
+		if err != nil {
+			failf("Failed to create command model, error: %s", err)
+		}
+
+		cmd.SetStdout(os.Stdout).SetStderr(os.Stderr)
+		cmd.SetDir(podfileDir)
+
+		if err := cmd.Run(); err != nil {
+			failf("Command failed, error: %s", err)
+		}
+
+		// Pod install
+		podInstallCmdSlice := append(podCmdSlice, "install")
+
+		if configs.Verbose == "true" {
+			podInstallCmdSlice = append(podInstallCmdSlice, "--verbose")
+		}
+
+		if useBundler {
+			podInstallCmdSlice = append([]string{"bundle", "exec"}, podInstallCmdSlice...)
+		}
+
+		log.Donef("$ %s", command.PrintableCommandArgs(false, podInstallCmdSlice))
+
+		cmd, err = rubycommand.NewFromSlice(podInstallCmdSlice...)
+		if err != nil {
+			failf("Failed to create command model, error: %s", err)
+		}
+
+		cmd.SetStdout(os.Stdout).SetStderr(os.Stderr)
+		cmd.SetDir(podfileDir)
+
+		if err := cmd.Run(); err != nil {
+			failf("Command failed, error: %s", err)
 		}
 	}
-	log.Done("Success!")
+
+	log.Donef("Success!")
 }
