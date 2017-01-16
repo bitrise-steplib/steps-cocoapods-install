@@ -70,6 +70,7 @@ func TestFindMostRootPodfile(t *testing.T) {
 			"./my/podfile/dir/Podfile",
 			"./my/dir/Podfile",
 			"./dir/Podfile",
+			"./",
 		}
 
 		podfile, err := findMostRootPodfileInFileList(fileList)

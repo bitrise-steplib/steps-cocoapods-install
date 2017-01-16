@@ -91,7 +91,7 @@ func findMostRootPodfileInFileList(fileList []string) (string, error) {
 		return "", err
 	}
 
-	podfiles, err = utility.SortPathsByComponents(fileList)
+	podfiles, err = utility.SortPathsByComponents(podfiles)
 	if err != nil {
 		return "", err
 	}
@@ -208,10 +208,18 @@ func main() {
 
 	//
 	// Search for Podfile
+	absPodfilePath := ""
+
 	if configs.PodfilePath == "" {
+		fmt.Println()
 		log.Infof("Searching for Podfile")
 
-		podfilePath, err := findMostRootPodfile(configs.SourceRootPath)
+		absSourceRootPath, err := pathutil.AbsPath(configs.SourceRootPath)
+		if err != nil {
+			failf("Failed to expand (%s), error: %s", configs.SourceRootPath, err)
+		}
+
+		podfilePath, err := findMostRootPodfile(absSourceRootPath)
 		if err != nil {
 			failf("Failed to find Podfile, error: %s", err)
 		}
@@ -221,19 +229,27 @@ func main() {
 
 		log.Donef("Found Podfile: %s", podfilePath)
 
-		configs.PodfilePath = podfilePath
+		absPodfilePath = podfilePath
+	} else {
+		absPodfilePath, err := pathutil.AbsPath(configs.PodfilePath)
+		if err != nil {
+			failf("Failed to expand (%s), error: %s", configs.PodfilePath, err)
+		}
+
+		fmt.Println()
+		log.Infof("Using Podfile: %s", absPodfilePath)
 	}
 
-	podfileDir := filepath.Dir(configs.PodfilePath)
+	podfileDir := filepath.Dir(absPodfilePath)
 
 	//
 	// Install required cocoapods version
+	fmt.Println()
 	log.Infof("Determining required cocoapods version")
 
 	useBundler := false
 	useCocoapodsVersion := ""
 
-	fmt.Println("")
 	log.Printf("Searching for Podfile.lock")
 
 	// Check Podfile.lock for CocoaPods version
@@ -285,10 +301,13 @@ func main() {
 	}
 
 	// Install cocoapods version
+	fmt.Println()
+	log.Infof("Install cocoapods version")
+
 	podCmdSlice := []string{"pod"}
 
 	if useBundler {
-		log.Infof("Install Fastlane with bundler")
+		log.Printf("Install cocoapods with bundler")
 
 		bundleInstallCmd := []string{"bundle", "install", "--jobs", "20", "--retry", "5"}
 
@@ -305,12 +324,16 @@ func main() {
 			failf("Command failed, error: %s", err)
 		}
 	} else if useCocoapodsVersion != "" {
+		log.Printf("Checking cocoapods %s gem", useCocoapodsVersion)
+
 		installed, err := rubycommand.IsGemInstalled("cocoapods", useCocoapodsVersion)
 		if err != nil {
 			failf("Failed to check if cocoapods %s installed, error: %s", useCocoapodsVersion, err)
 		}
 
 		if !installed {
+			log.Printf("Installing")
+
 			cmds, err := rubycommand.GemInstall("cocoapods", useCocoapodsVersion)
 			if err != nil {
 				failf("Failed to create command model, error: %s", err)
@@ -325,14 +348,17 @@ func main() {
 					failf("Command failed, error: %s", err)
 				}
 			}
+		} else {
+			log.Printf("Installed")
 		}
 
 		podCmdSlice = append(podCmdSlice, fmt.Sprintf("_%s_", useCocoapodsVersion))
 	} else {
-		log.Infof("Using system installed cocoapods")
+		log.Printf("Using system installed cocoapods")
 	}
 
 	// Run pod install
+	fmt.Println()
 	log.Infof("Installing Pods")
 
 	podInstallCmdSlice := append(podCmdSlice, "install", "--no-repo-update")
@@ -376,7 +402,7 @@ func main() {
 		cmd.SetDir(podfileDir)
 
 		if err := cmd.Run(); err != nil {
-			log.Warnf("Command failed, error: %s, retrying without --no-repo-update ...", err)
+			failf("Command failed, error: %s", err)
 		}
 
 		// Pod install
@@ -401,7 +427,7 @@ func main() {
 		cmd.SetDir(podfileDir)
 
 		if err := cmd.Run(); err != nil {
-			log.Warnf("Command failed, error: %s, retrying without --no-repo-update ...", err)
+			failf("Command failed, error: %s", err)
 		}
 	}
 
