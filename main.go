@@ -208,7 +208,7 @@ func main() {
 
 	//
 	// Search for Podfile
-	absPodfilePath := ""
+	podfilePath := ""
 
 	if configs.PodfilePath == "" {
 		fmt.Println()
@@ -219,17 +219,17 @@ func main() {
 			failf("Failed to expand (%s), error: %s", configs.SourceRootPath, err)
 		}
 
-		podfilePath, err := findMostRootPodfile(absSourceRootPath)
+		absPodfilePath, err := findMostRootPodfile(absSourceRootPath)
 		if err != nil {
 			failf("Failed to find Podfile, error: %s", err)
 		}
-		if podfilePath == "" {
+		if absPodfilePath == "" {
 			failf("No Podfile found")
 		}
 
-		log.Donef("Found Podfile: %s", podfilePath)
+		log.Donef("Found Podfile: %s", absPodfilePath)
 
-		absPodfilePath = podfilePath
+		podfilePath = absPodfilePath
 	} else {
 		absPodfilePath, err := pathutil.AbsPath(configs.PodfilePath)
 		if err != nil {
@@ -238,9 +238,11 @@ func main() {
 
 		fmt.Println()
 		log.Infof("Using Podfile: %s", absPodfilePath)
+
+		podfilePath = absPodfilePath
 	}
 
-	podfileDir := filepath.Dir(absPodfilePath)
+	podfileDir := filepath.Dir(podfilePath)
 
 	//
 	// Install required cocoapods version
