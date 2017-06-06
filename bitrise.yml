@@ -94,7 +94,7 @@ workflows:
         inputs:
         - podfile_path: $PODFILE_PTH
         - verbose: false
-        
+
   print_cache_paths:
     steps:
     - script:

@@ -12,11 +12,22 @@ import (
 const (
 	embeddedWorkspacePathPattern = `.+\.xcodeproj/.+\.xcworkspace`
 
-	gitDirName      = ".git"
-	podsDirName     = "Pods"
-	carthageDirName = "Carthage"
+	gitDirName        = ".git"
+	podsDirName       = "Pods"
+	carthageDirName   = "Carthage"
+	cordovaLibDirName = "CordovaLib"
 
 	frameworkExt = ".framework"
+)
+
+// XcodeProjectType ...
+type XcodeProjectType string
+
+const (
+	// XcodeProjectTypeIOS ...
+	XcodeProjectTypeIOS XcodeProjectType = "ios"
+	// XcodeProjectTypeMacOS ...
+	XcodeProjectTypeMacOS XcodeProjectType = "macos"
 )
 
 // AllowXcodeProjExtFilter ...
@@ -39,6 +50,9 @@ var ForbidPodsDirComponentFilter = ComponentFilter(podsDirName, false)
 
 // ForbidCarthageDirComponentFilter ...
 var ForbidCarthageDirComponentFilter = ComponentFilter(carthageDirName, false)
+
+// ForbidCordovaLibDirComponentFilter ...
+var ForbidCordovaLibDirComponentFilter = ComponentFilter(cordovaLibDirName, false)
 
 // ForbidFramworkComponentWithExtensionFilter ...
 var ForbidFramworkComponentWithExtensionFilter = ComponentWithExtensionFilter(frameworkExt, false)
@@ -174,4 +188,76 @@ func CreateStandaloneProjectsAndWorkspaces(projectFiles, workspaceFiles []string
 	}
 
 	return standaloneProjects, workspaces, nil
+}
+
+// FilterRelevantProjectFiles ...
+func FilterRelevantProjectFiles(fileList []string, projectTypes ...XcodeProjectType) ([]string, error) {
+	filters := []FilterFunc{
+		AllowXcodeProjExtFilter,
+		AllowIsDirectoryFilter,
+		ForbidEmbeddedWorkspaceRegexpFilter,
+		ForbidGitDirComponentFilter,
+		ForbidPodsDirComponentFilter,
+		ForbidCarthageDirComponentFilter,
+		ForbidFramworkComponentWithExtensionFilter,
+		ForbidCordovaLibDirComponentFilter,
+	}
+
+	for _, projectType := range projectTypes {
+		switch projectType {
+		case XcodeProjectTypeIOS:
+			filters = append(filters, AllowIphoneosSDKFilter)
+		case XcodeProjectTypeMacOS:
+			filters = append(filters, AllowMacosxSDKFilter)
+		}
+	}
+
+	return FilterPaths(fileList, filters...)
+}
+
+// FilterRelevantWorkspaceFiles ...
+func FilterRelevantWorkspaceFiles(fileList []string, projectTypes ...XcodeProjectType) ([]string, error) {
+	filters := []FilterFunc{
+		AllowXCWorkspaceExtFilter,
+		AllowIsDirectoryFilter,
+		ForbidEmbeddedWorkspaceRegexpFilter,
+		ForbidGitDirComponentFilter,
+		ForbidPodsDirComponentFilter,
+		ForbidCarthageDirComponentFilter,
+		ForbidFramworkComponentWithExtensionFilter,
+		ForbidCordovaLibDirComponentFilter,
+	}
+
+	for _, projectType := range projectTypes {
+		switch projectType {
+		case XcodeProjectTypeIOS:
+			filters = append(filters, AllowIphoneosSDKFilter)
+		case XcodeProjectTypeMacOS:
+			filters = append(filters, AllowMacosxSDKFilter)
+		}
+	}
+
+	return FilterPaths(fileList, filters...)
+}
+
+// FilterRelevantPodfiles ...
+func FilterRelevantPodfiles(fileList []string) ([]string, error) {
+	return FilterPaths(fileList,
+		AllowPodfileBaseFilter,
+		ForbidGitDirComponentFilter,
+		ForbidPodsDirComponentFilter,
+		ForbidCarthageDirComponentFilter,
+		ForbidFramworkComponentWithExtensionFilter,
+		ForbidCordovaLibDirComponentFilter)
+}
+
+// FilterRelevantCartFile ...
+func FilterRelevantCartFile(fileList []string) ([]string, error) {
+	return FilterPaths(fileList,
+		AllowCartfileBaseFilter,
+		ForbidGitDirComponentFilter,
+		ForbidPodsDirComponentFilter,
+		ForbidCarthageDirComponentFilter,
+		ForbidFramworkComponentWithExtensionFilter,
+		ForbidCordovaLibDirComponentFilter)
 }
