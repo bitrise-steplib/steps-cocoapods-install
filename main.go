@@ -14,6 +14,7 @@ import (
 	"github.com/bitrise-io/go-utils/fileutil"
 	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-io/go-utils/pathutil"
+	"github.com/bitrise-tools/go-steputils/cache"
 )
 
 // ConfigsModel ...
@@ -276,6 +277,25 @@ func main() {
 	} else {
 		log.Warnf("No Podfile.lock found at: %s", podfileLockPth)
 		log.Warnf("Make sure it's committed into your repository!")
+	}
+
+	// Collecting caches
+	fmt.Println()
+	log.Infof("Collecting Pod cache...")
+
+	podsCache := cache.New()
+	if absPodsDirPth, err := filepath.Abs(filepath.Join(podfileDir, "Pods")); err != nil {
+		log.Warnf("Cache collection skipped: failed to determine (Pods) dir path")
+	} else {
+		if absPodfileLockPth, err := filepath.Abs(podfileLockPth); err != nil {
+			log.Warnf("Cache collection skipped: failed to determine (Podfile.lock) path")
+		} else {
+			podsCache.IncludePath(fmt.Sprintf("%s -> %s", absPodsDirPth, absPodfileLockPth))
+
+			if err := podsCache.Commit(); err != nil {
+				log.Warnf("Cache collection skipped: failed to commit cache paths.")
+			}
+		}
 	}
 
 	if useCocoapodsVersion == "" {
