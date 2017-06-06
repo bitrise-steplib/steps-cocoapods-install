@@ -335,7 +335,7 @@ func main() {
 
 		log.Donef("$ %s", command.PrintableCommandArgs(false, bundleInstallCmd))
 
-		cmd, err := rubycommand.NewFromSlice(bundleInstallCmd...)
+		cmd, err := rubycommand.NewFromSlice(bundleInstallCmd)
 		if err != nil {
 			failf("Failed to create command model, error: %s", err)
 		}
@@ -395,7 +395,7 @@ func main() {
 
 	log.Donef("$ %s", command.PrintableCommandArgs(false, podInstallCmdSlice))
 
-	cmd, err = rubycommand.NewFromSlice(podInstallCmdSlice...)
+	cmd, err = rubycommand.NewFromSlice(podInstallCmdSlice)
 	if err != nil {
 		failf("Failed to create command model, error: %s", err)
 	}
@@ -415,7 +415,7 @@ func main() {
 
 		log.Donef("$ %s", command.PrintableCommandArgs(false, podRepoUpdateCmdSlice))
 
-		cmd, err = rubycommand.NewFromSlice(podRepoUpdateCmdSlice...)
+		cmd, err = rubycommand.NewFromSlice(podRepoUpdateCmdSlice)
 		if err != nil {
 			failf("Failed to create command model, error: %s", err)
 		}
@@ -440,7 +440,7 @@ func main() {
 
 		log.Donef("$ %s", command.PrintableCommandArgs(false, podInstallCmdSlice))
 
-		cmd, err = rubycommand.NewFromSlice(podInstallCmdSlice...)
+		cmd, err = rubycommand.NewFromSlice(podInstallCmdSlice)
 		if err != nil {
 			failf("Failed to create command model, error: %s", err)
 		}
