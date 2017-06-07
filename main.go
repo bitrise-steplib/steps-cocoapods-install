@@ -14,6 +14,7 @@ import (
 	"github.com/bitrise-io/go-utils/fileutil"
 	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-io/go-utils/pathutil"
+	"github.com/bitrise-tools/go-steputils/cache"
 )
 
 // ConfigsModel ...
@@ -256,9 +257,12 @@ func main() {
 
 	// Check Podfile.lock for CocoaPods version
 	podfileLockPth := filepath.Join(podfileDir, "Podfile.lock")
-	if exist, err := pathutil.IsPathExists(podfileLockPth); err != nil {
+	isPodfileLockExists, err := pathutil.IsPathExists(podfileLockPth)
+	if err != nil {
 		failf("Failed to check Podfile.lock at: %s, error: %s", podfileLockPth, err)
-	} else if exist {
+	}
+
+	if isPodfileLockExists {
 		// Podfile.lock exist scearch for version
 		log.Printf("Found Podfile.lock: %s", podfileLockPth)
 
@@ -315,7 +319,7 @@ func main() {
 
 		log.Donef("$ %s", command.PrintableCommandArgs(false, bundleInstallCmd))
 
-		cmd, err := rubycommand.NewFromSlice(bundleInstallCmd...)
+		cmd, err := rubycommand.NewFromSlice(bundleInstallCmd)
 		if err != nil {
 			failf("Failed to create command model, error: %s", err)
 		}
@@ -375,7 +379,7 @@ func main() {
 
 	log.Donef("$ %s", command.PrintableCommandArgs(false, podInstallCmdSlice))
 
-	cmd, err = rubycommand.NewFromSlice(podInstallCmdSlice...)
+	cmd, err = rubycommand.NewFromSlice(podInstallCmdSlice)
 	if err != nil {
 		failf("Failed to create command model, error: %s", err)
 	}
@@ -395,7 +399,7 @@ func main() {
 
 		log.Donef("$ %s", command.PrintableCommandArgs(false, podRepoUpdateCmdSlice))
 
-		cmd, err = rubycommand.NewFromSlice(podRepoUpdateCmdSlice...)
+		cmd, err = rubycommand.NewFromSlice(podRepoUpdateCmdSlice)
 		if err != nil {
 			failf("Failed to create command model, error: %s", err)
 		}
@@ -420,7 +424,7 @@ func main() {
 
 		log.Donef("$ %s", command.PrintableCommandArgs(false, podInstallCmdSlice))
 
-		cmd, err = rubycommand.NewFromSlice(podInstallCmdSlice...)
+		cmd, err = rubycommand.NewFromSlice(podInstallCmdSlice)
 		if err != nil {
 			failf("Failed to create command model, error: %s", err)
 		}
@@ -430,6 +434,19 @@ func main() {
 
 		if err := cmd.Run(); err != nil {
 			failf("Command failed, error: %s", err)
+		}
+	}
+
+	// Collecting caches
+	if isPodfileLockExists {
+		fmt.Println()
+		log.Infof("Collecting Pod cache paths...")
+
+		podsCache := cache.New()
+		podsCache.IncludePath(fmt.Sprintf("%s -> %s", filepath.Join(podfileDir, "Pods"), podfileLockPth))
+
+		if err := podsCache.Commit(); err != nil {
+			log.Warnf("Cache collection skipped: failed to commit cache paths.")
 		}
 	}
 

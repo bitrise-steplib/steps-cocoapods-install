@@ -20,7 +20,7 @@ func runRubyScriptForOutput(scriptContent, gemfileContent, inDir string, withEnv
 	}
 	defer func() {
 		if err := os.RemoveAll(tmpDir); err != nil {
-			log.Errorf("Failed to remove tmp dir (%s), error: %s", tmpDir, err)
+			log.Errorft("Failed to remove tmp dir (%s), error: %s", tmpDir, err)
 		}
 	}()
 

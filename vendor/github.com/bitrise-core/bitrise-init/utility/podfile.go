@@ -18,11 +18,17 @@ const podfileBase = "Podfile"
 // AllowPodfileBaseFilter ...
 var AllowPodfileBaseFilter = BaseFilter(podfileBase, true)
 
-func getTargetDefinitionProjectMap(podfilePth string) (map[string]string, error) {
-	gemfileContent := `source 'https://rubygems.org'
-gem 'cocoapods-core'
+func getTargetDefinitionProjectMap(podfilePth, cocoapodsVersion string) (map[string]string, error) {
+	gemfileCocoapodsVersion := ""
+	if cocoapodsVersion != "" {
+		gemfileCocoapodsVersion = fmt.Sprintf(`, '%s'`, cocoapodsVersion)
+	}
+
+	gemfileContent := fmt.Sprintf(`source 'https://rubygems.org'
+gem 'cocoapods-core'%s
 gem 'json'
-`
+`, gemfileCocoapodsVersion)
+
 	// returns target - project map, if xcodeproj defined in the Podfile
 	// return empty string if no xcodeproj defined in the Podfile
 	rubyScriptContent := `require 'cocoapods-core'
@@ -47,12 +53,17 @@ rescue => e
 end
 `
 
-	envs := []string{fmt.Sprintf("PODFILE_PATH=%s", podfilePth)}
-	podfileDir := filepath.Dir(podfilePth)
+	absPodfilePth, err := filepath.Abs(podfilePth)
+	if err != nil {
+		return map[string]string{}, fmt.Errorf("failed to expand path (%s), error: %s", podfilePth, err)
+	}
+
+	envs := []string{fmt.Sprintf("PODFILE_PATH=%s", absPodfilePth)}
+	podfileDir := filepath.Dir(absPodfilePth)
 
 	out, err := runRubyScriptForOutput(rubyScriptContent, gemfileContent, podfileDir, envs)
 	if err != nil {
-		return map[string]string{}, err
+		return map[string]string{}, fmt.Errorf("ruby script failed, error: %s", err)
 	}
 
 	if out == "" {
@@ -66,20 +77,20 @@ end
 
 	var targetDefinitionOutput targetDefinitionOutputModel
 	if err := json.Unmarshal([]byte(out), &targetDefinitionOutput); err != nil {
-		return map[string]string{}, err
+		return map[string]string{}, fmt.Errorf("failed to parse target definition output, error: %s", err)
 	}
 
 	if targetDefinitionOutput.Error != "" {
-		return map[string]string{}, errors.New(targetDefinitionOutput.Error)
+		return map[string]string{}, fmt.Errorf("failed to read target defintion map, error: %s", targetDefinitionOutput.Error)
 	}
 
 	return targetDefinitionOutput.Data, nil
 }
 
-func getUserDefinedProjectRelavtivePath(podfilePth string) (string, error) {
-	targetProjectMap, err := getTargetDefinitionProjectMap(podfilePth)
+func getUserDefinedProjectRelavtivePath(podfilePth, cocoapodsVersion string) (string, error) {
+	targetProjectMap, err := getTargetDefinitionProjectMap(podfilePth, cocoapodsVersion)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to get target definition map, error: %s", err)
 	}
 
 	for target, project := range targetProjectMap {
@@ -90,15 +101,20 @@ func getUserDefinedProjectRelavtivePath(podfilePth string) (string, error) {
 	return "", nil
 }
 
-func getUserDefinedWorkspaceRelativePath(podfilePth string) (string, error) {
-	getWorkspacePathGemfileContent := `source 'https://rubygems.org'
-gem 'cocoapods-core'
+func getUserDefinedWorkspaceRelativePath(podfilePth, cocoapodsVersion string) (string, error) {
+	gemfileCocoapodsVersion := ""
+	if cocoapodsVersion != "" {
+		gemfileCocoapodsVersion = fmt.Sprintf(`, '%s'`, cocoapodsVersion)
+	}
+
+	gemfileContent := fmt.Sprintf(`source 'https://rubygems.org'
+gem 'cocoapods-core'%s
 gem 'json'
-`
+`, gemfileCocoapodsVersion)
 
 	// returns WORKSPACE_NAME.xcworkspace if user defined a workspace name
 	// returns empty struct {}, if no user defined workspace name exists in Podfile
-	getWorkspacePathRubyScriptContent := `require 'cocoapods-core'
+	rubyScriptContent := `require 'cocoapods-core'
 require 'json'
 
 begin
@@ -110,13 +126,17 @@ rescue => e
 	puts "#{{ :error => e.to_s }.to_json}"
 end
 `
-
-	envs := []string{fmt.Sprintf("PODFILE_PATH=%s", podfilePth)}
-	podfileDir := filepath.Dir(podfilePth)
-
-	out, err := runRubyScriptForOutput(getWorkspacePathRubyScriptContent, getWorkspacePathGemfileContent, podfileDir, envs)
+	absPodfilePth, err := filepath.Abs(podfilePth)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to expand path (%s), error: %s", podfilePth, err)
+	}
+
+	envs := []string{fmt.Sprintf("PODFILE_PATH=%s", absPodfilePth)}
+	podfileDir := filepath.Dir(absPodfilePth)
+
+	out, err := runRubyScriptForOutput(rubyScriptContent, gemfileContent, podfileDir, envs)
+	if err != nil {
+		return "", fmt.Errorf("ruby script failed, error: %s", err)
 	}
 
 	if out == "" {
@@ -130,11 +150,11 @@ end
 
 	var workspacePathOutput workspacePathOutputModel
 	if err := json.Unmarshal([]byte(out), &workspacePathOutput); err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to parse workspace path output, error: %s", err)
 	}
 
 	if workspacePathOutput.Error != "" {
-		return "", errors.New(workspacePathOutput.Error)
+		return "", fmt.Errorf("failed to readworkspace path, error: %s", workspacePathOutput.Error)
 	}
 
 	return workspacePathOutput.Data, nil
@@ -146,10 +166,34 @@ end
 // Root 'xcodeproj/project' property will be mapped to the default cocoapods target (Pods).
 // If workspace property defined in the Podfile, it will override the workspace name.
 func GetWorkspaceProjectMap(podfilePth string, projects []string) (map[string]string, error) {
+	podfileDir := filepath.Dir(podfilePth)
+
+	cocoapodsVersion := ""
+
+	podfileLockPth := filepath.Join(podfileDir, "Podfile.lock")
+	if exist, err := pathutil.IsPathExists(podfileLockPth); err != nil {
+		return map[string]string{}, fmt.Errorf("failed to check if Podfile.lock exist, error: %s", err)
+	} else if !exist {
+		podfileLockPth = filepath.Join(podfileDir, "podfile.lock")
+		if exist, err := pathutil.IsPathExists(podfileLockPth); err != nil {
+			return map[string]string{}, fmt.Errorf("failed to check if podfile.lock exist, error: %s", err)
+		} else if !exist {
+			podfileLockPth = ""
+		}
+	}
+
+	if podfileLockPth != "" {
+		version, err := GemVersionFromGemfileLock("cocoapods", podfileLockPth)
+		if err != nil {
+			return map[string]string{}, fmt.Errorf("failed to read cocoapods version from %s, error: %s", podfileLockPth, err)
+		}
+		cocoapodsVersion = version
+	}
+
 	// fix podfile quotation
 	podfileContent, err := fileutil.ReadStringFromFile(podfilePth)
 	if err != nil {
-		return map[string]string{}, err
+		return map[string]string{}, fmt.Errorf("failed to read podfile (%s), error: %s", podfilePth, err)
 	}
 
 	podfileContent = strings.Replace(podfileContent, `‘`, `'`, -1)
@@ -158,21 +202,19 @@ func GetWorkspaceProjectMap(podfilePth string, projects []string) (map[string]st
 	podfileContent = strings.Replace(podfileContent, `”`, `"`, -1)
 
 	if err := fileutil.WriteStringToFile(podfilePth, podfileContent); err != nil {
-		return map[string]string{}, err
+		return map[string]string{}, fmt.Errorf("failed to apply Podfile quotation fix, error: %s", err)
 	}
 	// ----
 
-	podfileDir := filepath.Dir(podfilePth)
-
-	projectRelPth, err := getUserDefinedProjectRelavtivePath(podfilePth)
+	projectRelPth, err := getUserDefinedProjectRelavtivePath(podfilePth, cocoapodsVersion)
 	if err != nil {
-		return map[string]string{}, err
+		return map[string]string{}, fmt.Errorf("failed to get user defined project path, error: %s", err)
 	}
 
 	if projectRelPth == "" {
 		projects, err := FilterPaths(projects, InDirectoryFilter(podfileDir, true))
 		if err != nil {
-			return map[string]string{}, err
+			return map[string]string{}, fmt.Errorf("failed to filter projects, error: %s", err)
 		}
 
 		if len(projects) == 0 {
@@ -186,14 +228,14 @@ func GetWorkspaceProjectMap(podfilePth string, projects []string) (map[string]st
 	projectPth := filepath.Join(podfileDir, projectRelPth)
 
 	if exist, err := pathutil.IsPathExists(projectPth); err != nil {
-		return map[string]string{}, err
+		return map[string]string{}, fmt.Errorf("failed to check if path (%s) exists, error: %s", projectPth, err)
 	} else if !exist {
 		return map[string]string{}, fmt.Errorf("project not found at: %s", projectPth)
 	}
 
-	workspaceRelPth, err := getUserDefinedWorkspaceRelativePath(podfilePth)
+	workspaceRelPth, err := getUserDefinedWorkspaceRelativePath(podfilePth, cocoapodsVersion)
 	if err != nil {
-		return map[string]string{}, err
+		return map[string]string{}, fmt.Errorf("failed to get user defined workspace path, error: %s", err)
 	}
 
 	if workspaceRelPth == "" {

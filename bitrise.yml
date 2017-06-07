@@ -95,6 +95,16 @@ workflows:
         - podfile_path: $PODFILE_PTH
         - verbose: false
 
+  print_cache_paths:
+    steps:
+    - script:
+        title: Export go files to test
+        inputs:
+        - content: |-
+            #!/bin/bash
+            set -e
+            echo $BITRISE_CACHE_INCLUDE_PATHS
+
   test:
     before_run:
     - go-tests
@@ -105,6 +115,7 @@ workflows:
     - test_podfile_at_root
     - test_without_gemfile_with_podfile_path
     - test_without_verbose
+    - print_cache_paths
 
   go-tests:
     before_run:
