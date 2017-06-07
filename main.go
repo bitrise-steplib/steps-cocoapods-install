@@ -257,34 +257,18 @@ func main() {
 
 	// Check Podfile.lock for CocoaPods version
 	podfileLockPth := filepath.Join(podfileDir, "Podfile.lock")
-	if exist, err := pathutil.IsPathExists(podfileLockPth); err != nil {
+	isPodfileLockExists, err := pathutil.IsPathExists(podfileLockPth)
+	if err != nil {
 		failf("Failed to check Podfile.lock at: %s, error: %s", podfileLockPth, err)
-	} else if exist {
+	}
+
+	if isPodfileLockExists {
 		// Podfile.lock exist scearch for version
 		log.Printf("Found Podfile.lock: %s", podfileLockPth)
 
 		version, err := cocoapodsVersionFromPodfileLock(podfileLockPth)
 		if err != nil {
 			failf("Failed to determine CocoaPods version, error: %s", err)
-		}
-
-		// Collecting caches
-		fmt.Println()
-		log.Infof("Collecting Pod cache paths...")
-
-		podsCache := cache.New()
-		if absPodsDirPth, err := filepath.Abs(filepath.Join(podfileDir, "Pods")); err != nil {
-			log.Warnf("Cache collection skipped: failed to determine (Pods) dir path")
-		} else {
-			if absPodfileLockPth, err := filepath.Abs(podfileLockPth); err != nil {
-				log.Warnf("Cache collection skipped: failed to determine (Podfile.lock) path")
-			} else {
-				podsCache.IncludePath(fmt.Sprintf("%s -> %s", absPodsDirPth, absPodfileLockPth))
-
-				if err := podsCache.Commit(); err != nil {
-					log.Warnf("Cache collection skipped: failed to commit cache paths.")
-				}
-			}
 		}
 
 		if version != "" {
@@ -450,6 +434,27 @@ func main() {
 
 		if err := cmd.Run(); err != nil {
 			failf("Command failed, error: %s", err)
+		}
+	}
+
+	// Collecting caches
+	if isPodfileLockExists {
+		fmt.Println()
+		log.Infof("Collecting Pod cache paths...")
+
+		podsCache := cache.New()
+		if absPodsDirPth, err := filepath.Abs(filepath.Join(podfileDir, "Pods")); err != nil {
+			log.Warnf("Cache collection skipped: failed to determine (Pods) dir path")
+		} else {
+			if absPodfileLockPth, err := filepath.Abs(podfileLockPth); err != nil {
+				log.Warnf("Cache collection skipped: failed to determine (Podfile.lock) path")
+			} else {
+				podsCache.IncludePath(fmt.Sprintf("%s -> %s", absPodsDirPth, absPodfileLockPth))
+
+				if err := podsCache.Commit(); err != nil {
+					log.Warnf("Cache collection skipped: failed to commit cache paths.")
+				}
+			}
 		}
 	}
 
