@@ -1,6 +1,11 @@
-## Changelog (Current version: 1.6.1)
+## Changelog (Current version: 1.7.0)
 
 -----------------
+
+### 1.7.0 (2017 Jun 07)
+
+* [6514b5f] Prepare for 1.7.0
+* [b7ee105] Added built-in cache (#30)
 
 ### 1.6.1 (2017 Jan 16)
 
@@ -140,4 +145,4 @@
 
 -----------------
 
-Updated: 2017 Jan 16
+Updated: 2017 Jun 07
