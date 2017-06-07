@@ -443,18 +443,10 @@ func main() {
 		log.Infof("Collecting Pod cache paths...")
 
 		podsCache := cache.New()
-		if absPodsDirPth, err := filepath.Abs(filepath.Join(podfileDir, "Pods")); err != nil {
-			log.Warnf("Cache collection skipped: failed to determine (Pods) dir path")
-		} else {
-			if absPodfileLockPth, err := filepath.Abs(podfileLockPth); err != nil {
-				log.Warnf("Cache collection skipped: failed to determine (Podfile.lock) path")
-			} else {
-				podsCache.IncludePath(fmt.Sprintf("%s -> %s", absPodsDirPth, absPodfileLockPth))
+		podsCache.IncludePath(fmt.Sprintf("%s -> %s", filepath.Join(podfileDir, "Pods"), podfileLockPth))
 
-				if err := podsCache.Commit(); err != nil {
-					log.Warnf("Cache collection skipped: failed to commit cache paths.")
-				}
-			}
+		if err := podsCache.Commit(); err != nil {
+			log.Warnf("Cache collection skipped: failed to commit cache paths.")
 		}
 	}
 
