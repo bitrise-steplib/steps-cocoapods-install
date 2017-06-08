@@ -1,6 +1,10 @@
-## Changelog (Current version: 1.7.0)
+## Changelog (Current version: 1.7.1)
 
 -----------------
+
+### 1.7.1 (2017 Jun 08)
+
+* [66dee16] Prepare for 1.7.1
 
 ### 1.7.0 (2017 Jun 07)
 
@@ -145,4 +149,4 @@
 
 -----------------
 
-Updated: 2017 Jun 07
+Updated: 2017 Jun 08
