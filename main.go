@@ -441,7 +441,7 @@ func main() {
 	}
 
 	// Collecting caches
-	if config.IsCacheDisabled != "true" && isPodfileLockExists {
+	if configs.IsCacheDisabled != "true" && isPodfileLockExists {
 		fmt.Println()
 		log.Infof("Collecting Pod cache paths...")
 
