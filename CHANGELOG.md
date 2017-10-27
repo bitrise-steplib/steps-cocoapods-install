@@ -1,6 +1,11 @@
-## Changelog (Current version: 1.7.1)
+## Changelog (Current version: 1.7.2)
 
 -----------------
+
+### 1.7.2 (2017 Oct 27)
+
+* [f7236e7] Prepare for 1.7.2
+* [bd75d0d] Optional cache (#31)
 
 ### 1.7.1 (2017 Jun 08)
 
@@ -149,4 +154,4 @@
 
 -----------------
 
-Updated: 2017 Jun 08
+Updated: 2017 Oct 27
