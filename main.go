@@ -24,6 +24,7 @@ type ConfigsModel struct {
 	IsUpdateCocoapods       string
 	InstallCocoapodsVersion string
 	Verbose                 string
+        IsCacheDisabled         string
 }
 
 func createConfigsModelFromEnvs() ConfigsModel {
@@ -33,6 +34,7 @@ func createConfigsModelFromEnvs() ConfigsModel {
 		IsUpdateCocoapods:       os.Getenv("is_update_cocoapods"),
 		InstallCocoapodsVersion: os.Getenv("install_cocoapods_version"),
 		Verbose:                 os.Getenv("verbose"),
+		IsCacheDisabled:         os.Getenv("is_cache_disabled"),
 	}
 }
 
@@ -43,6 +45,7 @@ func (configs ConfigsModel) print() {
 	log.Printf("- IsUpdateCocoapods: %s", configs.IsUpdateCocoapods)
 	log.Printf("- InstallCocoapodsVersion: %s", configs.InstallCocoapodsVersion)
 	log.Printf("- Verbose: %s", configs.Verbose)
+	log.Printf("- IsCacheDisabled: %s", configs.IsCacheDisabled)
 }
 
 func (configs ConfigsModel) validate() error {
@@ -438,7 +441,7 @@ func main() {
 	}
 
 	// Collecting caches
-	if isPodfileLockExists {
+	if configs.IsCacheDisabled != "true" && isPodfileLockExists {
 		fmt.Println()
 		log.Infof("Collecting Pod cache paths...")
 
