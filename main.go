@@ -24,7 +24,7 @@ type ConfigsModel struct {
 	IsUpdateCocoapods       string
 	InstallCocoapodsVersion string
 	Verbose                 string
-        IsCacheDisabled         string
+	IsCacheDisabled         string
 }
 
 func createConfigsModelFromEnvs() ConfigsModel {
