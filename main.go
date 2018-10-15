@@ -8,6 +8,8 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/bitrise-io/go-utils/errorutil"
+
 	"github.com/bitrise-core/bitrise-init/utility"
 	"github.com/bitrise-io/go-utils/command"
 	"github.com/bitrise-io/go-utils/command/rubycommand"
@@ -24,7 +26,7 @@ type ConfigsModel struct {
 	IsUpdateCocoapods       string
 	InstallCocoapodsVersion string
 	Verbose                 string
-        IsCacheDisabled         string
+	IsCacheDisabled         string
 }
 
 func createConfigsModelFromEnvs() ConfigsModel {
@@ -329,8 +331,12 @@ func main() {
 
 		cmd.SetDir(podfileDir)
 
-		if err := cmd.Run(); err != nil {
-			failf("Command failed, error: %s", err)
+		if out, err := cmd.RunAndReturnTrimmedCombinedOutput(); err != nil {
+			if errorutil.IsExitStatusError(err) {
+				failf("Command failed: %s", out)
+			} else {
+				failf("Command failed: %s", err)
+			}
 		}
 	} else if useCocoapodsVersion != "" {
 		log.Printf("Checking cocoapods %s gem", useCocoapodsVersion)
