@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -17,6 +16,7 @@ import (
 	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-io/go-utils/pathutil"
 	"github.com/bitrise-tools/go-steputils/cache"
+	"github.com/pkg/errors"
 )
 
 // ConfigsModel ...
@@ -333,10 +333,7 @@ func main() {
 
 		if out, err := cmd.RunAndReturnTrimmedCombinedOutput(); err != nil {
 			if errorutil.IsExitStatusError(err) {
-				failf("Command failed: %s", out)
-			} else {
-				failf("Command failed: %s", err)
-			}
+				failf("Command failed: %s", errors.Wrap(err, out))
 		}
 	} else if useCocoapodsVersion != "" {
 		log.Printf("Checking cocoapods %s gem", useCocoapodsVersion)

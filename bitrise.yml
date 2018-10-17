@@ -1,4 +1,4 @@
-format_version: 1.3.1
+format_version: 6
 default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
 
 app:
@@ -112,7 +112,6 @@ workflows:
     - test_with_no_podfile_lock
     - test_with_gemfile
     - test_without_gemfile
-    # - test_podfile_at_root
     - test_without_gemfile_with_podfile_path
     - test_without_verbose
     - print_cache_paths
