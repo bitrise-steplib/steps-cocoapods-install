@@ -112,7 +112,7 @@ workflows:
     - test_with_no_podfile_lock
     - test_with_gemfile
     - test_without_gemfile
-    - test_podfile_at_root
+    # - test_podfile_at_root
     - test_without_gemfile_with_podfile_path
     - test_without_verbose
     - print_cache_paths
