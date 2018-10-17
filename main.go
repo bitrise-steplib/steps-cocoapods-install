@@ -7,8 +7,6 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/bitrise-io/go-utils/errorutil"
-
 	"github.com/bitrise-core/bitrise-init/utility"
 	"github.com/bitrise-io/go-utils/command"
 	"github.com/bitrise-io/go-utils/command/rubycommand"
@@ -332,8 +330,7 @@ func main() {
 		cmd.SetDir(podfileDir)
 
 		if out, err := cmd.RunAndReturnTrimmedCombinedOutput(); err != nil {
-			if errorutil.IsExitStatusError(err) {
-				failf("Command failed: %s", errors.Wrap(err, out))
+			failf("Command failed: %s", errors.Wrap(err, out))
 		}
 	} else if useCocoapodsVersion != "" {
 		log.Printf("Checking cocoapods %s gem", useCocoapodsVersion)
