@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/bitrise-core/bitrise-init/scanners/ios"
 	"github.com/bitrise-core/bitrise-init/utility"
 	"github.com/bitrise-io/go-utils/command"
 	"github.com/bitrise-io/go-utils/command/rubycommand"
@@ -86,11 +87,11 @@ func failf(format string, v ...interface{}) {
 
 func findMostRootPodfileInFileList(fileList []string) (string, error) {
 	podfiles, err := utility.FilterPaths(fileList,
-		utility.AllowPodfileBaseFilter,
-		utility.ForbidGitDirComponentFilter,
-		utility.ForbidPodsDirComponentFilter,
-		utility.ForbidCarthageDirComponentFilter,
-		utility.ForbidFramworkComponentWithExtensionFilter)
+		ios.AllowPodfileBaseFilter,
+		ios.ForbidCarthageDirComponentFilter,
+		ios.ForbidPodsDirComponentFilter,
+		ios.ForbidGitDirComponentFilter,
+		ios.ForbidFramworkComponentWithExtensionFilter)
 	if err != nil {
 		return "", err
 	}

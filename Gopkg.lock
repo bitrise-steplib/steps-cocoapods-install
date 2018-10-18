@@ -2,28 +2,61 @@
 
 
 [[projects]]
-  digest = "1:431e5aa313ceb5d80e228df36b4ce4ea8acf1f8f4013f683e3de8d40ee6adb9d"
+  digest = "1:dd83c0df7db55fd31e34576d078cdd115616406bb05f007f4b9f0d8f41a3c472"
   name = "github.com/bitrise-core/bitrise-init"
-  packages = ["utility"]
+  packages = [
+    "models",
+    "scanners/ios",
+    "scanners/xamarin",
+    "steps",
+    "utility",
+  ]
   pruneopts = "UT"
   revision = "73e7d83dc5d0802f781fc8672efc02ce98d09def"
   version = "1.6.6"
 
 [[projects]]
   branch = "master"
-  digest = "1:1cc360b7add6c3a79b43dd46d2f70e5aceadc88e79c4a221289cc378abfd08aa"
+  digest = "1:eb8e7b80791f678a90dc8f5bd6aa320304a2c8c9a8206fb1190211c836feac84"
+  name = "github.com/bitrise-io/bitrise"
+  packages = ["models"]
+  pruneopts = "UT"
+  revision = "9064eec019a63dcc77d369fea2c06d7fe4ff54cb"
+
+[[projects]]
+  branch = "master"
+  digest = "1:832f001e8cbed5bdfcb1b4d73ffae6a88a872e1577a539e6c91563934603ad64"
+  name = "github.com/bitrise-io/envman"
+  packages = ["models"]
+  pruneopts = "UT"
+  revision = "5470ead252e98a98189862995fef55faa0236fce"
+
+[[projects]]
+  branch = "master"
+  digest = "1:506aab8e7c907058fce3df940cf4a580da2fc172a3fb8bcd0ef4bb082356a185"
   name = "github.com/bitrise-io/go-utils"
   packages = [
     "colorstring",
     "command",
     "command/rubycommand",
+    "command/rubyscript",
     "errorutil",
     "fileutil",
     "log",
+    "parseutil",
     "pathutil",
+    "pointers",
   ]
   pruneopts = "UT"
   revision = "d1de0dbcb811588e61362aff67bb700b93c13c17"
+
+[[projects]]
+  branch = "master"
+  digest = "1:34e5041861da39ff37f982c3cdfd46c0b0b46836d136151e895be7bf8fb50d86"
+  name = "github.com/bitrise-io/stepman"
+  packages = ["models"]
+  pruneopts = "UT"
+  revision = "9a765f7d511cfaea640739e2cb26cde47ceb7481"
 
 [[projects]]
   branch = "master"
@@ -35,6 +68,17 @@
   ]
   pruneopts = "UT"
   revision = "d4d9e08cc4347e8784bb18419fcdceb932e17019"
+
+[[projects]]
+  branch = "master"
+  digest = "1:4d241e8a9f0ca68694467f3b2904a57d16b4826a685e1a67b9434ae2331e08e0"
+  name = "github.com/bitrise-tools/go-xcode"
+  packages = [
+    "plistutil",
+    "xcodeproj",
+  ]
+  pruneopts = "UT"
+  revision = "82aa5ad881aad17afd7b73af03dabc4ef89b8a53"
 
 [[projects]]
   digest = "1:ffe9824d294da03b391f44e1ae8281281b4afc1bdaa9588c9097785e3af10cec"
@@ -61,6 +105,14 @@
   version = "v1.0.0"
 
 [[projects]]
+  branch = "master"
+  digest = "1:5b92d232e81c3e8eec282c92dcaa2e0e1ad3c23157be19a01b3e33f7e6e8d137"
+  name = "github.com/ryanuber/go-glob"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "256dc444b735e061061cf46c809487313d5b0065"
+
+[[projects]]
   digest = "1:c40d65817cdd41fac9aa7af8bed56927bb2d6d47e4fea566a74880f5c2b1c41e"
   name = "github.com/stretchr/testify"
   packages = [
@@ -71,10 +123,27 @@
   revision = "f35b8ab0b5a2cef36673838d662e249dd9c94686"
   version = "v1.2.2"
 
+[[projects]]
+  branch = "v2"
+  digest = "1:342378ac4dcb378a5448dd723f0784ae519383532f5e70ade24132c4c8693202"
+  name = "gopkg.in/yaml.v2"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "5420a8b6744d3b0345ab293f6fcba19c978f1183"
+
+[[projects]]
+  branch = "master"
+  digest = "1:cefe687c5b27365f87dff523c85266408415c62a2915cc6148e9c26861274984"
+  name = "howett.net/plist"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "500bd5b9081b5957ac10389f86e069869f00c348"
+
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/bitrise-core/bitrise-init/scanners/ios",
     "github.com/bitrise-core/bitrise-init/utility",
     "github.com/bitrise-io/go-utils/command",
     "github.com/bitrise-io/go-utils/command/rubycommand",
