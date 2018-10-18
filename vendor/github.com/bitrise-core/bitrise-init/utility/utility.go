@@ -11,41 +11,6 @@ import (
 	"github.com/bitrise-io/go-utils/pathutil"
 )
 
-/*
-// RelCordovaWorkDir ...
-func RelCordovaWorkDir(baseDir, cordovaConfigPth string) (string, error) {
-	absBaseDir, err := pathutil.AbsPath(baseDir)
-	if err != nil {
-		return "", err
-	}
-
-	if strings.HasPrefix(absBaseDir, "/private/var") {
-		absBaseDir = strings.TrimPrefix(absBaseDir, "/private")
-	}
-
-	absCordovaConfigPth, err := pathutil.AbsPath(cordovaConfigPth)
-	if err != nil {
-		return "", err
-	}
-
-	if strings.HasPrefix(absCordovaConfigPth, "/private/var") {
-		absCordovaConfigPth = strings.TrimPrefix(absCordovaConfigPth, "/private")
-	}
-
-	absCordovaWorkDir := filepath.Dir(absCordovaConfigPth)
-	if absBaseDir == absCordovaWorkDir {
-		return "", nil
-	}
-
-	cordovaWorkdir, err := filepath.Rel(absBaseDir, absCordovaWorkDir)
-	if err != nil {
-		return "", err
-	}
-
-	return cordovaWorkdir, nil
-}
-*/
-
 // RelPath ...
 func RelPath(basePth, pth string) (string, error) {
 	absBasePth, err := pathutil.AbsPath(basePth)
@@ -69,12 +34,6 @@ func RelPath(basePth, pth string) (string, error) {
 	return filepath.Rel(absBasePth, absPth)
 }
 
-// CaseInsensitiveContains ...
-func CaseInsensitiveContains(s, substr string) bool {
-	s, substr = strings.ToUpper(s), strings.ToUpper(substr)
-	return strings.Contains(s, substr)
-}
-
 // ListPathInDirSortedByComponents ...
 func ListPathInDirSortedByComponents(searchDir string, relPath bool) ([]string, error) {
 	searchDir, err := filepath.Abs(searchDir)
@@ -84,7 +43,11 @@ func ListPathInDirSortedByComponents(searchDir string, relPath bool) ([]string, 
 
 	fileList := []string{}
 
-	if err := filepath.Walk(searchDir, func(path string, f os.FileInfo, err error) error {
+	if err := filepath.Walk(searchDir, func(path string, _ os.FileInfo, walkErr error) error {
+		if walkErr != nil {
+			return walkErr
+		}
+
 		if relPath {
 			rel, err := filepath.Rel(searchDir, path)
 			if err != nil {
@@ -125,7 +88,7 @@ func FilterPaths(fileList []string, filters ...FilterFunc) ([]string, error) {
 }
 
 // FilterFunc ...
-type FilterFunc func(pth string) (bool, error)
+type FilterFunc func(string) (bool, error)
 
 // BaseFilter ...
 func BaseFilter(base string, allowed bool) FilterFunc {

@@ -1,13 +1,13 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
 
+	"github.com/bitrise-core/bitrise-init/scanners/ios"
 	"github.com/bitrise-core/bitrise-init/utility"
 	"github.com/bitrise-io/go-utils/command"
 	"github.com/bitrise-io/go-utils/command/rubycommand"
@@ -15,6 +15,7 @@ import (
 	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-io/go-utils/pathutil"
 	"github.com/bitrise-tools/go-steputils/cache"
+	"github.com/pkg/errors"
 )
 
 // ConfigsModel ...
@@ -24,7 +25,7 @@ type ConfigsModel struct {
 	IsUpdateCocoapods       string
 	InstallCocoapodsVersion string
 	Verbose                 string
-        IsCacheDisabled         string
+	IsCacheDisabled         string
 }
 
 func createConfigsModelFromEnvs() ConfigsModel {
@@ -86,11 +87,11 @@ func failf(format string, v ...interface{}) {
 
 func findMostRootPodfileInFileList(fileList []string) (string, error) {
 	podfiles, err := utility.FilterPaths(fileList,
-		utility.AllowPodfileBaseFilter,
-		utility.ForbidGitDirComponentFilter,
-		utility.ForbidPodsDirComponentFilter,
-		utility.ForbidCarthageDirComponentFilter,
-		utility.ForbidFramworkComponentWithExtensionFilter)
+		ios.AllowPodfileBaseFilter,
+		ios.ForbidCarthageDirComponentFilter,
+		ios.ForbidPodsDirComponentFilter,
+		ios.ForbidGitDirComponentFilter,
+		ios.ForbidFramworkComponentWithExtensionFilter)
 	if err != nil {
 		return "", err
 	}
@@ -329,8 +330,8 @@ func main() {
 
 		cmd.SetDir(podfileDir)
 
-		if err := cmd.Run(); err != nil {
-			failf("Command failed, error: %s", err)
+		if out, err := cmd.RunAndReturnTrimmedCombinedOutput(); err != nil {
+			failf("Command failed: %s", errors.Wrap(err, out))
 		}
 	} else if useCocoapodsVersion != "" {
 		log.Printf("Checking cocoapods %s gem", useCocoapodsVersion)
