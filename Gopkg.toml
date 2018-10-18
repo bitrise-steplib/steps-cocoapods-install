@@ -1,6 +1,6 @@
 [[constraint]]
   name = "github.com/pkg/errors"
-  version = "master"
+  branch = "master"
 
 [prune]
   go-tests = true

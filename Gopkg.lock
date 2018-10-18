@@ -2,14 +2,16 @@
 
 
 [[projects]]
-  digest = "1:39dff434cc9ba98fc6d5feab8fc2d912c13b6b518cf96989041a144affbce475"
+  digest = "1:431e5aa313ceb5d80e228df36b4ce4ea8acf1f8f4013f683e3de8d40ee6adb9d"
   name = "github.com/bitrise-core/bitrise-init"
   packages = ["utility"]
   pruneopts = "UT"
-  revision = "cc83bdca44c28c53d76e26fa555650bdbc29d05a"
+  revision = "73e7d83dc5d0802f781fc8672efc02ce98d09def"
+  version = "1.6.6"
 
 [[projects]]
-  digest = "1:ada25c3679f9f92498cb6be3f2b5405457bee5cf91ac210d944bde0ba78e3038"
+  branch = "master"
+  digest = "1:1cc360b7add6c3a79b43dd46d2f70e5aceadc88e79c4a221289cc378abfd08aa"
   name = "github.com/bitrise-io/go-utils"
   packages = [
     "colorstring",
@@ -21,40 +23,34 @@
     "pathutil",
   ]
   pruneopts = "UT"
-  revision = "9c30a7825aa1064e423a0f1dba751fec990b07be"
+  revision = "d1de0dbcb811588e61362aff67bb700b93c13c17"
 
 [[projects]]
-  digest = "1:2509fdea4073de40570a8a6a4639335fa1269516bb5348d311cb65ee61e93ee6"
+  branch = "master"
+  digest = "1:1ae47250c28fc6db867d96a6e174f319e0a9a41cb387d73cfaf09c953ff09ebb"
   name = "github.com/bitrise-tools/go-steputils"
   packages = [
     "cache",
     "tools",
   ]
   pruneopts = "UT"
-  revision = "a848c9870ff7d745a8fb2a951e1c81fcb147b4ec"
+  revision = "d4d9e08cc4347e8784bb18419fcdceb932e17019"
 
 [[projects]]
-  digest = "1:e874700d7be6c1d70e7368fe50ce1ae0e29f700de727198815f908d9a66d1635"
-  name = "github.com/bitrise-tools/go-xcode"
-  packages = ["xcodeproj"]
-  pruneopts = "UT"
-  revision = "cf6e91a8a36aec6200b32988565a1770b9fe3bba"
-
-[[projects]]
-  digest = "1:a2c1d0e43bd3baaa071d1b9ed72c27d78169b2b269f71c105ac4ba34b1be4a39"
+  digest = "1:ffe9824d294da03b391f44e1ae8281281b4afc1bdaa9588c9097785e3af10cec"
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
   pruneopts = "UT"
-  revision = "346938d642f2ec3594ed81d874461961cd0faa76"
-  version = "v1.1.0"
+  revision = "8991bc29aa16c548c550c7ff78260e27b9ab7c73"
+  version = "v1.1.1"
 
 [[projects]]
-  digest = "1:40e195917a951a8bf867cd05de2a46aaf1806c50cf92eebf4c16f78cd196f747"
+  branch = "master"
+  digest = "1:66d83872b0af5a18652d1853dc690213a2e3bbd47feec637ef3401c9a6839e50"
   name = "github.com/pkg/errors"
   packages = ["."]
   pruneopts = "UT"
-  revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
-  version = "v0.8.0"
+  revision = "2233dee583dcf88f3c8b22cb7a33f05a499800d8"
 
 [[projects]]
   digest = "1:0028cb19b2e4c3112225cd871870f2d9cf49b9b4276531f03438a88e94be86fe"
@@ -65,14 +61,15 @@
   version = "v1.0.0"
 
 [[projects]]
-  digest = "1:3c75451ece0c392569234674e7b7d8238305c0a3d650a3cd1eb652e3e95e0969"
+  digest = "1:c40d65817cdd41fac9aa7af8bed56927bb2d6d47e4fea566a74880f5c2b1c41e"
   name = "github.com/stretchr/testify"
   packages = [
     "assert",
     "require",
   ]
   pruneopts = "UT"
-  revision = "f6abca593680b2315d2075e0f5e2a9751e3f431a"
+  revision = "f35b8ab0b5a2cef36673838d662e249dd9c94686"
+  version = "v1.2.2"
 
 [solve-meta]
   analyzer-name = "dep"
