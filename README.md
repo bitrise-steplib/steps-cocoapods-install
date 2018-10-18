@@ -1,7 +1,6 @@
 # CocoaPods install step
 
-Calls `pod install` for a specified project. Can use system wide installed
-CocoaPods, or the one specified in a `Gemfile`.
+Calls `pod install` for a specified project.
 
 ## How to use this Step
 
@@ -17,7 +16,8 @@ Step by step:
 1. Open up your Terminal / Command Line
 2. `git clone` the repository
 3. `cd` into the directory of the step (the one you just `git clone`d)
-5. Create a `.bitrise.secrets.yml` file in the same directory of `bitrise.yml` - the `.bitrise.secrets.yml` is a git ignored file, you can store your secrets in
+5. Create a `.bitrise.secrets.yml` file in the same directory of `bitrise.yml`
+   (the `.bitrise.secrets.yml` is a git ignored file, you can store your secrets in it)
 6. Check the `bitrise.yml` file for any secret you should set in `.bitrise.secrets.yml`
   * Best practice is to mark these options with something like `# define these in your .bitrise.secrets.yml`, in the `app:envs` section.
 7. Once you have all the required secret parameters in your `.bitrise.secrets.yml` you can just run this step with the [bitrise CLI](https://github.com/bitrise-io/bitrise): `bitrise run test`
@@ -39,6 +39,8 @@ envs:
 5. Fill out the other parts of the `step.yml` too
 6. Provide test values for the inputs in the `bitrise.yml`
 7. Run your step with `bitrise run test` - if it works, you're ready
+
+__For Step development guidelines & best practices__ check this documentation: [https://github.com/bitrise-io/bitrise/blob/master/_docs/step-development-guideline.md](https://github.com/bitrise-io/bitrise/blob/master/_docs/step-development-guideline.md).
 
 **NOTE:**
 
@@ -76,4 +78,15 @@ in the [bitrise CLI repository](https://github.com/bitrise-io/bitrise/blob/maste
 
 ## Share your own Step
 
-You can share your Step or step version with the [bitrise CLI](https://github.com/bitrise-io/bitrise). Just run `bitrise share` and follow the guide it prints.
+You can share your Step or step version with the [bitrise CLI](https://github.com/bitrise-io/bitrise). If you use the `bitrise.yml` included in this repository, all you have to do is:
+
+1. In your Terminal / Command Line `cd` into this directory (where the `bitrise.yml` of the step is located)
+1. Run: `bitrise run test` to test the step
+1. Run: `bitrise run audit-this-step` to audit the `step.yml`
+1. Check the `share-this-step` workflow in the `bitrise.yml`, and fill out the
+   `envs` if you haven't done so already (don't forget to bump the version number if this is an update
+   of your step!)
+1. Then run: `bitrise run share-this-step` to share the step (version) you specified in the `envs`
+1. Send the Pull Request, as described in the logs of `bitrise run share-this-step`
+
+That's all ;)
