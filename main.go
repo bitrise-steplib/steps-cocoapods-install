@@ -117,14 +117,6 @@ func findMostRootPodfile(dir string) (string, error) {
 	return findMostRootPodfileInFileList(fileList)
 }
 
-func cocoapodsVersionFromGemfileLock(gemfileLockPth string) (gems.Version, error) {
-	content, err := fileutil.ReadStringFromFile(gemfileLockPth)
-	if err != nil {
-		return gems.Version{}, err
-	}
-	return gems.ParseVersionFromBundle("cocoapods", content)
-}
-
 func cocoapodsVersionFromPodfileLockContent(content string) string {
 	exp := regexp.MustCompile("COCOAPODS: (.+)")
 	match := exp.FindStringSubmatch(content)
@@ -264,6 +256,7 @@ func main() {
 		log.Warnf("Make sure it's committed into your repository!")
 	}
 
+	var podVersion gems.Version
 	var bundlerVersion gems.Version
 	if useCocoapodsVersion == "" {
 		gemfileLockPth := filepath.Join(podfileDir, "Gemfile.lock")
@@ -272,15 +265,24 @@ func main() {
 		if exist, err := pathutil.IsPathExists(gemfileLockPth); err != nil {
 			failf("Failed to check Gemfile.lock at: %s, error: %s", gemfileLockPth, err)
 		} else if exist {
-			var err error
-			bundlerVersion, err = cocoapodsVersionFromGemfileLock(gemfileLockPth)
+			content, err := fileutil.ReadStringFromFile(gemfileLockPth)
 			if err != nil {
-				failf("Failed to check if Gemfile.lock contains cocopods, error: %s", err)
+				failf("failed to read file (%s) contents, error: %s", err)
 			}
 
-			if bundlerVersion.Found {
+			podVersion, err = gems.ParseVersionFromBundle("cocoapods", content)
+			if err != nil {
+				failf("Failed to check if Gemfile.lock contains cocoapods, error: %s", err)
+			}
+
+			bundlerVersion, err = gems.ParseBundlerVersion(content)
+			if err != nil {
+				failf("Failed to parse bundler version form cocoapods, error: %s", err)
+			}
+
+			if podVersion.Found {
 				log.Printf("Found Gemfile.lock: %s", gemfileLockPth)
-				log.Donef("Gemfile.lock defined cocoapods version: %s", bundlerVersion.Version)
+				log.Donef("Gemfile.lock defined cocoapods version: %s", podVersion.Version)
 
 				useBundler = true
 			}
@@ -298,7 +300,7 @@ func main() {
 
 	if useBundler {
 		fmt.Println()
-		log.Infof("Install bundler")
+		log.Infof("Installing bundler")
 
 		// install bundler with `gem install bundler [-v version]`
 		// in some configurations, the command "bunder _1.2.3_" can return 'Command not found', installing bundler solves this
@@ -317,7 +319,8 @@ func main() {
 		}
 
 		// install Gemfile.lock gems with `bundle [_version_] install ...`
-		log.Printf("Install cocoapods with bundler")
+		fmt.Println()
+		log.Infof("Installing cocoapods with bundler")
 
 		cmd, err := gems.BundleInstallCommand(bundlerVersion)
 		if err != nil {
