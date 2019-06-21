@@ -304,10 +304,7 @@ func main() {
 
 		// install bundler with `gem install bundler [-v version]`
 		// in some configurations, the command "bunder _1.2.3_" can return 'Command not found', installing bundler solves this
-		installBundlerCommand, err := gems.InstallBundlerCommand(bundlerVersion)
-		if err != nil {
-			failf("failed to create command, error: %s", err)
-		}
+		installBundlerCommand := gems.InstallBundlerCommand(bundlerVersion)
 		installBundlerCommand.SetStdout(os.Stdout).SetStderr(os.Stderr)
 		installBundlerCommand.SetDir(podfileDir)
 
