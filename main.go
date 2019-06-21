@@ -267,7 +267,7 @@ func main() {
 		} else if exist {
 			content, err := fileutil.ReadStringFromFile(gemfileLockPth)
 			if err != nil {
-				failf("failed to read file (%s) contents, error: %s", err)
+				failf("failed to read file (%s) contents, error: %s", gemfileLockPth, err)
 			}
 
 			podVersion, err = gems.ParseVersionFromBundle("cocoapods", content)
