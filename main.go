@@ -128,7 +128,7 @@ func cocoapodsVersionFromGemfileLock(gemfileLockPth string) (gems.Version, error
 func cocoapodsVersionFromPodfileLockContent(content string) string {
 	exp := regexp.MustCompile("COCOAPODS: (.+)")
 	match := exp.FindStringSubmatch(content)
-	if match != nil && len(match) == 2 {
+	if len(match) == 2 {
 		return match[1]
 	}
 	return ""
@@ -388,7 +388,7 @@ func main() {
 		podRepoUpdateCmdSlice := append(podCmdSlice, "repo", "update")
 
 		if useBundler {
-			podInstallCmdSlice = append(gems.BundleExecPrefix(bundlerVersion), podRepoUpdateCmdSlice...)
+			podRepoUpdateCmdSlice = append(gems.BundleExecPrefix(bundlerVersion), podRepoUpdateCmdSlice...)
 		}
 
 		log.Donef("$ %s", command.PrintableCommandArgs(false, podRepoUpdateCmdSlice))
