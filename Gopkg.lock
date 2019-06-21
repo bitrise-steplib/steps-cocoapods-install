@@ -44,7 +44,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:7ba04bb5d39899893526b879c237a26f82e2e29de9eaeba55829f94f43c3a39b"
+  digest = "1:490879608c698500312b175ed395a7cbc23e9499315577110a02e4bb52c1d3e1"
   name = "github.com/bitrise-io/go-utils"
   packages = [
     "colorstring",
@@ -61,7 +61,7 @@
     "sliceutil",
   ]
   pruneopts = "UT"
-  revision = "12d92d0c7b75b6925108e6420eb9b3fabf67db03"
+  revision = "10ba6612803187a89b6935f06a617e9e1cd9d2bf"
 
 [[projects]]
   branch = "master"
