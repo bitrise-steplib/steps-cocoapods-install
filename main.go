@@ -8,13 +8,13 @@ import (
 
 	"github.com/bitrise-io/bitrise-init/scanners/ios"
 	"github.com/bitrise-io/bitrise-init/utility"
+	"github.com/bitrise-io/go-steputils/cache"
 	"github.com/bitrise-io/go-utils/command"
 	"github.com/bitrise-io/go-utils/command/gems"
 	"github.com/bitrise-io/go-utils/command/rubycommand"
 	"github.com/bitrise-io/go-utils/fileutil"
 	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-io/go-utils/pathutil"
-	"github.com/bitrise-tools/go-steputils/cache"
 	"github.com/pkg/errors"
 )
 

@@ -33,9 +33,12 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:659157c334882ba37fe50584d691ea469fb6e708a49e81dcd4381fef6ba611b0"
+  digest = "1:e935dd82be8de69ef50d583046102f272ffd4060c3a15c0bf4a885450de42d12"
   name = "github.com/bitrise-io/go-steputils"
-  packages = ["tools"]
+  packages = [
+    "cache",
+    "tools",
+  ]
   pruneopts = "UT"
   revision = "cecc766da84859e37e780d9d1c416f0f3993e6b1"
 
@@ -91,14 +94,6 @@
   ]
   pruneopts = "UT"
   revision = "5929ad85d89233b3296d2d795e068a656db7fb25"
-
-[[projects]]
-  branch = "master"
-  digest = "1:aa5129361a557747c87fbc46cb79de001d0c026af913a2860372a3b90b48c22f"
-  name = "github.com/bitrise-tools/go-steputils"
-  packages = ["cache"]
-  pruneopts = "UT"
-  revision = "cecc766da84859e37e780d9d1c416f0f3993e6b1"
 
 [[projects]]
   digest = "1:ffe9824d294da03b391f44e1ae8281281b4afc1bdaa9588c9097785e3af10cec"
@@ -180,13 +175,13 @@
   input-imports = [
     "github.com/bitrise-io/bitrise-init/scanners/ios",
     "github.com/bitrise-io/bitrise-init/utility",
+    "github.com/bitrise-io/go-steputils/cache",
     "github.com/bitrise-io/go-utils/command",
     "github.com/bitrise-io/go-utils/command/gems",
     "github.com/bitrise-io/go-utils/command/rubycommand",
     "github.com/bitrise-io/go-utils/fileutil",
     "github.com/bitrise-io/go-utils/log",
     "github.com/bitrise-io/go-utils/pathutil",
-    "github.com/bitrise-tools/go-steputils/cache",
     "github.com/pkg/errors",
     "github.com/stretchr/testify/require",
   ]
