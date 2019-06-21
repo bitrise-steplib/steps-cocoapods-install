@@ -134,13 +134,6 @@ func cocoapodsVersionFromPodfileLock(podfileLockPth string) (string, error) {
 	return cocoapodsVersionFromPodfileLockContent(content), nil
 }
 
-func isCocoapodsInPath() bool {
-	if _, err := command.New("which", "pod").RunAndReturnTrimmedCombinedOutput(); err != nil {
-		return false
-	}
-	return true
-}
-
 func main() {
 	configs := createConfigsModelFromEnvs()
 
@@ -164,21 +157,20 @@ func main() {
 	fmt.Println()
 	log.Printf("System installed cocoapods version:")
 
-	if isCocoapodsInPath() {
-		podVersionCmdSlice := []string{"pod", "--version"}
+	// pod can be in the PATH as an rbenv shim and pod --version will return "rbenv: pod: command not found"
+	podVersionCmdSlice := []string{"pod", "--version"}
 
-		log.Donef("$ %s", command.PrintableCommandArgs(false, podVersionCmdSlice))
+	log.Donef("$ %s", command.PrintableCommandArgs(false, podVersionCmdSlice))
 
-		cmd, err := rubycommand.New("pod", "--version")
-		if err != nil {
-			failf("Failed to create command model, error: %s", err)
-		}
+	cmd, err := rubycommand.New("pod", "--version")
+	if err != nil {
+		failf("Failed to create command model, error: %s", err)
+	}
 
-		cmd.SetStdout(os.Stdout).SetStderr(os.Stderr)
+	cmd.SetStdout(os.Stdout).SetStderr(os.Stderr)
 
-		if err := cmd.Run(); err != nil {
-			failf("Command failed, error: %s", err)
-		}
+	if err := cmd.Run(); err != nil {
+		log.Warnf("Command failed, error: %s", err)
 	}
 
 	//
@@ -382,7 +374,7 @@ func main() {
 
 	log.Donef("$ %s", command.PrintableCommandArgs(false, podInstallCmdSlice))
 
-	cmd, err := rubycommand.NewFromSlice(podInstallCmdSlice)
+	cmd, err = rubycommand.NewFromSlice(podInstallCmdSlice)
 	if err != nil {
 		failf("Failed to create command model, error: %s", err)
 	}
