@@ -4,7 +4,7 @@
   name = "github.com/bitrise-io/bitrise-init"
 
 [[override]]
-  branch = "TOOL-494-bundler-commands"
+  branch = "master"
   name = "github.com/bitrise-io/go-utils"
 
 [[constraint]]
