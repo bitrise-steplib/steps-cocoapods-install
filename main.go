@@ -5,11 +5,11 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
-	"strings"
 
 	"github.com/bitrise-core/bitrise-init/scanners/ios"
 	"github.com/bitrise-core/bitrise-init/utility"
 	"github.com/bitrise-io/go-utils/command"
+	"github.com/bitrise-io/go-utils/command/gems"
 	"github.com/bitrise-io/go-utils/command/rubycommand"
 	"github.com/bitrise-io/go-utils/fileutil"
 	"github.com/bitrise-io/go-utils/log"
@@ -117,43 +117,12 @@ func findMostRootPodfile(dir string) (string, error) {
 	return findMostRootPodfileInFileList(fileList)
 }
 
-func cocoapodsVersionFromGemfileLockContent(content string) string {
-	relevantLines := []string{}
-	lines := strings.Split(content, "\n")
-
-	specsStart := false
-	for _, line := range lines {
-		if strings.Contains(line, "specs:") {
-			specsStart = true
-		}
-
-		trimmed := strings.Trim(line, " ")
-		if trimmed == "" {
-			break
-		}
-
-		if specsStart {
-			relevantLines = append(relevantLines, line)
-		}
-	}
-
-	exp := regexp.MustCompile(`cocoapods \((.+)\)`)
-	for _, line := range relevantLines {
-		match := exp.FindStringSubmatch(line)
-		if match != nil && len(match) == 2 {
-			return match[1]
-		}
-	}
-
-	return ""
-}
-
-func cocoapodsVersionFromGemfileLock(gemfileLockPth string) (string, error) {
+func cocoapodsVersionFromGemfileLock(gemfileLockPth string) (gems.GemVersion, error) {
 	content, err := fileutil.ReadStringFromFile(gemfileLockPth)
 	if err != nil {
-		return "", err
+		return gems.GemVersion{}, err
 	}
-	return cocoapodsVersionFromGemfileLockContent(content), nil
+	return gems.ParseGemVersionFromBundle("cocoapods", content)
 }
 
 func cocoapodsVersionFromPodfileLockContent(content string) string {
@@ -298,9 +267,9 @@ func main() {
 				failf("Failed to check if Gemfile.lock contains cocopods, error: %s", err)
 			}
 
-			if version != "" {
+			if version.Found {
 				log.Printf("Found Gemfile.lock: %s", gemfileLockPth)
-				log.Donef("Gemfile.lock defined cocoapods version: %s", version)
+				log.Donef("Gemfile.lock defined cocoapods version: %s", version.Version)
 
 				useBundler = true
 			}
