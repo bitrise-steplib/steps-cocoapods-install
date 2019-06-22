@@ -340,10 +340,14 @@ func main() {
 	}
 
 	fmt.Println()
-	log.Printf("cocoapods version:")
+	log.Infof("cocoapods version:")
 
 	// pod can be in the PATH as an rbenv shim and pod --version will return "rbenv: pod: command not found"
-	cmd, err := rubycommand.New("pod", "--version")
+	podVersionCmdSlice := []string{"pod", "--version"}
+	if useBundler {
+		podVersionCmdSlice = append(gems.BundleExecPrefix(bundlerVersion), podVersionCmdSlice...)
+	}
+	cmd, err := rubycommand.NewFromSlice(podVersionCmdSlice)
 	if err != nil {
 		failf("Failed to create command model, error: %s", err)
 	}
