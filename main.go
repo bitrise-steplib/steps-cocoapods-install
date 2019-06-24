@@ -350,7 +350,9 @@ func main() {
 	if err != nil {
 		failf("Failed to create command model, error: %s", err)
 	}
+
 	cmd.SetStdout(os.Stdout).SetStderr(os.Stderr)
+	cmd.SetDir(podfileDir)
 
 	log.Donef("$ %s", cmd.PrintableCommandArgs())
 	if err := cmd.Run(); err != nil {
