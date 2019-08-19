@@ -209,7 +209,7 @@ func main() {
 	}
 
 	if isPodfileLockExists {
-		// Podfile.lock exist scearch for version
+		// Podfile.lock exist search for version
 		log.Printf("Found Podfile.lock: %s", podfileLockPth)
 
 		version, err := cocoapodsVersionFromPodfileLock(podfileLockPth)
