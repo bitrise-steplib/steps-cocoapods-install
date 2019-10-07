@@ -5,6 +5,8 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strconv"
+	"strings"
 
 	"github.com/bitrise-io/bitrise-init/scanners/ios"
 	"github.com/bitrise-io/bitrise-init/utility"
@@ -133,6 +135,114 @@ func cocoapodsVersionFromPodfileLock(podfileLockPth string) (string, error) {
 	return cocoapodsVersionFromPodfileLockContent(content), nil
 }
 
+// VersionSpec ...
+type VersionSpec struct {
+	Operator string
+	Version string
+}
+
+func splitOperatorAndVersion(input string) (VersionSpec, error) {
+	splittedString := strings.Split(input, " ")
+	cnt := len(splittedString)
+
+	if cnt == 1 {
+		out := VersionSpec{"", splittedString[0]}
+		return out, nil
+	}
+
+	if cnt != 2 {
+		err := fmt.Errorf("Invalid version range: %s", input)
+		return VersionSpec{}, err
+	}
+
+	out := VersionSpec{splittedString[0], splittedString[1]}
+	return out, nil
+}
+
+func isIncludedInGemfileLockVersionRanges(input string, gemfileLockVersion string) (bool, error) {
+	var splittedVersions []string
+	splittedVersions = strings.Split(gemfileLockVersion, ", ")
+
+	for _, each := range splittedVersions {
+		versionSpec, err := splitOperatorAndVersion(each)
+		if err != nil {
+			return false, err
+		}
+
+		switch versionSpec.Operator {
+		case "":
+			if input != versionSpec.Version {
+				return false, nil
+			}
+
+			continue
+		case "~>":
+			if input != versionSpec.Version {
+				return false, nil
+			}
+
+			continue
+		case ">=":
+			versions := strings.Split(versionSpec.Version, ".")
+			inputVersions := strings.Split(input, ".")
+
+			for i, version := range versions {
+				v1, err := strconv.Atoi(version)
+				if err != nil {
+					return false, err
+				}
+
+				v2, err := strconv.Atoi(inputVersions[i])
+				if err != nil {
+					return false, err
+				}
+
+				if i != len(versions) - 1 && v1 == v2 {
+					continue
+				}
+				if v2 >= v1 {
+					break
+				} else {
+					return false, nil
+				}
+			}
+
+			continue
+		case "<":
+			versions := strings.Split(versionSpec.Version, ".")
+			inputVersions := strings.Split(input, ".")
+
+			for i, version := range versions {
+				v1, err := strconv.Atoi(version)
+				if err != nil {
+					return false, err
+				}
+
+				v2, err := strconv.Atoi(inputVersions[i])
+				if err != nil {
+					return false, err
+				}
+
+				if i != len(versions) - 1 && v1 == v2 {
+					continue
+				}
+				if v2 < v1 {
+					break
+				} else {
+					return false, nil
+				}
+			}
+
+			continue
+		default:
+			err := fmt.Errorf("Unknown version operator: %s", each)
+			return false, err
+		}
+	}
+
+	return true, nil
+}
+
 func main() {
 	configs := createConfigsModelFromEnvs()
 
@@ -197,7 +307,8 @@ func main() {
 	log.Infof("Determining required cocoapods version")
 
 	useBundler := false
-	useCocoapodsVersion := ""
+	useCocoapodsVersionFromPodfileLock := ""
+	useCocoapodsVersionFromGemfileLock := ""
 
 	log.Printf("Searching for Podfile.lock")
 
@@ -209,7 +320,7 @@ func main() {
 	}
 
 	if isPodfileLockExists {
-		// Podfile.lock exist scearch for version
+		// Podfile.lock exist search for version
 		log.Printf("Found Podfile.lock: %s", podfileLockPth)
 
 		version, err := cocoapodsVersionFromPodfileLock(podfileLockPth)
@@ -218,8 +329,8 @@ func main() {
 		}
 
 		if version != "" {
-			useCocoapodsVersion = version
-			log.Donef("Required CocoaPods version (from Podfile.lock): %s", useCocoapodsVersion)
+			useCocoapodsVersionFromPodfileLock = version
+			log.Donef("Required CocoaPods version (from Podfile.lock): %s", useCocoapodsVersionFromPodfileLock)
 		} else {
 			log.Warnf("No CocoaPods version found in Podfile.lock! (%s)", podfileLockPth)
 		}
@@ -230,38 +341,51 @@ func main() {
 
 	var pod gems.Version
 	var bundler gems.Version
-	if useCocoapodsVersion == "" {
-		gemfileLockPth := filepath.Join(podfileDir, "Gemfile.lock")
-		log.Printf("Searching for Gemfile.lock with cocoapods gem")
 
-		if exist, err := pathutil.IsPathExists(gemfileLockPth); err != nil {
-			failf("Failed to check Gemfile.lock at: %s, error: %s", gemfileLockPth, err)
-		} else if exist {
-			content, err := fileutil.ReadStringFromFile(gemfileLockPth)
+	log.Printf("Searching for Gemfile.lock with cocoapods gem")
+
+	// Check Gemfile.lock for CocoaPods version
+	gemfileLockPth := filepath.Join(podfileDir, "Gemfile.lock")
+	isGemfileLockExists, err := pathutil.IsPathExists(gemfileLockPth)
+	if err != nil {
+		failf("Failed to check Gemfile.lock at: %s, error: %s", gemfileLockPth, err)
+	}
+
+	if isGemfileLockExists {
+		// CocoaPods exist search for version in Gemfile.lock
+		log.Printf("Found Gemfile.lock: %s", gemfileLockPth)
+
+		content, err := fileutil.ReadStringFromFile(gemfileLockPth)
+		if err != nil {
+			failf("failed to read file (%s) contents, error: %s", gemfileLockPth, err)
+		}
+
+		pod, err = gems.ParseVersionFromBundle("cocoapods", content)
+		if err != nil {
+			failf("Failed to check if Gemfile.lock contains cocoapods, error: %s", err)
+		}
+
+		bundler, err = gems.ParseBundlerVersion(content)
+		if err != nil {
+			failf("Failed to parse bundler version form cocoapods, error: %s", err)
+		}
+
+		if pod.Found {
+			useCocoapodsVersionFromGemfileLock = pod.Version
+			log.Donef("Required CocoaPods version (from Gemfile.lock): %s", useCocoapodsVersionFromGemfileLock)
+
+			isIncludedVersionRange, err := isIncludedInGemfileLockVersionRanges(useCocoapodsVersionFromPodfileLock, useCocoapodsVersionFromGemfileLock)
 			if err != nil {
-				failf("failed to read file (%s) contents, error: %s", gemfileLockPth, err)
+				failf("Failed to compare version range in Gemfile.lock, error: %s", err)
 			}
 
-			pod, err = gems.ParseVersionFromBundle("cocoapods", content)
-			if err != nil {
-				failf("Failed to check if Gemfile.lock contains cocoapods, error: %s", err)
-			}
-
-			bundler, err = gems.ParseBundlerVersion(content)
-			if err != nil {
-				failf("Failed to parse bundler version form cocoapods, error: %s", err)
-			}
-
-			if pod.Found {
-				log.Printf("Found Gemfile.lock: %s", gemfileLockPth)
-				log.Donef("Gemfile.lock defined cocoapods version: %s", pod.Version)
-
+			if !isPodfileLockExists || isIncludedVersionRange {
 				useBundler = true
 			}
-		} else {
-			log.Printf("No Gemfile.lock with cocoapods gem found at: %s", gemfileLockPth)
-			log.Donef("Using system installed CocoaPods version")
 		}
+	} else {
+		log.Printf("No Gemfile.lock with cocoapods gem found at: %s", gemfileLockPth)
+		log.Donef("Using system installed CocoaPods version")
 	}
 
 	// Install cocoapods
@@ -308,18 +432,18 @@ func main() {
 		if useBundler {
 			podCmdSlice = append(gems.BundleExecPrefix(bundler), podCmdSlice...)
 		}
-	} else if useCocoapodsVersion != "" {
-		log.Printf("Checking cocoapods %s gem", useCocoapodsVersion)
+	} else if useCocoapodsVersionFromPodfileLock != "" {
+		log.Printf("Checking cocoapods %s gem", useCocoapodsVersionFromPodfileLock)
 
-		installed, err := rubycommand.IsGemInstalled("cocoapods", useCocoapodsVersion)
+		installed, err := rubycommand.IsGemInstalled("cocoapods", useCocoapodsVersionFromPodfileLock)
 		if err != nil {
-			failf("Failed to check if cocoapods %s installed, error: %s", useCocoapodsVersion, err)
+			failf("Failed to check if cocoapods %s installed, error: %s", useCocoapodsVersionFromPodfileLock, err)
 		}
 
 		if !installed {
 			log.Printf("Installing")
 
-			cmds, err := rubycommand.GemInstall("cocoapods", useCocoapodsVersion)
+			cmds, err := rubycommand.GemInstall("cocoapods", useCocoapodsVersionFromPodfileLock)
 			if err != nil {
 				failf("Failed to create command model, error: %s", err)
 			}
@@ -337,7 +461,7 @@ func main() {
 			log.Printf("Installed")
 		}
 
-		podCmdSlice = append(podCmdSlice, fmt.Sprintf("_%s_", useCocoapodsVersion))
+		podCmdSlice = append(podCmdSlice, fmt.Sprintf("_%s_", useCocoapodsVersionFromPodfileLock))
 	} else {
 		log.Printf("Using system installed cocoapods")
 	}

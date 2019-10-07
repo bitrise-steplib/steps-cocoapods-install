@@ -118,3 +118,41 @@ PODFILE CHECKSUM: f2a6f4eed25b89d16fc8e906af222b4e63afa6c3
 		require.Equal(t, "", actual)
 	}
 }
+
+func TestIsIncludedInGemfileLockVersionRanges(t *testing.T) {
+	t.Log("Match version")
+	{
+		gemfileLockVersion := "1.0.0"
+
+		isIncluded, err := isIncludedInGemfileLockVersionRanges("1.0.0", gemfileLockVersion)
+		require.NoError(t, err)
+		require.True(t, isIncluded)
+		isExcluded, err := isIncludedInGemfileLockVersionRanges("2.0.0", gemfileLockVersion)
+		require.NoError(t, err)
+		require.False(t, isExcluded)
+	}
+
+	t.Log("Specify version")
+	{
+		gemfileLockVersion := "~> 1.0.0"
+
+		isIncluded, err := isIncludedInGemfileLockVersionRanges("1.0.0", gemfileLockVersion)
+		require.NoError(t, err)
+		require.True(t, isIncluded)
+		isExcluded, err := isIncludedInGemfileLockVersionRanges("2.0.0", gemfileLockVersion)
+		require.NoError(t, err)
+		require.False(t, isExcluded)
+	}
+
+	t.Log("Range version")
+	{
+		gemfileLockVersion := ">= 1.0.0, < 2.0.0"
+
+		isIncluded, err := isIncludedInGemfileLockVersionRanges("1.0.0", gemfileLockVersion)
+		require.NoError(t, err)
+		require.True(t, isIncluded)
+		isExcluded, err := isIncludedInGemfileLockVersionRanges("2.0.0", gemfileLockVersion)
+		require.NoError(t, err)
+		require.False(t, isExcluded)
+	}
+}
