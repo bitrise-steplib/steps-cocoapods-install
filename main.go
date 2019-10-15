@@ -394,13 +394,13 @@ func main() {
 		fmt.Println()
 		log.Infof("Check selected ruby is installed")
 
-		rubyInstalled, rversion, err := isSelectedRubyInstalled(configs.SourceRootPath)
+		rubyInstalled, rversion, err := rubycommand.IsSelectedRbenvRubyInstalled(configs.SourceRootPath)
 		if err != nil {
 			log.Errorf("Failed to check if selected ruby is installed, error: %s", err)
 		}
 
 		if !rubyInstalled {
-			log.Donef("Ruby %s is not installed", rversion)
+			log.Errorf("Ruby %s is not installed", rversion)
 			fmt.Println()
 
 			cmd := command.New("rbenv", "install", rversion).SetStdout(os.Stdout).SetStderr(os.Stderr)
@@ -409,7 +409,7 @@ func main() {
 				log.Errorf("Failed to install ruby version %s, error: %s", rversion, err)
 			}
 		} else {
-			log.Donef("Ruby %s installed", rversion)
+			log.Donef("Ruby %s is installed", rversion)
 		}
 
 	}
@@ -578,51 +578,4 @@ func main() {
 	}
 
 	log.Donef("Success!")
-}
-
-func isSelectedRubyInstalled(workdir string) (bool, string, error) {
-	absWorkdir, err := pathutil.AbsPath(workdir)
-	if err != nil {
-		failf("Failed to expand (%s), error: %s", workdir, err)
-	}
-
-	cmd := command.New("rbenv", "version").SetDir(absWorkdir)
-	log.Donef("$ %s", cmd.PrintableCommandArgs())
-
-	log.Printf("Ruby version:")
-	out, err := cmd.RunAndReturnTrimmedCombinedOutput()
-	if err != nil {
-		return false, "", fmt.Errorf("Failed to check installed ruby version")
-	}
-	log.Printf(out)
-
-	//
-	// Not installed
-	reg, err := regexp.Compile("rbenv: version \x60.*' is not installed")
-	if err != nil {
-		return false, "", fmt.Errorf("Failed to parse error message, error: %s", err)
-	}
-
-	var version string
-	if reg.MatchString(out) {
-		message := reg.FindString(out)
-		version = strings.Split(strings.Split(message, "`")[1], "'")[0]
-
-		return false, version, nil
-	}
-
-	//
-	// Installed
-	reg, err = regexp.Compile(".* \\(set by")
-	if err != nil {
-		return false, "", fmt.Errorf("Failed to parse error message, error: %s", err)
-	}
-
-	if reg.MatchString(out) {
-		message := reg.FindString(out)
-		version = strings.Split(message, "(set by")[0]
-
-		return true, version, nil
-	}
-	return false, version, nil
 }
