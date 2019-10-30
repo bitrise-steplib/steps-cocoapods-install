@@ -129,7 +129,6 @@ workflows:
         - content: |-
             #!/bin/bash
             set -ex
-            rm -rf ./_tmp
 
             echo "2.6.0" >> .ruby-version
     - path::./:
