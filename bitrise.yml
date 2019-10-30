@@ -41,14 +41,6 @@ workflows:
         inputs:
         - path: "${ORIG_BITRISE_SOURCE_DIR}/_tmp"
         - is_create_path: "false"
-    - script:
-        inputs:
-        - content: |-
-            #!/bin/bash
-            set -ex
-            rm -rf ./_tmp
-
-            echo "2.6.0" >> .ruby-version
     - path::./:
         inputs:
         - podfile_path: $PODFILE_PTH
@@ -132,6 +124,14 @@ workflows:
         inputs:
         - path: "${ORIG_BITRISE_SOURCE_DIR}/_tmp"
         - is_create_path: "false"
+    - script:
+        inputs:
+        - content: |-
+            #!/bin/bash
+            set -ex
+            rm -rf ./_tmp
+
+            echo "2.6.0" >> .ruby-version
     - path::./:
         inputs:
         - podfile_path: $PODFILE_PTH
