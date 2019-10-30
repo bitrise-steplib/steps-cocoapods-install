@@ -390,11 +390,11 @@ func main() {
 	}
 
 	// Check ruby version
-	if os.Getenv("CI") == "true" {
+	if os.Getenv("CI") == "false" {
 		fmt.Println()
 		log.Infof("Check selected ruby is installed")
 
-		rubyInstalled, rversion, err := rubycommand.IsSelectedRbenvRubyInstalled(configs.SourceRootPath)
+		rubyInstalled, rversion, err := rubycommand.IsSpecifiedRbenvRubyInstalled(configs.SourceRootPath)
 		if err != nil {
 			log.Errorf("Failed to check if selected ruby is installed, error: %s", err)
 		}
