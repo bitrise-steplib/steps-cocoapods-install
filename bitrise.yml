@@ -99,7 +99,7 @@ workflows:
   test_with_specific_ruby:
     envs:
     # Podfile is in repo root
-    - REPO_URL: https://github.com/bitrise-samples/ios-cocoapods-at-root.git
+    - REPO_URL: https://github.com/bitrise-samples/ios-cocoapods-1.x.git
     - TEST_REPO_BRANCH: master
     - PODFILE_PTH: ''
     steps:
