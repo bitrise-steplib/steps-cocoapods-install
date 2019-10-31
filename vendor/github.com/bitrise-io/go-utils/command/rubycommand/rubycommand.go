@@ -47,6 +47,11 @@ func cmdExist(slice ...string) bool {
 	return (cmd.Run() == nil)
 }
 
+// RubyInstallType returns which version manager was used for the ruby install
+func RubyInstallType() InstallType {
+	return installType()
+}
+
 func installType() InstallType {
 	whichRuby, err := command.New("which", "ruby").RunAndReturnTrimmedCombinedOutput()
 	if err != nil {

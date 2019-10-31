@@ -390,7 +390,7 @@ func main() {
 	}
 
 	// Check ruby version
-	if os.Getenv("CI") == "true" {
+	if os.Getenv("CI") == "true" && rubycommand.RubyInstallType() == rubycommand.RbenvRuby {
 		fmt.Println()
 		log.Infof("Check selected ruby is installed")
 
