@@ -346,13 +346,12 @@ func main() {
 	log.Printf("Searching for Gemfile.lock with cocoapods gem")
 
 	// Check Gemfile.lock for CocoaPods version
-	gemfileLockPth := filepath.Join(podfileDir, "Gemfile.lock")
-	isGemfileLockExists, err := pathutil.IsPathExists(gemfileLockPth)
-	if err != nil {
+	gemfileLockPth, err := gems.GemFileLockPth(podfileDir)
+	if err != nil && !os.IsNotExist(err) {
 		failf("Failed to check Gemfile.lock at: %s, error: %s", gemfileLockPth, err)
 	}
 
-	if isGemfileLockExists {
+	if gemfileLockPth != "" {
 		// CocoaPods exist search for version in Gemfile.lock
 		log.Printf("Found Gemfile.lock: %s", gemfileLockPth)
 
