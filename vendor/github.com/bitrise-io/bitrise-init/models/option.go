@@ -39,6 +39,7 @@ const (
 // OptionNode ...
 type OptionNode struct {
 	Title          string                 `json:"title,omitempty" yaml:"title,omitempty"`
+	Summary        string                 `json:"summary,omitempty" yaml:"summary,omitempty"`
 	EnvKey         string                 `json:"env_key,omitempty" yaml:"env_key,omitempty"`
 	Type           Type                   `json:"type,omitempty" yaml:"type,omitempty"`
 	ChildOptionMap map[string]*OptionNode `json:"value_map,omitempty" yaml:"value_map,omitempty"`
@@ -51,9 +52,10 @@ type OptionNode struct {
 }
 
 // NewOption ...
-func NewOption(title, envKey string, optionType Type) *OptionNode {
+func NewOption(title, summary, envKey string, optionType Type) *OptionNode {
 	return &OptionNode{
 		Title:          title,
+		Summary:        summary,
 		EnvKey:         envKey,
 		ChildOptionMap: map[string]*OptionNode{},
 		Components:     []string{},

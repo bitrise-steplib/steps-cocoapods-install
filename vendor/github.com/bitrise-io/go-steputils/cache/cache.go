@@ -53,5 +53,10 @@ func combineEnvContent(envVar string, values []string) error {
 
 	content += "\n" + strings.Join(values, "\n") + "\n"
 
+	// Set envirmonet varible so that an other cache usage does not override
+	if err := os.Setenv(envVar, content); err != nil {
+		return err
+	}
+
 	return tools.ExportEnvironmentWithEnvman(envVar, content)
 }
