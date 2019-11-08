@@ -390,6 +390,7 @@ func main() {
 	}
 
 	// Check ruby version
+	// Run this logic only in CI environment when the ruby was installed via rbenv for the virtual machine
 	if os.Getenv("CI") == "true" && rubycommand.RubyInstallType() == rubycommand.RbenvRuby {
 		fmt.Println()
 		log.Infof("Check selected ruby is installed")
