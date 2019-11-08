@@ -393,7 +393,7 @@ func main() {
 	// Run this logic only in CI environment when the ruby was installed via rbenv for the virtual machine
 	if os.Getenv("CI") == "true" && rubycommand.RubyInstallType() == rubycommand.RbenvRuby {
 		fmt.Println()
-		log.Infof("Check selected ruby is installed")
+		log.Infof("Check selected Ruby is installed")
 
 		rubyInstalled, rversion, err := rubycommand.IsSpecifiedRbenvRubyInstalled(configs.SourceRootPath)
 		if err != nil {
@@ -407,7 +407,7 @@ func main() {
 			cmd := command.New("rbenv", "install", rversion).SetStdout(os.Stdout).SetStderr(os.Stderr)
 			log.Donef("$ %s", cmd.PrintableCommandArgs())
 			if err := cmd.Run(); err != nil {
-				log.Errorf("Failed to install ruby version %s, error: %s", rversion, err)
+				log.Errorf("Failed to install Ruby version %s, error: %s", rversion, err)
 			}
 		} else {
 			log.Donef("Ruby %s is installed", rversion)
