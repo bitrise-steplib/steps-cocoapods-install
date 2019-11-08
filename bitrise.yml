@@ -6,6 +6,7 @@ app:
   - ORIG_BITRISE_SOURCE_DIR: $BITRISE_SOURCE_DIR
 
 workflows:
+  
   simple_test:
     steps:
     - path::./:
@@ -52,6 +53,7 @@ workflows:
     - PODFILE_PTH: ''
     after_run:
     - _test_with_repo
+
   test_with_gemfile:
     envs:
     # With Gemfile:
@@ -60,6 +62,7 @@ workflows:
     - PODFILE_PTH: ''
     after_run:
     - _test_with_repo
+
   test_without_gemfile:
     envs:
     # Without Gemfile:
@@ -68,6 +71,7 @@ workflows:
     - PODFILE_PTH: ''
     after_run:
     - _test_with_repo
+
   test_podfile_at_root:
     envs:
     # Podfile is in repo root
@@ -92,6 +96,45 @@ workflows:
         - podfile_path: $PODFILE_PTH
         - verbose: false
 
+  test_with_specific_ruby:
+    envs:
+    # Podfile is in repo root
+    - REPO_URL: https://github.com/bitrise-samples/ios-cocoapods-1.x.git
+    - TEST_REPO_BRANCH: master
+    - PODFILE_PTH: ''
+    steps:
+    - change-workdir:
+        inputs:
+        - path: "${ORIG_BITRISE_SOURCE_DIR}"
+        - is_create_path: "false"
+    - script:
+        inputs:
+        - content: |-
+            #!/bin/bash
+            set -ex
+            rm -rf ./_tmp
+
+            git clone "${REPO_URL}" ./_tmp --branch "${TEST_REPO_BRANCH}"
+    - change-workdir:
+        title: Switch working dir to test/_tmp dir
+        description: |-
+          To prevent step testing issues, like referencing relative
+          files with just './some-file', which would work for local tests
+          but not if the step is included in another bitrise.yml!
+        inputs:
+        - path: "${ORIG_BITRISE_SOURCE_DIR}/_tmp"
+        - is_create_path: "false"
+    - script:
+        inputs:
+        - content: |-
+            #!/bin/bash
+            set -ex
+
+            echo "2.6.0" >> .ruby-version
+    - path::./:
+        inputs:
+        - podfile_path: $PODFILE_PTH
+
   print_cache_paths:
     steps:
     - script:
@@ -113,6 +156,7 @@ workflows:
     - test_without_gemfile_with_podfile_path
     - test_without_verbose
     - print_cache_paths
+    - test_with_specific_ruby
 
   go-tests:
     steps:

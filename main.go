@@ -11,6 +11,7 @@ import (
 	"github.com/bitrise-io/bitrise-init/scanners/ios"
 	"github.com/bitrise-io/bitrise-init/utility"
 	"github.com/bitrise-io/go-steputils/cache"
+	"github.com/bitrise-io/go-utils/command"
 	"github.com/bitrise-io/go-utils/command/gems"
 	"github.com/bitrise-io/go-utils/command/rubycommand"
 	"github.com/bitrise-io/go-utils/fileutil"
@@ -138,7 +139,7 @@ func cocoapodsVersionFromPodfileLock(podfileLockPth string) (string, error) {
 // VersionSpec ...
 type VersionSpec struct {
 	Operator string
-	Version string
+	Version  string
 }
 
 func splitOperatorAndVersion(input string) (VersionSpec, error) {
@@ -197,7 +198,7 @@ func isIncludedInGemfileLockVersionRanges(input string, gemfileLockVersion strin
 					return false, err
 				}
 
-				if i != len(versions) - 1 && v1 == v2 {
+				if i != len(versions)-1 && v1 == v2 {
 					continue
 				}
 				if v2 >= v1 {
@@ -223,7 +224,7 @@ func isIncludedInGemfileLockVersionRanges(input string, gemfileLockVersion strin
 					return false, err
 				}
 
-				if i != len(versions) - 1 && v1 == v2 {
+				if i != len(versions)-1 && v1 == v2 {
 					continue
 				}
 				if v2 < v1 {
@@ -386,6 +387,32 @@ func main() {
 	} else {
 		log.Printf("No Gemfile.lock with cocoapods gem found at: %s", gemfileLockPth)
 		log.Donef("Using system installed CocoaPods version")
+	}
+
+	// Check ruby version
+	// Run this logic only in CI environment when the ruby was installed via rbenv for the virtual machine
+	if os.Getenv("CI") == "true" && rubycommand.RubyInstallType() == rubycommand.RbenvRuby {
+		fmt.Println()
+		log.Infof("Check selected Ruby is installed")
+
+		rubyInstalled, rversion, err := rubycommand.IsSpecifiedRbenvRubyInstalled(configs.SourceRootPath)
+		if err != nil {
+			log.Errorf("Failed to check if selected ruby is installed, error: %s", err)
+		}
+
+		if !rubyInstalled {
+			log.Errorf("Ruby %s is not installed", rversion)
+			fmt.Println()
+
+			cmd := command.New("rbenv", "install", rversion).SetStdout(os.Stdout).SetStderr(os.Stderr)
+			log.Donef("$ %s", cmd.PrintableCommandArgs())
+			if err := cmd.Run(); err != nil {
+				log.Errorf("Failed to install Ruby version %s, error: %s", rversion, err)
+			}
+		} else {
+			log.Donef("Ruby %s is installed", rversion)
+		}
+
 	}
 
 	// Install cocoapods
