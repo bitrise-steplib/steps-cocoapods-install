@@ -11,7 +11,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:d0bf77d82fe5a917fbe990c19b0fe5bc07e171a7cbb4c93a44b22b92023fd1fd"
+  digest = "1:7cdbfff9fc811df9d709292857dca7f656052fdee4fbc280490a665b162de6ce"
   name = "github.com/bitrise-io/bitrise-init"
   packages = [
     "models",
@@ -21,7 +21,7 @@
     "utility",
   ]
   pruneopts = "UT"
-  revision = "897d749bb1bcdfb1c84f53f81462aa9bfcb743e8"
+  revision = "d427aaa58574173a85922dddf5533a0052e1b764"
 
 [[projects]]
   branch = "master"
@@ -29,22 +29,22 @@
   name = "github.com/bitrise-io/envman"
   packages = ["models"]
   pruneopts = "UT"
-  revision = "eb2e53257e527de59351cec1ecdffb50dadd5a07"
+  revision = "a82637cf13cc2bd0d61e8660aa269ce43c73a92e"
 
 [[projects]]
   branch = "master"
-  digest = "1:e935dd82be8de69ef50d583046102f272ffd4060c3a15c0bf4a885450de42d12"
+  digest = "1:594d51ad1ed8d44086145528a32b5e403c43195c0b236a2f6e116e00baa2c0eb"
   name = "github.com/bitrise-io/go-steputils"
   packages = [
     "cache",
     "tools",
   ]
   pruneopts = "UT"
-  revision = "cecc766da84859e37e780d9d1c416f0f3993e6b1"
+  revision = "3c98d95a94d51624a26e99419d0fc03d2aab0055"
 
 [[projects]]
   branch = "master"
-  digest = "1:2340eab73c868e4aebb618a69b4a53bfd34baccaf08e553ec270c5366f1028c3"
+  digest = "1:45290b5e7baba7e12e25d3b987e69b74cb359b39f12a60aae7db9442f6303e84"
   name = "github.com/bitrise-io/go-utils"
   packages = [
     "colorstring",
@@ -61,7 +61,7 @@
     "sliceutil",
   ]
   pruneopts = "UT"
-  revision = "252723a83464eac6cf133de86c666f1829b4479c"
+  revision = "5067a2a682f21030f379f88e853b9e0734a24516"
 
 [[projects]]
   branch = "master"
@@ -72,7 +72,7 @@
     "xcodeproj",
   ]
   pruneopts = "UT"
-  revision = "c1544b4453f2869335f71fb53c0360bdb91d01b4"
+  revision = "19cbfe6430acc193d779847a13be0b8585d866c1"
 
 [[projects]]
   branch = "master"
@@ -80,20 +80,21 @@
   name = "github.com/bitrise-io/stepman"
   packages = ["models"]
   pruneopts = "UT"
-  revision = "af0e468635253eaf3a66dca748af4a5966d161b1"
+  revision = "5243f5feb13656285d1de3dc05bd5f3cd54d38b7"
 
 [[projects]]
   branch = "master"
-  digest = "1:a35d42c66f8e5c1f1a29b247a312353eea1607512936d067d80126fcb38bc39f"
+  digest = "1:5dd11cd7c4bb3f4105bb3e27e37b58955b6b64aa63ae18f21e0cc5e5d169e8db"
   name = "github.com/bitrise-io/xcode-project"
   packages = [
+    "pretty",
     "serialized",
     "xcodebuild",
     "xcodeproj",
     "xcscheme",
   ]
   pruneopts = "UT"
-  revision = "5929ad85d89233b3296d2d795e068a656db7fb25"
+  revision = "a4e01d69cacc7dd9acbe8fb987dba69c9ce01b1c"
 
 [[projects]]
   digest = "1:ffe9824d294da03b391f44e1ae8281281b4afc1bdaa9588c9097785e3af10cec"
@@ -128,15 +129,15 @@
   revision = "51a8f68e6c24dc43f1e371749c89a267de4ebc53"
 
 [[projects]]
-  digest = "1:5da8ce674952566deae4dbc23d07c85caafc6cfa815b0b3e03e41979cedb8750"
+  digest = "1:99d32780e5238c2621fff621123997c3e3cca96db8be13179013aea77dfab551"
   name = "github.com/stretchr/testify"
   packages = [
     "assert",
     "require",
   ]
   pruneopts = "UT"
-  revision = "ffdc059bfe9ce6a4e144ba849dbedead332c6053"
-  version = "v1.3.0"
+  revision = "221dbe5ed46703ee255b1da0dec05086f5035f62"
+  version = "v1.4.0"
 
 [[projects]]
   digest = "1:1093f2eb4b344996604f7d8b29a16c5b22ab9e1b25652140d3fede39f640d5cd"
@@ -154,12 +155,12 @@
   version = "v0.3.2"
 
 [[projects]]
-  digest = "1:4d2e5a73dc1500038e504a8d78b986630e3626dc027bc030ba5c75da257cdb96"
+  digest = "1:f26a5d382387e03a40d1471dddfba85dfff9bf05352d7e42d37612677c4d3c5c"
   name = "gopkg.in/yaml.v2"
   packages = ["."]
   pruneopts = "UT"
-  revision = "51d6538a90f86fe93ac480b35f37b2be17fef232"
-  version = "v2.2.2"
+  revision = "f90ceb4f409096b60e2e9076b38b304b8246e5fa"
+  version = "v2.2.5"
 
 [[projects]]
   branch = "master"
@@ -176,7 +177,6 @@
     "github.com/bitrise-io/bitrise-init/scanners/ios",
     "github.com/bitrise-io/bitrise-init/utility",
     "github.com/bitrise-io/go-steputils/cache",
-    "github.com/bitrise-io/go-utils/command",
     "github.com/bitrise-io/go-utils/command/gems",
     "github.com/bitrise-io/go-utils/command/rubycommand",
     "github.com/bitrise-io/go-utils/fileutil",
