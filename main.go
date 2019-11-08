@@ -347,7 +347,7 @@ func main() {
 
 	// Check Gemfile.lock for CocoaPods version
 	gemfileLockPth, err := gems.GemFileLockPth(podfileDir)
-	if err != nil && !os.IsNotExist(err) {
+	if err != nil && err != gems.ErrGemLockNotFound {
 		failf("Failed to check Gemfile.lock at: %s, error: %s", gemfileLockPth, err)
 	}
 
