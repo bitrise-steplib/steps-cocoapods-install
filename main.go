@@ -256,12 +256,12 @@ func main() {
 
 	if configs.IsUpdateCocoapods != "false" {
 		log.Warnf("`is_update_cocoapods` is deprecated!")
-		log.Warnf("CocoaPods version is determined based on the Podfile.lock or the Gemfile.lock in the Podfile's directory.")
+		log.Warnf("CocoaPods version is determined based on the Podfile.lock or the gem lockfile in the Podfile's directory.")
 	}
 
 	if configs.InstallCocoapodsVersion != "" {
 		log.Warnf("`install_cocoapods_version` is deprecated!")
-		log.Warnf("CocoaPods version is determined based on the Podfile.lock or the Gemfile.lock in the Podfile's directory.")
+		log.Warnf("CocoaPods version is determined based on the Podfile.lock or the gem lockfile in the Podfile's directory.")
 	}
 
 	//
@@ -343,17 +343,17 @@ func main() {
 	var pod gems.Version
 	var bundler gems.Version
 
-	log.Printf("Searching for Gemfile.lock with cocoapods gem")
+	log.Printf("Searching for gem lockfile with cocoapods gem")
 
-	// Check Gemfile.lock for CocoaPods version
+	// Check gem lockfile for CocoaPods version
 	gemfileLockPth, err := gems.GemFileLockPth(podfileDir)
 	if err != nil && err != gems.ErrGemLockNotFound {
-		failf("Failed to check Gemfile.lock at: %s, error: %s", gemfileLockPth, err)
+		failf("Failed to check gem lockfile at: %s, error: %s", podfileDir, err)
 	}
 
 	if gemfileLockPth != "" {
-		// CocoaPods exist search for version in Gemfile.lock
-		log.Printf("Found Gemfile.lock: %s", gemfileLockPth)
+		// CocoaPods exist search for version in gem lockfile
+		log.Printf("Found gem lockfile: %s", gemfileLockPth)
 
 		content, err := fileutil.ReadStringFromFile(gemfileLockPth)
 		if err != nil {
@@ -362,7 +362,7 @@ func main() {
 
 		pod, err = gems.ParseVersionFromBundle("cocoapods", content)
 		if err != nil {
-			failf("Failed to check if Gemfile.lock contains cocoapods, error: %s", err)
+			failf("Failed to check if gem lockfile contains cocoapods, error: %s", err)
 		}
 
 		bundler, err = gems.ParseBundlerVersion(content)
@@ -372,11 +372,11 @@ func main() {
 
 		if pod.Found {
 			useCocoapodsVersionFromGemfileLock = pod.Version
-			log.Donef("Required CocoaPods version (from Gemfile.lock): %s", useCocoapodsVersionFromGemfileLock)
+			log.Donef("Required CocoaPods version (from gem lockfile): %s", useCocoapodsVersionFromGemfileLock)
 
 			isIncludedVersionRange, err := isIncludedInGemfileLockVersionRanges(useCocoapodsVersionFromPodfileLock, useCocoapodsVersionFromGemfileLock)
 			if err != nil {
-				failf("Failed to compare version range in Gemfile.lock, error: %s", err)
+				failf("Failed to compare version range in gem lockfile, error: %s", err)
 			}
 
 			if !isPodfileLockExists || isIncludedVersionRange {
@@ -384,7 +384,7 @@ func main() {
 			}
 		}
 	} else {
-		log.Printf("No Gemfile.lock with cocoapods gem found at: %s", gemfileLockPth)
+		log.Printf("No gem lockfile with cocoapods gem found at: %s", gemfileLockPth)
 		log.Donef("Using system installed CocoaPods version")
 	}
 
@@ -437,7 +437,7 @@ func main() {
 			failf("command failed, error: %s", err)
 		}
 
-		// install Gemfile.lock gems with `bundle [_version_] install ...`
+		// install gem lockfile gems with `bundle [_version_] install ...`
 		fmt.Println()
 		log.Infof("Installing cocoapods with bundler")
 
