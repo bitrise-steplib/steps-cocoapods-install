@@ -151,8 +151,7 @@ func splitOperatorAndVersion(input string) (VersionSpec, error) {
 }
 
 func isIncludedInGemfileLockVersionRanges(input string, gemfileLockVersion string) (bool, error) {
-	var splittedVersions []string
-	splittedVersions = strings.Split(gemfileLockVersion, ", ")
+	var splittedVersions = strings.Split(gemfileLockVersion, ", ")
 
 	for _, each := range splittedVersions {
 		versionSpec, err := splitOperatorAndVersion(each)
