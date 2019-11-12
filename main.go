@@ -22,22 +22,18 @@ import (
 
 // ConfigsModel ...
 type ConfigsModel struct {
-	SourceRootPath          string
-	PodfilePath             string
-	IsUpdateCocoapods       string
-	InstallCocoapodsVersion string
-	Verbose                 string
-	IsCacheDisabled         string
+	SourceRootPath  string
+	PodfilePath     string
+	Verbose         string
+	IsCacheDisabled string
 }
 
 func createConfigsModelFromEnvs() ConfigsModel {
 	return ConfigsModel{
-		SourceRootPath:          os.Getenv("source_root_path"),
-		PodfilePath:             os.Getenv("podfile_path"),
-		IsUpdateCocoapods:       os.Getenv("is_update_cocoapods"),
-		InstallCocoapodsVersion: os.Getenv("install_cocoapods_version"),
-		Verbose:                 os.Getenv("verbose"),
-		IsCacheDisabled:         os.Getenv("is_cache_disabled"),
+		SourceRootPath:  os.Getenv("source_root_path"),
+		PodfilePath:     os.Getenv("podfile_path"),
+		Verbose:         os.Getenv("verbose"),
+		IsCacheDisabled: os.Getenv("is_cache_disabled"),
 	}
 }
 
@@ -45,8 +41,6 @@ func (configs ConfigsModel) print() {
 	log.Infof("Configs:")
 	log.Printf("- SourceRootPath: %s", configs.SourceRootPath)
 	log.Printf("- PodfilePath: %s", configs.PodfilePath)
-	log.Printf("- IsUpdateCocoapods: %s", configs.IsUpdateCocoapods)
-	log.Printf("- InstallCocoapodsVersion: %s", configs.InstallCocoapodsVersion)
 	log.Printf("- Verbose: %s", configs.Verbose)
 	log.Printf("- IsCacheDisabled: %s", configs.IsCacheDisabled)
 }
@@ -67,10 +61,6 @@ func (configs ConfigsModel) validate() error {
 		} else if !exist {
 			return fmt.Errorf("PodfilePath does not exist at: %s", configs.PodfilePath)
 		}
-	}
-
-	if configs.IsUpdateCocoapods != "true" && configs.IsUpdateCocoapods != "false" {
-		return fmt.Errorf("IsUpdateCocoapods invalid value: %s, available: [true false]", configs.IsUpdateCocoapods)
 	}
 
 	if configs.Verbose != "" {
@@ -252,16 +242,6 @@ func main() {
 
 	if err := configs.validate(); err != nil {
 		failf("Issue with input: %s", err)
-	}
-
-	if configs.IsUpdateCocoapods != "false" {
-		log.Warnf("`is_update_cocoapods` is deprecated!")
-		log.Warnf("CocoaPods version is determined based on the Podfile.lock or the gem lockfile in the Podfile's directory.")
-	}
-
-	if configs.InstallCocoapodsVersion != "" {
-		log.Warnf("`install_cocoapods_version` is deprecated!")
-		log.Warnf("CocoaPods version is determined based on the Podfile.lock or the gem lockfile in the Podfile's directory.")
 	}
 
 	//
