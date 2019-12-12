@@ -1,14 +1,35 @@
 title: Run CocoaPods install
 summary: |-
-  You don't need to keep the installed pods in your repo, simply add this step
+  You don't need to keep the installed pods in your repo. Simply add this Step
   and Bitrise will do the pod install for you on the VM!
 description: |-
-  Run CocoaPods install (`$ pod install`) in your App's directory.
 
-  CocoaPods version is determined based on the Podfile.lock or
-  on the Gemfile.lock (if Podfile.lock does not exist in the Podfile's
-  directory and Gemfile.lock contains cocoapods gem)
-  in the Podfile's directory.
+  CocoaPods is a dependency manager for Swift and Objective-C Cocoa projects. This Step uses CocoaPods' `pod install` command to install your dependencies on the virtual machine where your Bitrise build runs. CocoaPods version is determined based on the Podfile.lock file or on the Gemfile.lock file if Podfile.lock does not exist in the Podfile's
+  directory and Gemfile.lock contains the `cocoapods` gem).
+
+  ### Configuring the Step
+
+  1. Set the **Source Code Directory path** to the path of your app's source code.
+
+  1. Optionally, provide a Podfile in the **Podfile path** input.
+
+     Without a specific Podfile, the Step searches for the Podfile in the root of your app's directory.
+
+  ### Troubleshooting
+
+  If the Step fails, check out the Podfile and the Gemfile of your app. Make sure there is no compatibility issue with the different versions of your Pods.
+
+  You can set the **Execute cocoapods in verboe mode?** input to true to get detailed logs of the Step.
+
+  ### Useful links
+
+  [Caching Cocoapods](https://devcenter.bitrise.io/builds/caching/caching-cocoapods/)
+  [Include your dependencies in your repository](https://devcenter.bitrise.io/tips-and-tricks/optimize-your-build-times/#include-your-dependencies-in-your-repository)
+
+  ### Related Steps
+
+  [Run yarn command](https://www.bitrise.io/integrations/steps/yarn)
+  [Carthage](https://www.bitrise.io/integrations/steps/carthage)
 website: https://github.com/bitrise-io/steps-cocoapods-install
 source_code_url: https://github.com/bitrise-io/steps-cocoapods-install
 support_url: https://github.com/bitrise-io/steps-cocoapods-install/issues
