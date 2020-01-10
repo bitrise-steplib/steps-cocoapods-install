@@ -4,8 +4,10 @@ summary: |-
   and Bitrise will do the pod install for you on the VM!
 description: |-
 
-  CocoaPods is a dependency manager for Swift and Objective-C Cocoa projects. This Step uses CocoaPods' `pod install` command to install your dependencies on the virtual machine where your Bitrise build runs. CocoaPods version is determined based on the Podfile.lock file or on the Gemfile.lock file if Podfile.lock does not exist in the Podfile's
-  directory and Gemfile.lock contains the `cocoapods` gem).
+  CocoaPods is a dependency manager for Swift and Objective-C projects. This Step uses CocoaPods' `pod install` command to install your dependencies on the virtual machine where your Bitrise build runs.   
+  CocoaPods version is determined based on the Podfile.lock file or on the Gemfile.lock file. If the version is specified in the Gemfile.lock file and the version range specified in the Podfile.lock file . 
+  contains that version, then that version will be installed. Otherwise, the Cocoapods version in the Podfile.lock will be installed as a global gem.  
+  If no Cocoapods version is defined in the Podfile.lock, the preinstalled sytem Cocoapods version will be used.
 
   ### Configuring the Step
 
@@ -13,7 +15,7 @@ description: |-
 
   1. Optionally, provide a Podfile in the **Podfile path** input.
 
-     Without a specific Podfile, the Step searches for the Podfile in the root of your app's directory.
+     Without a specific Podfile, the Step does a recursive search for the Podfile in the root of your app's directory, and uses the first Podfile it finds.
 
   ### Troubleshooting
 
@@ -23,13 +25,13 @@ description: |-
 
   ### Useful links
 
-  [Caching Cocoapods](https://devcenter.bitrise.io/builds/caching/caching-cocoapods/)
-  [Include your dependencies in your repository](https://devcenter.bitrise.io/tips-and-tricks/optimize-your-build-times/#include-your-dependencies-in-your-repository)
+  * [Caching Cocoapods](https://devcenter.bitrise.io/builds/caching/caching-cocoapods/)
+  * [Include your dependencies in your repository](https://devcenter.bitrise.io/tips-and-tricks/optimize-your-build-times/#include-your-dependencies-in-your-repository)
 
   ### Related Steps
 
-  [Run yarn command](https://www.bitrise.io/integrations/steps/yarn)
-  [Carthage](https://www.bitrise.io/integrations/steps/carthage)
+  * [Run yarn command](https://www.bitrise.io/integrations/steps/yarn)
+  * [Carthage](https://www.bitrise.io/integrations/steps/carthage)
 website: https://github.com/bitrise-io/steps-cocoapods-install
 source_code_url: https://github.com/bitrise-io/steps-cocoapods-install
 support_url: https://github.com/bitrise-io/steps-cocoapods-install/issues
