@@ -5,7 +5,7 @@ summary: |-
 description: |-
 
   CocoaPods is a dependency manager for Swift and Objective-C projects. This Step uses CocoaPods' `pod install` command to install your dependencies on the virtual machine where your Bitrise build runs.   
-  CocoaPods version is determined based on the Podfile.lock file or on the Gemfile.lock file. If the version is specified in the Gemfile.lock file and the version range specified in the Podfile.lock file . 
+  CocoaPods version is determined based on the Podfile.lock file or on the Gemfile.lock file. If the version is specified in the Podfile.lock file and the version range specified in the Gemfile.lock file  
   contains that version, then that version will be installed. Otherwise, the Cocoapods version in the Podfile.lock will be installed as a global gem.  
   If no Cocoapods version is defined in the Podfile.lock, the preinstalled sytem Cocoapods version will be used.
 
@@ -19,9 +19,10 @@ description: |-
 
   ### Troubleshooting
 
-  If the Step fails, check out the Podfile and the Gemfile of your app. Make sure there is no compatibility issue with the different versions of your Pods.
+  If the Step fails, check out the Podfile and the Gemfile of your app. Make sure there is no compatibility issue with the different versions of your Pods.  
+  Check that both Podfile.lock and Gemfile.lock is committed and the Cocoapods versions defined in both match.
 
-  You can set the **Execute cocoapods in verboe mode?** input to true to get detailed logs of the Step.
+  You can set the **Execute cocoapods in verbose mode?** input to true to get detailed logs of the Step.
 
   ### Useful links
 
