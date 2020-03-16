@@ -159,6 +159,7 @@ workflows:
     - audit-this-step
     - go-tests
     after_run:
+    - test_with_plugins
     - test_with_no_podfile_lock
     - test_with_gemfile
     - test_without_gemfile
