@@ -145,6 +145,15 @@ workflows:
             set -e
             echo $BITRISE_CACHE_INCLUDE_PATHS
 
+  test_with_plugins:
+    envs:
+    # With Gemfile:
+    - REPO_URL: https://github.com/bitrise-io/sample-apps-ios-cocoapods-plugins.git
+    - TEST_REPO_BRANCH: master
+    - PODFILE_PTH: ''
+    after_run:
+    - _test_with_repo
+
   test:
     before_run:
     - audit-this-step
