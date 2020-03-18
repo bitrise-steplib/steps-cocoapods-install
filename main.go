@@ -380,7 +380,7 @@ func main() {
 			}
 
 			if !isIncludedVersionRange {
-				log.Warnf("Using bundler but the resolved version in podfile.lock and gemfile.lock for 'cocoapods' is different.")
+				log.Warnf("Using bundler but the resolved version in podfile.lock(%s) and gemfile.lock(%s) for 'cocoapods' is different.", useCocoapodsVersionFromPodfileLock, useCocoapodsVersionFromGemfileLock)
 			}
 			useBundler = true
 		}
