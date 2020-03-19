@@ -380,7 +380,7 @@ func main() {
 			}
 
 			if !isIncludedVersionRange {
-				log.Warnf("Using bundler but the resolved version in podfile.lock(%s) and gemfile.lock(%s) for 'cocoapods' is different.", useCocoapodsVersionFromPodfileLock, useCocoapodsVersionFromGemfileLock)
+				log.Warnf("Cocoapods version required in Podfile.lock (%s) does not match Gemfile.lock (%s). Will install Cocoapods using bundler.", useCocoapodsVersionFromPodfileLock, useCocoapodsVersionFromGemfileLock)
 			}
 			useBundler = true
 		}
