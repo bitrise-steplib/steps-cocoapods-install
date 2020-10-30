@@ -358,9 +358,10 @@ func main() {
 				failf("Failed to compare version range in gem lockfile, error: %s", err)
 			}
 
-			if !isPodfileLockExists || isIncludedVersionRange {
-				useBundler = true
+			if !isIncludedVersionRange {
+				log.Warnf("Cocoapods version required in Podfile.lock (%s) does not match Gemfile.lock (%s). Will install Cocoapods using bundler.", useCocoapodsVersionFromPodfileLock, useCocoapodsVersionFromGemfileLock)
 			}
+			useBundler = true
 		}
 	} else {
 		log.Printf("No gem lockfile with cocoapods gem found at: %s", gemfileLockPth)
