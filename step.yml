@@ -49,15 +49,9 @@ type_tags:
 is_requires_admin_user: true
 is_always_run: false
 is_skippable: false
-deps:
-  brew:
-  - name: go
-  apt_get:
-  - name: golang
-    bin_name: go
 toolkit:
   go:
-    package_name: github.com/bitrise-io/steps-cocoapods-install
+    package_name: github.com/bitrise-steplib/steps-cocoapods-install
 inputs:
   - source_root_path: "$BITRISE_SOURCE_DIR"
     opts:
@@ -72,23 +66,6 @@ inputs:
 
         If not provided, the Step will search for root Podfile,
         and run `pod install` with.
-  - is_update_cocoapods: "false"
-    opts:
-      title: "Update CocoaPods to the latest version?"
-      description: |
-        __Deprecated!__
-
-        CocoaPods version is determined based on the Podfile.lock or the Gemfile.lock in the Podfile's directory.
-      value_options: ["true", "false"]
-      is_expand: false
-      is_required: true
-  - install_cocoapods_version: ""
-    opts:
-      title: "Install specified CocoaPods version"
-      description: |
-        __Deprecated!__
-
-        CocoaPods version is determined based on the Podfile.lock or the Gemfile.lock in the Podfile's directory.
   - verbose: "true"
     opts:
       title: "Execute cocoapods in verbose mode?"
