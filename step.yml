@@ -66,7 +66,7 @@ inputs:
 
         If not provided, the Step will search for root Podfile,
         and run `pod install` with.
-  - verbose: "true"
+  - verbose: "false"
     opts:
       title: "Execute cocoapods in verbose mode?"
       description: |
@@ -78,7 +78,7 @@ inputs:
     opts:
       title: "Disable built-in cache"
       description: |
-        True to disable pods caching 
+        True to disable pods caching
       value_options: ["true", "false"]
       is_expand: false
       is_required: false
