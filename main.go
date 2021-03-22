@@ -493,7 +493,7 @@ func main() {
 	fmt.Println()
 	log.Infof("Installing Pods")
 
-	podInstallCmdSlice := append(podCmdSlice, "install", "--no-repo-update")
+	podInstallCmdSlice := append(podCmdSlice, "install", "--repo-update")
 	if configs.Verbose == "true" {
 		podInstallCmdSlice = append(podInstallCmdSlice, "--verbose")
 	}
