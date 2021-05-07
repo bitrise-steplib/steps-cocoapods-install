@@ -6,6 +6,7 @@ import (
 
 	"gopkg.in/yaml.v2"
 
+	"github.com/bitrise-io/bitrise-init/analytics"
 	"github.com/bitrise-io/bitrise-init/models"
 	"github.com/bitrise-io/bitrise-init/steps"
 	"github.com/bitrise-io/bitrise-init/utility"
@@ -18,6 +19,7 @@ import (
 const (
 	defaultConfigNameFormat = "default-%s-config"
 	configNameFormat        = "%s%s-config"
+	iconFailureTag          = "icon_lookup"
 )
 
 const (
@@ -60,6 +62,14 @@ const (
 // IosExportMethods ...
 var IosExportMethods = []string{"app-store", "ad-hoc", "enterprise", "development"}
 
+const (
+	// ExportXCArchiveProductInputKey ...
+	ExportXCArchiveProductInputKey = "product"
+
+	// ExportXCArchiveProductInputAppClipValue ...
+	ExportXCArchiveProductInputAppClipValue = "app-clip"
+)
+
 // MacExportMethods ...
 var MacExportMethods = []string{"app-store", "developer-id", "development", "none"}
 
@@ -84,15 +94,19 @@ type ConfigDescriptor struct {
 	HasPodfile           bool
 	CarthageCommand      string
 	HasTest              bool
+	HasAppClip           bool
+	ExportMethod         string
 	MissingSharedSchemes bool
 }
 
 // NewConfigDescriptor ...
-func NewConfigDescriptor(hasPodfile bool, carthageCommand string, hasXCTest bool, missingSharedSchemes bool) ConfigDescriptor {
+func NewConfigDescriptor(hasPodfile bool, carthageCommand string, hasXCTest, hasAppClip bool, exportMethod string, missingSharedSchemes bool) ConfigDescriptor {
 	return ConfigDescriptor{
 		HasPodfile:           hasPodfile,
 		CarthageCommand:      carthageCommand,
 		HasTest:              hasXCTest,
+		HasAppClip:           hasAppClip,
+		ExportMethod:         exportMethod,
 		MissingSharedSchemes: missingSharedSchemes,
 	}
 }
@@ -108,6 +122,9 @@ func (descriptor ConfigDescriptor) ConfigName(projectType XcodeProjectType) stri
 	}
 	if descriptor.HasTest {
 		qualifiers += "-test"
+	}
+	if descriptor.HasAppClip {
+		qualifiers += fmt.Sprintf("-app-clip-%s", descriptor.ExportMethod)
 	}
 	if descriptor.MissingSharedSchemes {
 		qualifiers += "-missing-shared-schemes"
@@ -242,7 +259,7 @@ func projectPathByScheme(projects []xcodeproj.ProjectModel, targetScheme string)
 }
 
 // GenerateOptions ...
-func GenerateOptions(projectType XcodeProjectType, searchDir string, excludeAppIcon bool) (models.OptionNode, []ConfigDescriptor, models.Icons, models.Warnings, error) {
+func GenerateOptions(projectType XcodeProjectType, searchDir string, excludeAppIcon, suppressPodFileParseError bool) (models.OptionNode, []ConfigDescriptor, models.Icons, models.Warnings, error) {
 	warnings := models.Warnings{}
 
 	fileList, err := utility.ListPathInDirSortedByComponents(searchDir, true)
@@ -292,7 +309,12 @@ func GenerateOptions(projectType XcodeProjectType, searchDir string, excludeAppI
 	for _, podfile := range podfiles {
 		log.TPrintf("- %s", podfile)
 
-		workspaceProjectMap, err := GetWorkspaceProjectMap(podfile, projectFiles)
+		podfileParser := podfileParser{
+			podfilePth:                podfile,
+			suppressPodFileParseError: suppressPodFileParseError,
+		}
+
+		workspaceProjectMap, err := podfileParser.GetWorkspaceProjectMap(projectFiles)
 		if err != nil {
 			warning := fmt.Sprintf("Failed to determine cocoapods project-workspace mapping, error: %s", err)
 			warnings = append(warnings, warning)
@@ -373,9 +395,8 @@ func GenerateOptions(projectType XcodeProjectType, searchDir string, excludeAppI
 				if !excludeAppIcon {
 					icons, err := lookupIconByTargetName(projectPath, target.Name, searchDir)
 					if err != nil {
-						warningMsg := fmt.Sprintf("could not get icons for app: %s, error: %s", projectPath, err)
-						log.Warnf(warningMsg)
-						warnings = append(warnings, warningMsg)
+						log.Warnf("could not get icons for app: %s, error: %s", projectPath, err)
+						analytics.LogInfo(iconFailureTag, analytics.DetectorErrorData(string(XcodeProjectTypeIOS), err), "Failed to lookup ios icons")
 					}
 					iconsForAllProjects = append(iconsForAllProjects, icons...)
 					for _, icon := range icons {
@@ -384,7 +405,7 @@ func GenerateOptions(projectType XcodeProjectType, searchDir string, excludeAppI
 				}
 
 				for _, exportMethod := range exportMethods {
-					configDescriptor := NewConfigDescriptor(false, carthageCommand, target.HasXCTest, true)
+					configDescriptor := NewConfigDescriptor(false, carthageCommand, target.HasXCTest, target.HasAppClip, exportMethod, true)
 					configDescriptors = append(configDescriptors, configDescriptor)
 					configOption := models.NewConfigOption(configDescriptor.ConfigName(projectType), iconIDs)
 
@@ -402,9 +423,8 @@ func GenerateOptions(projectType XcodeProjectType, searchDir string, excludeAppI
 				if !excludeAppIcon {
 					icons, err := lookupIconBySchemeName(projectPath, scheme.Name, searchDir)
 					if err != nil {
-						warningMsg := fmt.Sprintf("could not get icons for app: %s, error: %s", projectPath, err)
-						log.Warnf(warningMsg)
-						warnings = append(warnings, warningMsg)
+						log.Warnf("could not get icons for app: %s, error: %s", projectPath, err)
+						analytics.LogInfo(iconFailureTag, analytics.DetectorErrorData(string(XcodeProjectTypeIOS), err), "Failed to lookup ios icons")
 					}
 					iconsForAllProjects = append(iconsForAllProjects, icons...)
 					for _, icon := range icons {
@@ -413,7 +433,7 @@ func GenerateOptions(projectType XcodeProjectType, searchDir string, excludeAppI
 				}
 
 				for _, exportMethod := range exportMethods {
-					configDescriptor := NewConfigDescriptor(false, carthageCommand, scheme.HasXCTest, false)
+					configDescriptor := NewConfigDescriptor(false, carthageCommand, scheme.HasXCTest, schemeHasAppClipTarget(scheme, project.Targets), exportMethod, false)
 					configDescriptors = append(configDescriptors, configDescriptor)
 					configOption := models.NewConfigOption(configDescriptor.ConfigName(projectType), iconIDs)
 
@@ -456,9 +476,8 @@ func GenerateOptions(projectType XcodeProjectType, searchDir string, excludeAppI
 					if !excludeAppIcon {
 						icons, err := lookupIconByTargetName(project.Pth, target.Name, searchDir)
 						if err != nil {
-							warningMsg := fmt.Sprintf("could not get icons for app: %s, error: %s", project.Pth, err)
-							log.Warnf(warningMsg)
-							warnings = append(warnings, warningMsg)
+							log.Warnf("could not get icons for app: %s, error: %s", project.Pth, err)
+							analytics.LogInfo(iconFailureTag, analytics.DetectorErrorData(string(XcodeProjectTypeIOS), err), "Failed to lookup ios icons")
 						}
 						iconsForAllProjects = append(iconsForAllProjects, icons...)
 						for _, icon := range icons {
@@ -467,7 +486,7 @@ func GenerateOptions(projectType XcodeProjectType, searchDir string, excludeAppI
 					}
 
 					for _, exportMethod := range exportMethods {
-						configDescriptor := NewConfigDescriptor(workspace.IsPodWorkspace, carthageCommand, target.HasXCTest, true)
+						configDescriptor := NewConfigDescriptor(workspace.IsPodWorkspace, carthageCommand, target.HasXCTest, target.HasAppClip, exportMethod, true)
 						configDescriptors = append(configDescriptors, configDescriptor)
 						configOption := models.NewConfigOption(configDescriptor.ConfigName(projectType), iconIDs)
 
@@ -503,9 +522,8 @@ func GenerateOptions(projectType XcodeProjectType, searchDir string, excludeAppI
 
 					icons, err := lookupIconBySchemeName(projectPath, scheme.Name, searchDir)
 					if err != nil {
-						warningMsg := fmt.Sprintf("could not get icons for app: %s, error: %s", projectPath, err)
-						log.Warnf(warningMsg)
-						warnings = append(warnings, warningMsg)
+						log.Warnf("could not get icons for app: %s, error: %s", projectPath, err)
+						analytics.LogInfo(iconFailureTag, analytics.DetectorErrorData(string(XcodeProjectTypeIOS), err), "Failed to lookup ios icons")
 					}
 					iconsForAllProjects = append(iconsForAllProjects, icons...)
 					for _, icon := range icons {
@@ -514,7 +532,8 @@ func GenerateOptions(projectType XcodeProjectType, searchDir string, excludeAppI
 				}
 
 				for _, exportMethod := range exportMethods {
-					configDescriptor := NewConfigDescriptor(workspace.IsPodWorkspace, carthageCommand, scheme.HasXCTest, false)
+					// only add appclip for development and ad-hoc
+					configDescriptor := NewConfigDescriptor(workspace.IsPodWorkspace, carthageCommand, scheme.HasXCTest, schemeHasAppClipTarget(scheme, workspace.GetTargets()), exportMethod, false)
 					configDescriptors = append(configDescriptors, configDescriptor)
 					configOption := models.NewConfigOption(configDescriptor.ConfigName(projectType), iconIDs)
 
@@ -566,7 +585,16 @@ func GenerateDefaultOptions(projectType XcodeProjectType) models.OptionNode {
 }
 
 // GenerateConfigBuilder ...
-func GenerateConfigBuilder(projectType XcodeProjectType, hasPodfile, hasTest, missingSharedSchemes bool, carthageCommand string, isIncludeCache bool) models.ConfigBuilderModel {
+func GenerateConfigBuilder(
+	projectType XcodeProjectType,
+	hasPodfile,
+	hasTest,
+	hasAppClip,
+	missingSharedSchemes bool,
+	carthageCommand string,
+	isIncludeCache bool,
+	exportMethod string,
+) models.ConfigBuilderModel {
 	configBuilder := models.NewDefaultConfigBuilder()
 
 	// CI
@@ -590,8 +618,8 @@ func GenerateConfigBuilder(projectType XcodeProjectType, hasPodfile, hasTest, mi
 	}
 
 	xcodeStepInputModels := []envmanModels.EnvironmentItemModel{
-		envmanModels.EnvironmentItemModel{ProjectPathInputKey: "$" + ProjectPathInputEnvKey},
-		envmanModels.EnvironmentItemModel{SchemeInputKey: "$" + SchemeInputEnvKey},
+		{ProjectPathInputKey: "$" + ProjectPathInputEnvKey},
+		{SchemeInputKey: "$" + SchemeInputEnvKey},
 	}
 	xcodeArchiveStepInputModels := append(xcodeStepInputModels, envmanModels.EnvironmentItemModel{ExportMethodInputKey: "$" + ExportMethodInputEnvKey})
 
@@ -606,6 +634,10 @@ func GenerateConfigBuilder(projectType XcodeProjectType, hasPodfile, hasTest, mi
 		switch projectType {
 		case XcodeProjectTypeIOS:
 			configBuilder.AppendStepListItemsTo(models.PrimaryWorkflowID, steps.XcodeArchiveStepListItem(xcodeArchiveStepInputModels...))
+
+			if shouldAppendExportAppClipStep(hasAppClip, exportMethod) {
+				appendExportAppClipStep(configBuilder, models.PrimaryWorkflowID)
+			}
 		case XcodeProjectTypeMacOS:
 			configBuilder.AppendStepListItemsTo(models.PrimaryWorkflowID, steps.XcodeArchiveMacStepListItem(xcodeArchiveStepInputModels...))
 		}
@@ -637,14 +669,13 @@ func GenerateConfigBuilder(projectType XcodeProjectType, hasPodfile, hasTest, mi
 		switch projectType {
 		case XcodeProjectTypeIOS:
 			configBuilder.AppendStepListItemsTo(models.DeployWorkflowID, steps.XcodeTestStepListItem(xcodeStepInputModels...))
+			configBuilder.AppendStepListItemsTo(models.DeployWorkflowID, steps.XcodeArchiveStepListItem(xcodeArchiveStepInputModels...))
+
+			if shouldAppendExportAppClipStep(hasAppClip, exportMethod) {
+				appendExportAppClipStep(configBuilder, models.DeployWorkflowID)
+			}
 		case XcodeProjectTypeMacOS:
 			configBuilder.AppendStepListItemsTo(models.DeployWorkflowID, steps.XcodeTestMacStepListItem(xcodeStepInputModels...))
-		}
-
-		switch projectType {
-		case XcodeProjectTypeIOS:
-			configBuilder.AppendStepListItemsTo(models.DeployWorkflowID, steps.XcodeArchiveStepListItem(xcodeArchiveStepInputModels...))
-		case XcodeProjectTypeMacOS:
 			configBuilder.AppendStepListItemsTo(models.DeployWorkflowID, steps.XcodeArchiveMacStepListItem(xcodeArchiveStepInputModels...))
 		}
 
@@ -674,7 +705,15 @@ func RemoveDuplicatedConfigDescriptors(configDescriptors []ConfigDescriptor, pro
 func GenerateConfig(projectType XcodeProjectType, configDescriptors []ConfigDescriptor, isIncludeCache bool) (models.BitriseConfigMap, error) {
 	bitriseDataMap := models.BitriseConfigMap{}
 	for _, descriptor := range configDescriptors {
-		configBuilder := GenerateConfigBuilder(projectType, descriptor.HasPodfile, descriptor.HasTest, descriptor.MissingSharedSchemes, descriptor.CarthageCommand, isIncludeCache)
+		configBuilder := GenerateConfigBuilder(
+			projectType,
+			descriptor.HasPodfile,
+			descriptor.HasTest,
+			descriptor.HasAppClip,
+			descriptor.MissingSharedSchemes,
+			descriptor.CarthageCommand,
+			isIncludeCache,
+			descriptor.ExportMethod)
 
 		config, err := configBuilder.Generate(string(projectType))
 		if err != nil {
@@ -706,8 +745,8 @@ func GenerateDefaultConfig(projectType XcodeProjectType, isIncludeCache bool) (m
 	configBuilder.AppendStepListItemsTo(models.PrimaryWorkflowID, steps.CocoapodsInstallStepListItem())
 
 	xcodeTestStepInputModels := []envmanModels.EnvironmentItemModel{
-		envmanModels.EnvironmentItemModel{ProjectPathInputKey: "$" + ProjectPathInputEnvKey},
-		envmanModels.EnvironmentItemModel{SchemeInputKey: "$" + SchemeInputEnvKey},
+		{ProjectPathInputKey: "$" + ProjectPathInputEnvKey},
+		{SchemeInputKey: "$" + SchemeInputEnvKey},
 	}
 	xcodeArchiveStepInputModels := append(xcodeTestStepInputModels, envmanModels.EnvironmentItemModel{ExportMethodInputKey: "$" + ExportMethodInputEnvKey})
 
@@ -731,7 +770,6 @@ func GenerateDefaultConfig(projectType XcodeProjectType, isIncludeCache bool) (m
 	switch projectType {
 	case XcodeProjectTypeIOS:
 		configBuilder.AppendStepListItemsTo(models.DeployWorkflowID, steps.XcodeTestStepListItem(xcodeTestStepInputModels...))
-
 		configBuilder.AppendStepListItemsTo(models.DeployWorkflowID, steps.XcodeArchiveStepListItem(xcodeArchiveStepInputModels...))
 	case XcodeProjectTypeMacOS:
 		configBuilder.AppendStepListItemsTo(models.DeployWorkflowID, steps.XcodeTestMacStepListItem(xcodeTestStepInputModels...))
@@ -753,4 +791,29 @@ func GenerateDefaultConfig(projectType XcodeProjectType, isIncludeCache bool) (m
 	return models.BitriseConfigMap{
 		fmt.Sprintf(defaultConfigNameFormat, string(projectType)): string(data),
 	}, nil
+}
+
+func schemeHasAppClipTarget(scheme xcodeproj.SchemeModel, targets []xcodeproj.TargetModel) bool {
+	for _, target := range targets {
+		for _, referenceID := range scheme.BuildableReferenceIDs {
+			if referenceID == target.ID && target.HasAppClip {
+				return true
+			}
+		}
+	}
+
+	return false
+}
+
+func shouldAppendExportAppClipStep(hasAppClip bool, exportMethod string) bool {
+	return hasAppClip &&
+		(exportMethod == "development" || exportMethod == "ad-hoc")
+}
+
+func appendExportAppClipStep(configBuilder *models.ConfigBuilderModel, workflowID models.WorkflowID) {
+	exportXCArchiveStepInputModels := []envmanModels.EnvironmentItemModel{
+		{ExportXCArchiveProductInputKey: ExportXCArchiveProductInputAppClipValue},
+		{ExportMethodInputKey: "$" + ExportMethodInputEnvKey},
+	}
+	configBuilder.AppendStepListItemsTo(workflowID, steps.ExportXCArchiveStepListItem(exportXCArchiveStepInputModels...))
 }

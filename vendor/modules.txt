@@ -1,0 +1,71 @@
+# github.com/bitrise-io/bitrise v0.0.0-20210401073821-4ed3f06d26ae
+## explicit
+github.com/bitrise-io/bitrise/models
+# github.com/bitrise-io/bitrise-init v0.0.0-20210208131021-c11d38b7aef3
+## explicit
+github.com/bitrise-io/bitrise-init/analytics
+github.com/bitrise-io/bitrise-init/models
+github.com/bitrise-io/bitrise-init/scanners/ios
+github.com/bitrise-io/bitrise-init/scanners/xamarin
+github.com/bitrise-io/bitrise-init/step
+github.com/bitrise-io/bitrise-init/steps
+github.com/bitrise-io/bitrise-init/utility
+# github.com/bitrise-io/envman v0.0.0-20200512105748-919e33f391ee
+github.com/bitrise-io/envman/models
+# github.com/bitrise-io/go-plist v0.0.0-20210301100253-4b1a112ccd10
+github.com/bitrise-io/go-plist
+# github.com/bitrise-io/go-steputils v0.0.0-20210505101226-8536c460c5c1
+## explicit
+github.com/bitrise-io/go-steputils/cache
+github.com/bitrise-io/go-steputils/command/gems
+github.com/bitrise-io/go-steputils/command/rubycommand
+github.com/bitrise-io/go-steputils/command/rubyscript
+github.com/bitrise-io/go-steputils/tools
+# github.com/bitrise-io/go-utils v0.0.0-20210506064210-b22e2b7b3ad3
+## explicit
+github.com/bitrise-io/go-utils/colorstring
+github.com/bitrise-io/go-utils/command
+github.com/bitrise-io/go-utils/errorutil
+github.com/bitrise-io/go-utils/fileutil
+github.com/bitrise-io/go-utils/log
+github.com/bitrise-io/go-utils/parseutil
+github.com/bitrise-io/go-utils/pathutil
+github.com/bitrise-io/go-utils/pointers
+github.com/bitrise-io/go-utils/sliceutil
+# github.com/bitrise-io/go-xcode v0.0.0-20210506065716-dfbf48d9980d
+## explicit
+github.com/bitrise-io/go-xcode/plistutil
+github.com/bitrise-io/go-xcode/xcodeproj
+# github.com/bitrise-io/stepman v0.0.0-20210505110307-5c2296bcc558
+## explicit
+github.com/bitrise-io/stepman/models
+# github.com/bitrise-io/xcode-project v0.0.0-20210302080829-f3e0bfbcd5cb
+## explicit
+github.com/bitrise-io/xcode-project/pretty
+github.com/bitrise-io/xcode-project/serialized
+github.com/bitrise-io/xcode-project/xcodebuild
+github.com/bitrise-io/xcode-project/xcodeproj
+github.com/bitrise-io/xcode-project/xcscheme
+# github.com/davecgh/go-spew v1.1.1
+github.com/davecgh/go-spew/spew
+# github.com/pkg/errors v0.9.1
+## explicit
+github.com/pkg/errors
+# github.com/pmezard/go-difflib v1.0.0
+github.com/pmezard/go-difflib/difflib
+# github.com/ryanuber/go-glob v1.0.0
+github.com/ryanuber/go-glob
+# github.com/stretchr/testify v1.7.0
+## explicit
+github.com/stretchr/testify/assert
+github.com/stretchr/testify/require
+# golang.org/x/text v0.3.6
+## explicit
+golang.org/x/text/transform
+golang.org/x/text/unicode/norm
+# gopkg.in/yaml.v2 v2.4.0
+gopkg.in/yaml.v2
+# gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
+gopkg.in/yaml.v3
+# howett.net/plist v0.0.0-20201203080718-1454fab16a06
+howett.net/plist
