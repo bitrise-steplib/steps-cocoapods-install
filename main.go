@@ -11,9 +11,9 @@ import (
 	"github.com/bitrise-io/bitrise-init/scanners/ios"
 	"github.com/bitrise-io/bitrise-init/utility"
 	"github.com/bitrise-io/go-steputils/cache"
+	"github.com/bitrise-io/go-steputils/command/gems"
+	"github.com/bitrise-io/go-steputils/command/rubycommand"
 	"github.com/bitrise-io/go-utils/command"
-	"github.com/bitrise-io/go-utils/command/gems"
-	"github.com/bitrise-io/go-utils/command/rubycommand"
 	"github.com/bitrise-io/go-utils/fileutil"
 	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-io/go-utils/pathutil"
@@ -449,7 +449,7 @@ func main() {
 		if !installed {
 			log.Printf("Installing")
 
-			cmds, err := rubycommand.GemInstall("cocoapods", useCocoapodsVersionFromPodfileLock)
+			cmds, err := rubycommand.GemInstall("cocoapods", useCocoapodsVersionFromPodfileLock, false)
 			if err != nil {
 				failf("Failed to create command model, error: %s", err)
 			}
