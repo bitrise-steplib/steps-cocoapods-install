@@ -13,63 +13,35 @@ import (
 	"github.com/bitrise-io/go-steputils/cache"
 	"github.com/bitrise-io/go-steputils/command/gems"
 	"github.com/bitrise-io/go-steputils/command/rubycommand"
+	"github.com/bitrise-io/go-steputils/stepconf"
 	"github.com/bitrise-io/go-utils/command"
 	"github.com/bitrise-io/go-utils/fileutil"
 	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-io/go-utils/pathutil"
-	"github.com/pkg/errors"
 )
 
 // ConfigsModel ...
 type ConfigsModel struct {
-	SourceRootPath  string
-	PodfilePath     string
-	Verbose         string
-	IsCacheDisabled string
+	Command         string `env:"command,opt[install,update]"`
+	SourceRootPath  string `env:"source_root_path,required"`
+	PodfilePath     string `env:"podfile_path"`
+	Verbose         bool   `env:"verbose,opt[true,false]"`
+	IsCacheDisabled bool   `env:"is_cache_disabled,opt[true,false]"`
 }
 
-func createConfigsModelFromEnvs() ConfigsModel {
-	return ConfigsModel{
-		SourceRootPath:  os.Getenv("source_root_path"),
-		PodfilePath:     os.Getenv("podfile_path"),
-		Verbose:         os.Getenv("verbose"),
-		IsCacheDisabled: os.Getenv("is_cache_disabled"),
-	}
-}
-
-func (configs ConfigsModel) print() {
-	log.Infof("Configs:")
-	log.Printf("- SourceRootPath: %s", configs.SourceRootPath)
-	log.Printf("- PodfilePath: %s", configs.PodfilePath)
-	log.Printf("- Verbose: %s", configs.Verbose)
-	log.Printf("- IsCacheDisabled: %s", configs.IsCacheDisabled)
-}
-
-func (configs ConfigsModel) validate() error {
-	if configs.SourceRootPath == "" {
-		return errors.New("no SourceRootPath parameter specified")
-	}
-	if exist, err := pathutil.IsDirExists(configs.SourceRootPath); err != nil {
-		return fmt.Errorf("failed to check if SourceRootPath exists at: %s, error: %s", configs.SourceRootPath, err)
-	} else if !exist {
-		return fmt.Errorf("SourceRootPath does not exist at: %s", configs.SourceRootPath)
+func createConfigsModelFromEnvs() (ConfigsModel, error) {
+	var c ConfigsModel
+	if err := stepconf.Parse(&c); err != nil {
+		return ConfigsModel{}, err
 	}
 
-	if configs.PodfilePath != "" {
-		if exist, err := pathutil.IsPathExists(configs.PodfilePath); err != nil {
-			return fmt.Errorf("failed to check if PodfilePath exists at: %s, error: %s", configs.PodfilePath, err)
-		} else if !exist {
-			return fmt.Errorf("PodfilePath does not exist at: %s", configs.PodfilePath)
+	if c.PodfilePath != "" {
+		if _, err := os.Stat(c.PodfilePath); os.IsNotExist(err) {
+			return ConfigsModel{}, fmt.Errorf("%s is not exist", c.PodfilePath)
 		}
 	}
 
-	if configs.Verbose != "" {
-		if configs.Verbose != "true" && configs.Verbose != "false" {
-			return fmt.Errorf(`invalid Verbose parameter specified: %s, available: ["true", "false"]`, configs.Verbose)
-		}
-	}
-
-	return nil
+	return c, nil
 }
 
 func failf(format string, v ...interface{}) {
@@ -234,14 +206,11 @@ func isIncludedInGemfileLockVersionRanges(input string, gemfileLockVersion strin
 }
 
 func main() {
-	configs := createConfigsModelFromEnvs()
-
-	fmt.Println()
-	configs.print()
-
-	if err := configs.validate(); err != nil {
-		failf("Issue with input: %s", err)
+	configs, err := createConfigsModelFromEnvs()
+	if err != nil {
+		failf(err.Error())
 	}
+	stepconf.Print(configs)
 
 	//
 	// Search for Podfile
@@ -493,10 +462,10 @@ func main() {
 	fmt.Println()
 	log.Infof("Installing Pods")
 	installer := NewCocoapodsInstaller(RubyCmdRunner{})
-	installer.InstallPods(podCmdSlice, podfileDir, configs.Verbose == "true")
+	installer.InstallPods(podCmdSlice, podfileDir, configs.Verbose)
 
 	// Collecting caches
-	if configs.IsCacheDisabled != "true" && isPodfileLockExists {
+	if !configs.IsCacheDisabled && isPodfileLockExists {
 		fmt.Println()
 		log.Infof("Collecting Pod cache paths...")
 
