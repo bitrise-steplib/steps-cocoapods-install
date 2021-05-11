@@ -462,7 +462,9 @@ func main() {
 	fmt.Println()
 	log.Infof("Installing Pods")
 	installer := NewCocoapodsInstaller(RubyCmdRunner{})
-	installer.InstallPods(podCmdSlice, configs.Command, podfileDir, configs.Verbose)
+	if err := installer.InstallPods(podCmdSlice, configs.Command, podfileDir, configs.Verbose); err != nil {
+		failf("command failed, error: %s", err)
+	}
 
 	// Collecting caches
 	if !configs.IsCacheDisabled && isPodfileLockExists {
@@ -480,13 +482,16 @@ func main() {
 	log.Donef("Success!")
 }
 
+// CmdRunner ...
 type CmdRunner interface {
 	Run(args []string, dir string) error
 }
 
+// RubyCmdRunner ...
 type RubyCmdRunner struct {
 }
 
+// Run ...
 func (r RubyCmdRunner) Run(args []string, dir string) error {
 	cmd, err := rubycommand.NewFromSlice(args)
 	if err != nil {
@@ -503,14 +508,17 @@ func (r RubyCmdRunner) Run(args []string, dir string) error {
 	return nil
 }
 
+// CocoapodsInstaller ...
 type CocoapodsInstaller struct {
 	cmdRunner CmdRunner
 }
 
+// NewCocoapodsInstaller ...
 func NewCocoapodsInstaller(cmdRunner CmdRunner) CocoapodsInstaller {
 	return CocoapodsInstaller{cmdRunner: cmdRunner}
 }
 
+// InstallPods ...
 func (i CocoapodsInstaller) InstallPods(podArg []string, podCmd string, podfileDir string, verbose bool) error {
 	resolveCmdSlice := append(podArg, podCmd, "--no-repo-update")
 	if verbose {
