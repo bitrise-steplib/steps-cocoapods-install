@@ -171,9 +171,10 @@ func TestCocoapodsInstaller_InstallPods(t *testing.T) {
 		cmdRunner *MockCmdRunner
 	}
 	type args struct {
-		podCmdSlice []string
-		podfileDir  string
-		verbose     bool
+		podArg     []string
+		podCmd     string
+		podfileDir string
+		verbose    bool
 	}
 	tests := []struct {
 		name     string
@@ -185,16 +186,23 @@ func TestCocoapodsInstaller_InstallPods(t *testing.T) {
 		{
 			name:     "simple pod install",
 			fields:   fields{cmdRunner: &MockCmdRunner{}},
-			args:     args{podCmdSlice: []string{"pod"}, verbose: false},
+			args:     args{podArg: []string{"pod"}, podCmd: "install", verbose: false},
 			wantErr:  false,
 			wantCmds: [][]string{{"pod", "install", "--no-repo-update"}},
 		},
 		{
 			name:     "verbose pod install",
 			fields:   fields{cmdRunner: &MockCmdRunner{}},
-			args:     args{podCmdSlice: []string{"pod"}, verbose: true},
+			args:     args{podArg: []string{"pod"}, podCmd: "install", verbose: true},
 			wantErr:  false,
 			wantCmds: [][]string{{"pod", "install", "--no-repo-update", "--verbose"}},
+		},
+		{
+			name:     "verbose pod update",
+			fields:   fields{cmdRunner: &MockCmdRunner{}},
+			args:     args{podArg: []string{"pod"}, podCmd: "update", verbose: true},
+			wantErr:  false,
+			wantCmds: [][]string{{"pod", "update", "--no-repo-update", "--verbose"}},
 		},
 	}
 	for _, tt := range tests {
@@ -202,7 +210,7 @@ func TestCocoapodsInstaller_InstallPods(t *testing.T) {
 			i := CocoapodsInstaller{
 				cmdRunner: tt.fields.cmdRunner,
 			}
-			if err := i.InstallPods(tt.args.podCmdSlice, tt.args.podfileDir, tt.args.verbose); (err != nil) != tt.wantErr {
+			if err := i.InstallPods(tt.args.podArg, tt.args.podCmd, tt.args.podfileDir, tt.args.verbose); (err != nil) != tt.wantErr {
 				t.Errorf("CocoapodsInstaller.InstallPods() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			require.Equal(t, tt.wantCmds, tt.fields.cmdRunner.cmds)

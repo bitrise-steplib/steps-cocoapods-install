@@ -462,7 +462,7 @@ func main() {
 	fmt.Println()
 	log.Infof("Installing Pods")
 	installer := NewCocoapodsInstaller(RubyCmdRunner{})
-	installer.InstallPods(podCmdSlice, podfileDir, configs.Verbose)
+	installer.InstallPods(podCmdSlice, configs.Command, podfileDir, configs.Verbose)
 
 	// Collecting caches
 	if !configs.IsCacheDisabled && isPodfileLockExists {
@@ -511,13 +511,13 @@ func NewCocoapodsInstaller(cmdRunner CmdRunner) CocoapodsInstaller {
 	return CocoapodsInstaller{cmdRunner: cmdRunner}
 }
 
-func (i CocoapodsInstaller) InstallPods(podCmdSlice []string, podfileDir string, verbose bool) error {
-	installCmdSlice := append(podCmdSlice, "install", "--no-repo-update")
+func (i CocoapodsInstaller) InstallPods(podArg []string, podCmd string, podfileDir string, verbose bool) error {
+	resolveCmdSlice := append(podArg, podCmd, "--no-repo-update")
 	if verbose {
-		installCmdSlice = append(installCmdSlice, "--verbose")
+		resolveCmdSlice = append(resolveCmdSlice, "--verbose")
 	}
 
-	err := i.cmdRunner.Run(installCmdSlice, podfileDir)
+	err := i.cmdRunner.Run(resolveCmdSlice, podfileDir)
 	if err == nil {
 		return nil
 	}
@@ -525,7 +525,7 @@ func (i CocoapodsInstaller) InstallPods(podCmdSlice []string, podfileDir string,
 	log.Warnf("pod install failed: %s, retrying without --no-repo-update ...", err)
 
 	// Repo update
-	repoUpdateCmdSlice := append(podCmdSlice, "repo", "update")
+	repoUpdateCmdSlice := append(podArg, "repo", "update")
 	if verbose {
 		repoUpdateCmdSlice = append(repoUpdateCmdSlice, "--verbose")
 	}
@@ -535,7 +535,7 @@ func (i CocoapodsInstaller) InstallPods(podCmdSlice []string, podfileDir string,
 	}
 
 	// Pod install
-	if err := i.cmdRunner.Run(installCmdSlice, podfileDir); err != nil {
+	if err := i.cmdRunner.Run(resolveCmdSlice, podfileDir); err != nil {
 		return fmt.Errorf("pod install failed: %s", err)
 	}
 	return nil
