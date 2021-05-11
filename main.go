@@ -492,57 +492,8 @@ func main() {
 	// Run pod install
 	fmt.Println()
 	log.Infof("Installing Pods")
-
-	podInstallCmdSlice := append(podCmdSlice, "install", "--no-repo-update")
-	if configs.Verbose == "true" {
-		podInstallCmdSlice = append(podInstallCmdSlice, "--verbose")
-	}
-
-	cmd, err = rubycommand.NewFromSlice(podInstallCmdSlice)
-	if err != nil {
-		failf("Failed to create command model, error: %s", err)
-	}
-
-	cmd.SetStdout(os.Stdout).SetStderr(os.Stderr)
-	cmd.SetDir(podfileDir)
-
-	log.Donef("$ %s", cmd.PrintableCommandArgs())
-	if err := cmd.Run(); err != nil {
-		log.Warnf("Command failed, error: %s, retrying without --no-repo-update ...", err)
-
-		// Repo update
-		cmd, err = rubycommand.NewFromSlice(append(podCmdSlice, "repo", "update"))
-		if err != nil {
-			failf("Failed to create command model, error: %s", err)
-		}
-
-		cmd.SetStdout(os.Stdout).SetStderr(os.Stderr)
-		cmd.SetDir(podfileDir)
-
-		log.Donef("$ %s", cmd.PrintableCommandArgs())
-		if err := cmd.Run(); err != nil {
-			failf("Command failed, error: %s", err)
-		}
-
-		// Pod install
-		podInstallCmdSlice := append(podCmdSlice, "install")
-		if configs.Verbose == "true" {
-			podInstallCmdSlice = append(podInstallCmdSlice, "--verbose")
-		}
-
-		cmd, err = rubycommand.NewFromSlice(podInstallCmdSlice)
-		if err != nil {
-			failf("Failed to create command model, error: %s", err)
-		}
-
-		cmd.SetStdout(os.Stdout).SetStderr(os.Stderr)
-		cmd.SetDir(podfileDir)
-
-		log.Donef("$ %s", cmd.PrintableCommandArgs())
-		if err := cmd.Run(); err != nil {
-			failf("Command failed, error: %s", err)
-		}
-	}
+	installer := NewCocoapodsInstaller(RubyCmdRunner{})
+	installer.InstallPods(podCmdSlice, podfileDir, configs.Verbose == "true")
 
 	// Collecting caches
 	if configs.IsCacheDisabled != "true" && isPodfileLockExists {
@@ -558,4 +509,65 @@ func main() {
 	}
 
 	log.Donef("Success!")
+}
+
+type CmdRunner interface {
+	Run(args []string, dir string) error
+}
+
+type RubyCmdRunner struct {
+}
+
+func (r RubyCmdRunner) Run(args []string, dir string) error {
+	cmd, err := rubycommand.NewFromSlice(args)
+	if err != nil {
+		failf("Failed to create command model, error: %s", err)
+	}
+
+	cmd.SetStdout(os.Stdout).SetStderr(os.Stderr)
+	cmd.SetDir(dir)
+
+	log.Donef("$ %s", cmd.PrintableCommandArgs())
+	if err := cmd.Run(); err != nil {
+		return err
+	}
+	return nil
+}
+
+type CocoapodsInstaller struct {
+	cmdRunner CmdRunner
+}
+
+func NewCocoapodsInstaller(cmdRunner CmdRunner) CocoapodsInstaller {
+	return CocoapodsInstaller{cmdRunner: cmdRunner}
+}
+
+func (i CocoapodsInstaller) InstallPods(podCmdSlice []string, podfileDir string, verbose bool) error {
+	installCmdSlice := append(podCmdSlice, "install", "--no-repo-update")
+	if verbose {
+		installCmdSlice = append(installCmdSlice, "--verbose")
+	}
+
+	err := i.cmdRunner.Run(installCmdSlice, podfileDir)
+	if err == nil {
+		return nil
+	}
+
+	log.Warnf("pod install failed: %s, retrying without --no-repo-update ...", err)
+
+	// Repo update
+	repoUpdateCmdSlice := append(podCmdSlice, "repo", "update")
+	if verbose {
+		repoUpdateCmdSlice = append(repoUpdateCmdSlice, "--verbose")
+	}
+
+	if err := i.cmdRunner.Run(repoUpdateCmdSlice, podfileDir); err != nil {
+		return fmt.Errorf("pod repo update failed: %s", err)
+	}
+
+	// Pod install
+	if err := i.cmdRunner.Run(installCmdSlice, podfileDir); err != nil {
+		return fmt.Errorf("pod install failed: %s", err)
+	}
+	return nil
 }

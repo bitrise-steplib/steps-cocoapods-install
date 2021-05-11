@@ -156,3 +156,56 @@ func TestIsIncludedInGemfileLockVersionRanges(t *testing.T) {
 		require.False(t, isExcluded)
 	}
 }
+
+type MockCmdRunner struct {
+	cmds [][]string
+}
+
+func (r *MockCmdRunner) Run(args []string, dir string) error {
+	r.cmds = append(r.cmds, args)
+	return nil
+}
+
+func TestCocoapodsInstaller_InstallPods(t *testing.T) {
+	type fields struct {
+		cmdRunner *MockCmdRunner
+	}
+	type args struct {
+		podCmdSlice []string
+		podfileDir  string
+		verbose     bool
+	}
+	tests := []struct {
+		name     string
+		fields   fields
+		args     args
+		wantErr  bool
+		wantCmds [][]string
+	}{
+		{
+			name:     "simple pod install",
+			fields:   fields{cmdRunner: &MockCmdRunner{}},
+			args:     args{podCmdSlice: []string{"pod"}, verbose: false},
+			wantErr:  false,
+			wantCmds: [][]string{{"pod", "install", "--no-repo-update"}},
+		},
+		{
+			name:     "verbose pod install",
+			fields:   fields{cmdRunner: &MockCmdRunner{}},
+			args:     args{podCmdSlice: []string{"pod"}, verbose: true},
+			wantErr:  false,
+			wantCmds: [][]string{{"pod", "install", "--no-repo-update", "--verbose"}},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			i := CocoapodsInstaller{
+				cmdRunner: tt.fields.cmdRunner,
+			}
+			if err := i.InstallPods(tt.args.podCmdSlice, tt.args.podfileDir, tt.args.verbose); (err != nil) != tt.wantErr {
+				t.Errorf("CocoapodsInstaller.InstallPods() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			require.Equal(t, tt.wantCmds, tt.fields.cmdRunner.cmds)
+		})
+	}
+}
