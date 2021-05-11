@@ -96,6 +96,7 @@ workflows:
     steps:
     - path::./:
         inputs:
+        - command: $COMMAND
         - podfile_path: $PODFILE_PTH
         - verbose: false
 
@@ -137,6 +138,7 @@ workflows:
             echo "2.6.0" >> .ruby-version
     - path::./:
         inputs:
+        - command: $COMMAND
         - podfile_path: $PODFILE_PTH
 
   print_cache_paths:
@@ -189,4 +191,5 @@ workflows:
         - is_create_path: "false"
     - path::./:
         inputs:
+        - command: $COMMAND
         - podfile_path: $PODFILE_PTH
