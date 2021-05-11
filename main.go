@@ -23,7 +23,7 @@ import (
 // ConfigsModel ...
 type ConfigsModel struct {
 	Command         string `env:"command,opt[install,update]"`
-	SourceRootPath  string `env:"source_root_path,required"`
+	SourceRootPath  string `env:"source_root_path,dir"`
 	PodfilePath     string `env:"podfile_path"`
 	Verbose         bool   `env:"verbose,opt[true,false]"`
 	IsCacheDisabled bool   `env:"is_cache_disabled,opt[true,false]"`
