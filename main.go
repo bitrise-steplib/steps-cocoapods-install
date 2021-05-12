@@ -13,63 +13,35 @@ import (
 	"github.com/bitrise-io/go-steputils/cache"
 	"github.com/bitrise-io/go-steputils/command/gems"
 	"github.com/bitrise-io/go-steputils/command/rubycommand"
+	"github.com/bitrise-io/go-steputils/stepconf"
 	"github.com/bitrise-io/go-utils/command"
 	"github.com/bitrise-io/go-utils/fileutil"
 	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-io/go-utils/pathutil"
-	"github.com/pkg/errors"
 )
 
 // ConfigsModel ...
 type ConfigsModel struct {
-	SourceRootPath  string
-	PodfilePath     string
-	Verbose         string
-	IsCacheDisabled string
+	Command         string `env:"command,opt[install,update]"`
+	SourceRootPath  string `env:"source_root_path,dir"`
+	PodfilePath     string `env:"podfile_path"`
+	Verbose         bool   `env:"verbose,opt[true,false]"`
+	IsCacheDisabled bool   `env:"is_cache_disabled,opt[true,false]"`
 }
 
-func createConfigsModelFromEnvs() ConfigsModel {
-	return ConfigsModel{
-		SourceRootPath:  os.Getenv("source_root_path"),
-		PodfilePath:     os.Getenv("podfile_path"),
-		Verbose:         os.Getenv("verbose"),
-		IsCacheDisabled: os.Getenv("is_cache_disabled"),
-	}
-}
-
-func (configs ConfigsModel) print() {
-	log.Infof("Configs:")
-	log.Printf("- SourceRootPath: %s", configs.SourceRootPath)
-	log.Printf("- PodfilePath: %s", configs.PodfilePath)
-	log.Printf("- Verbose: %s", configs.Verbose)
-	log.Printf("- IsCacheDisabled: %s", configs.IsCacheDisabled)
-}
-
-func (configs ConfigsModel) validate() error {
-	if configs.SourceRootPath == "" {
-		return errors.New("no SourceRootPath parameter specified")
-	}
-	if exist, err := pathutil.IsDirExists(configs.SourceRootPath); err != nil {
-		return fmt.Errorf("failed to check if SourceRootPath exists at: %s, error: %s", configs.SourceRootPath, err)
-	} else if !exist {
-		return fmt.Errorf("SourceRootPath does not exist at: %s", configs.SourceRootPath)
+func createConfigsModelFromEnvs() (ConfigsModel, error) {
+	var c ConfigsModel
+	if err := stepconf.Parse(&c); err != nil {
+		return ConfigsModel{}, err
 	}
 
-	if configs.PodfilePath != "" {
-		if exist, err := pathutil.IsPathExists(configs.PodfilePath); err != nil {
-			return fmt.Errorf("failed to check if PodfilePath exists at: %s, error: %s", configs.PodfilePath, err)
-		} else if !exist {
-			return fmt.Errorf("PodfilePath does not exist at: %s", configs.PodfilePath)
+	if c.PodfilePath != "" {
+		if _, err := os.Stat(c.PodfilePath); os.IsNotExist(err) {
+			return ConfigsModel{}, fmt.Errorf("%s is not exist", c.PodfilePath)
 		}
 	}
 
-	if configs.Verbose != "" {
-		if configs.Verbose != "true" && configs.Verbose != "false" {
-			return fmt.Errorf(`invalid Verbose parameter specified: %s, available: ["true", "false"]`, configs.Verbose)
-		}
-	}
-
-	return nil
+	return c, nil
 }
 
 func failf(format string, v ...interface{}) {
@@ -234,14 +206,11 @@ func isIncludedInGemfileLockVersionRanges(input string, gemfileLockVersion strin
 }
 
 func main() {
-	configs := createConfigsModelFromEnvs()
-
-	fmt.Println()
-	configs.print()
-
-	if err := configs.validate(); err != nil {
-		failf("Issue with input: %s", err)
+	configs, err := createConfigsModelFromEnvs()
+	if err != nil {
+		failf(err.Error())
 	}
+	stepconf.Print(configs)
 
 	//
 	// Search for Podfile
@@ -492,60 +461,13 @@ func main() {
 	// Run pod install
 	fmt.Println()
 	log.Infof("Installing Pods")
-
-	podInstallCmdSlice := append(podCmdSlice, "install", "--no-repo-update")
-	if configs.Verbose == "true" {
-		podInstallCmdSlice = append(podInstallCmdSlice, "--verbose")
-	}
-
-	cmd, err = rubycommand.NewFromSlice(podInstallCmdSlice)
-	if err != nil {
-		failf("Failed to create command model, error: %s", err)
-	}
-
-	cmd.SetStdout(os.Stdout).SetStderr(os.Stderr)
-	cmd.SetDir(podfileDir)
-
-	log.Donef("$ %s", cmd.PrintableCommandArgs())
-	if err := cmd.Run(); err != nil {
-		log.Warnf("Command failed, error: %s, retrying without --no-repo-update ...", err)
-
-		// Repo update
-		cmd, err = rubycommand.NewFromSlice(append(podCmdSlice, "repo", "update"))
-		if err != nil {
-			failf("Failed to create command model, error: %s", err)
-		}
-
-		cmd.SetStdout(os.Stdout).SetStderr(os.Stderr)
-		cmd.SetDir(podfileDir)
-
-		log.Donef("$ %s", cmd.PrintableCommandArgs())
-		if err := cmd.Run(); err != nil {
-			failf("Command failed, error: %s", err)
-		}
-
-		// Pod install
-		podInstallCmdSlice := append(podCmdSlice, "install")
-		if configs.Verbose == "true" {
-			podInstallCmdSlice = append(podInstallCmdSlice, "--verbose")
-		}
-
-		cmd, err = rubycommand.NewFromSlice(podInstallCmdSlice)
-		if err != nil {
-			failf("Failed to create command model, error: %s", err)
-		}
-
-		cmd.SetStdout(os.Stdout).SetStderr(os.Stderr)
-		cmd.SetDir(podfileDir)
-
-		log.Donef("$ %s", cmd.PrintableCommandArgs())
-		if err := cmd.Run(); err != nil {
-			failf("Command failed, error: %s", err)
-		}
+	installer := NewCocoapodsInstaller(RubyCmdRunner{})
+	if err := installer.InstallPods(podCmdSlice, configs.Command, podfileDir, configs.Verbose); err != nil {
+		failf("command failed, error: %s", err)
 	}
 
 	// Collecting caches
-	if configs.IsCacheDisabled != "true" && isPodfileLockExists {
+	if !configs.IsCacheDisabled && isPodfileLockExists {
 		fmt.Println()
 		log.Infof("Collecting Pod cache paths...")
 
@@ -558,4 +480,71 @@ func main() {
 	}
 
 	log.Donef("Success!")
+}
+
+// CmdRunner ...
+type CmdRunner interface {
+	Run(args []string, dir string) error
+}
+
+// RubyCmdRunner ...
+type RubyCmdRunner struct {
+}
+
+// Run ...
+func (r RubyCmdRunner) Run(args []string, dir string) error {
+	cmd, err := rubycommand.NewFromSlice(args)
+	if err != nil {
+		failf("Failed to create command model, error: %s", err)
+	}
+
+	cmd.SetStdout(os.Stdout).SetStderr(os.Stderr)
+	cmd.SetDir(dir)
+
+	log.Donef("$ %s", cmd.PrintableCommandArgs())
+	if err := cmd.Run(); err != nil {
+		return err
+	}
+	return nil
+}
+
+// CocoapodsInstaller ...
+type CocoapodsInstaller struct {
+	cmdRunner CmdRunner
+}
+
+// NewCocoapodsInstaller ...
+func NewCocoapodsInstaller(cmdRunner CmdRunner) CocoapodsInstaller {
+	return CocoapodsInstaller{cmdRunner: cmdRunner}
+}
+
+// InstallPods ...
+func (i CocoapodsInstaller) InstallPods(podArg []string, podCmd string, podfileDir string, verbose bool) error {
+	resolveCmdSlice := append(podArg, podCmd, "--no-repo-update")
+	if verbose {
+		resolveCmdSlice = append(resolveCmdSlice, "--verbose")
+	}
+
+	err := i.cmdRunner.Run(resolveCmdSlice, podfileDir)
+	if err == nil {
+		return nil
+	}
+
+	log.Warnf("pod install failed: %s, retrying without --no-repo-update ...", err)
+
+	// Repo update
+	repoUpdateCmdSlice := append(podArg, "repo", "update")
+	if verbose {
+		repoUpdateCmdSlice = append(repoUpdateCmdSlice, "--verbose")
+	}
+
+	if err := i.cmdRunner.Run(repoUpdateCmdSlice, podfileDir); err != nil {
+		return fmt.Errorf("pod repo update failed: %s", err)
+	}
+
+	// Pod install
+	if err := i.cmdRunner.Run(resolveCmdSlice, podfileDir); err != nil {
+		return fmt.Errorf("pod install failed: %s", err)
+	}
+	return nil
 }

@@ -53,6 +53,14 @@ toolkit:
   go:
     package_name: github.com/bitrise-steplib/steps-cocoapods-install
 inputs:
+  - command: install
+    opts:
+      value_options: ["install", "update"]
+      title: "Pod command to run"
+      description: |-
+        Use pod `install` to download the explicit version listed in the Podfile.lock without trying to check if a newer version is available.  
+        Use pod `update` to update every pod listed in your Podfile to the latest version possible.
+      is_required: true
   - source_root_path: "$BITRISE_SOURCE_DIR"
     opts:
       title: "Source Code Directory path."
