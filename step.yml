@@ -1,11 +1,11 @@
 title: Run CocoaPods install
 summary: |-
-  You don't need to keep the installed pods in your repo. Simply add this Step
-  and Bitrise will do the pod install for you on the VM!
+  You don't need to keep the installed Pods in your repo. Simply add this Step
+  and Bitrise will do the Pod install for you on the VM!
 description: |-
 
-  CocoaPods is a dependency manager for Swift and Objective-C projects. This Step uses CocoaPods' `pod install` command to install your dependencies on the virtual machine where your Bitrise build runs.   
-  CocoaPods version is determined based on the Podfile.lock file or on the Gemfile.lock file. If your Gemfile.lock file contains the `cocoapods` gem then the step will call `pod install` with `bundle exec`. Otherwise, the Cocoapods version in the Podfile.lock will be installed as a global gem.
+  CocoaPods is a dependency manager for Swift and Objective-C projects. This Step uses CocoaPods' `pod install` or `pod update` command to install your dependencies on the virtual machine where your Bitrise build runs.   
+  CocoaPods version is determined based on the Podfile.lock file or on the Gemfile.lock file. If your Gemfile.lock file contains the `cocoapods` gem then the step will call the pod install command with `bundle exec`. Otherwise, the Cocoapods version in the Podfile.lock will be installed as a global gem.
   If no Cocoapods version is defined in Podfile.lock or Gemfile.lock, the preinstalled sytem Cocoapods version will be used.
 
   ### Configuring the Step
@@ -56,37 +56,34 @@ inputs:
   - command: install
     opts:
       value_options: ["install", "update"]
-      title: "Pod command to run"
+      title: "CocoaPods command"
       description: |-
         Use pod `install` to download the explicit version listed in the Podfile.lock without trying to check if a newer version is available.  
-        Use pod `update` to update every pod listed in your Podfile to the latest version possible.
+        Use pod `update` to update every Pod listed in your Podfile to the latest version possible.
       is_required: true
   - source_root_path: "$BITRISE_SOURCE_DIR"
     opts:
-      title: "Source Code Directory path."
+      title: "Workdir"
+      description: |-
+        Directory path where the project's Podfile (and optionally Gemfile) is placed.  
+        CocoaPods commands will be executed in this directory.
       is_required: true
   - podfile_path: ""
     opts:
       title: "Podfile path"
-      summary: "(optional) Podfile path, relative to the source_root_path"
+      summary: "Podfile path, relative to the `Workdir`"
       description: |-
-        (optional) `Podfile` path, relative to the `source_root_path`.
-
-        If not provided, the Step will search for root Podfile,
-        and run `pod install` with.
+        By specifying this input `Workdir` gets overriden by the provided file's directory path.
   - verbose: "false"
     opts:
-      title: "Execute cocoapods in verbose mode?"
+      title: "Execute all CocoaPods commands in verbose mode?"
       description: |
-        (optional) True to execute the command in verbose mode or false to execute it without verbose
+        If set all CocoaPods commands will get the `--verbose` flag.
       value_options: ["true", "false"]
-      is_expand: false
-      is_required: false
   - is_cache_disabled: "false"
     opts:
-      title: "Disable built-in cache"
+      title: "Disable automatic cache item collection"
       description: |
-        True to disable pods caching
+        By default the step adds the Pods directory in the `Workdir` to the Bitrise Build Cache.  
+        Set this input to disable automatic cache item collection for this Step.
       value_options: ["true", "false"]
-      is_expand: false
-      is_required: false
