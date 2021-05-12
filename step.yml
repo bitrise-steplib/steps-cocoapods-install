@@ -5,7 +5,7 @@ summary: |-
 description: |-
 
   CocoaPods is a dependency manager for Swift and Objective-C projects. This Step uses CocoaPods' `pod install` or `pod update` command to install your dependencies on the virtual machine where your Bitrise build runs.   
-  CocoaPods version is determined based on the Podfile.lock file or on the Gemfile.lock file. If your Gemfile.lock file contains the `cocoapods` gem then the step will call the pod install command with `bundle exec`. Otherwise, the Cocoapods version in the Podfile.lock will be installed as a global gem.
+  CocoaPods version is determined based on the Podfile.lock file or on the Gemfile.lock file. If your Gemfile.lock file contains the `cocoapods` gem, then the Step will call the pod `install` command with `bundle exec`. Otherwise, the Cocoapods version in the Podfile.lock will be installed as a global gem.
   If no Cocoapods version is defined in Podfile.lock or Gemfile.lock, the preinstalled sytem Cocoapods version will be used.
 
   ### Configuring the Step
@@ -71,7 +71,6 @@ inputs:
   - podfile_path: ""
     opts:
       title: "Podfile path"
-      summary: "Podfile path, relative to the `Workdir`"
       description: |-
         By specifying this input `Workdir` gets overriden by the provided file's directory path.
   - verbose: "false"
@@ -84,6 +83,6 @@ inputs:
     opts:
       title: "Disable automatic cache item collection"
       description: |
-        By default the step adds the Pods directory in the `Workdir` to the Bitrise Build Cache.  
+        By default the Step adds the Pods directory in the `Workdir` to the Bitrise Build Cache.  
         Set this input to disable automatic cache item collection for this Step.
       value_options: ["true", "false"]
