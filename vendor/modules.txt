@@ -1,12 +1,3 @@
-# github.com/bitrise-io/bitrise v0.0.0-20210513161711-09b1442cf3e0
-github.com/bitrise-io/bitrise/models
-# github.com/bitrise-io/bitrise-init v0.0.0-20210517093622-1c5198bb948b
-## explicit
-github.com/bitrise-io/bitrise-init/models
-github.com/bitrise-io/bitrise-init/step
-github.com/bitrise-io/bitrise-init/utility
-# github.com/bitrise-io/envman v0.0.0-20200512105748-919e33f391ee
-github.com/bitrise-io/envman/models
 # github.com/bitrise-io/go-steputils v0.0.0-20210514150206-5b6261447e77
 ## explicit
 github.com/bitrise-io/go-steputils/cache
@@ -15,7 +6,7 @@ github.com/bitrise-io/go-steputils/command/rubycommand
 github.com/bitrise-io/go-steputils/command/rubyscript
 github.com/bitrise-io/go-steputils/stepconf
 github.com/bitrise-io/go-steputils/tools
-# github.com/bitrise-io/go-utils v0.0.0-20210514133945-9dd14e1c514a
+# github.com/bitrise-io/go-utils v0.0.0-20210517140706-aa64fd88ca49
 ## explicit
 github.com/bitrise-io/go-utils/colorstring
 github.com/bitrise-io/go-utils/command
@@ -25,24 +16,21 @@ github.com/bitrise-io/go-utils/log
 github.com/bitrise-io/go-utils/parseutil
 github.com/bitrise-io/go-utils/pathutil
 github.com/bitrise-io/go-utils/pointers
-github.com/bitrise-io/go-utils/sliceutil
 # github.com/bitrise-io/go-xcode v0.0.0-20210517092111-792daa927657
 ## explicit
 github.com/bitrise-io/go-xcode/pathfilters
 github.com/bitrise-io/go-xcode/plistutil
 github.com/bitrise-io/go-xcode/xcodeproj
-# github.com/bitrise-io/stepman v0.0.0-20210505110307-5c2296bcc558
-github.com/bitrise-io/stepman/models
 # github.com/bitrise-io/xcode-project v0.0.0-20210302080829-f3e0bfbcd5cb
+## explicit
 github.com/bitrise-io/xcode-project/xcscheme
 # github.com/davecgh/go-spew v1.1.1
 github.com/davecgh/go-spew/spew
 # github.com/pkg/errors v0.9.1
+## explicit
 github.com/pkg/errors
 # github.com/pmezard/go-difflib v1.0.0
 github.com/pmezard/go-difflib/difflib
-# github.com/ryanuber/go-glob v1.0.0
-github.com/ryanuber/go-glob
 # github.com/stretchr/testify v1.7.0
 ## explicit
 github.com/stretchr/testify/assert

@@ -8,7 +8,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/bitrise-io/bitrise-init/utility"
 	"github.com/bitrise-io/go-steputils/cache"
 	"github.com/bitrise-io/go-steputils/command/gems"
 	"github.com/bitrise-io/go-steputils/command/rubycommand"
@@ -73,7 +72,7 @@ func findMostRootPodfileInFileList(fileList []string) (string, error) {
 }
 
 func findMostRootPodfile(dir string) (string, error) {
-	fileList, err := utility.ListPathInDirSortedByComponents(dir, false)
+	fileList, err := pathutil.ListPathInDirSortedByComponents(dir, false)
 	if err != nil {
 		return "", err
 	}
