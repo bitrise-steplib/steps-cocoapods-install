@@ -8,7 +8,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/bitrise-io/bitrise-init/scanners/ios"
 	"github.com/bitrise-io/bitrise-init/utility"
 	"github.com/bitrise-io/go-steputils/cache"
 	"github.com/bitrise-io/go-steputils/command/gems"
@@ -18,6 +17,7 @@ import (
 	"github.com/bitrise-io/go-utils/fileutil"
 	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-io/go-utils/pathutil"
+	"github.com/bitrise-io/go-xcode/pathfilters"
 )
 
 // ConfigsModel ...
@@ -50,12 +50,12 @@ func failf(format string, v ...interface{}) {
 }
 
 func findMostRootPodfileInFileList(fileList []string) (string, error) {
-	podfiles, err := utility.FilterPaths(fileList,
-		ios.AllowPodfileBaseFilter,
-		ios.ForbidCarthageDirComponentFilter,
-		ios.ForbidPodsDirComponentFilter,
-		ios.ForbidGitDirComponentFilter,
-		ios.ForbidFramworkComponentWithExtensionFilter)
+	podfiles, err := pathutil.FilterPaths(fileList,
+		pathfilters.AllowPodfileBaseFilter,
+		pathfilters.ForbidCarthageDirComponentFilter,
+		pathfilters.ForbidPodsDirComponentFilter,
+		pathfilters.ForbidGitDirComponentFilter,
+		pathfilters.ForbidFramworkComponentWithExtensionFilter)
 	if err != nil {
 		return "", err
 	}
