@@ -1,12 +1,10 @@
-package utility
+package pathutil
 
 import (
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
-
-	"github.com/bitrise-io/go-utils/pathutil"
 )
 
 // SortablePath ...
@@ -18,7 +16,7 @@ type SortablePath struct {
 
 // NewSortablePath ...
 func NewSortablePath(pth string) (SortablePath, error) {
-	absPth, err := pathutil.AbsPath(pth)
+	absPth, err := AbsPath(pth)
 	if err != nil {
 		return SortablePath{}, err
 	}

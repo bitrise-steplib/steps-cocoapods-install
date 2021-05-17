@@ -1,4 +1,4 @@
-package ios
+package pathfilters
 
 const testMacOSPbxprojContent = `// !$*UTF8*$!
 {
