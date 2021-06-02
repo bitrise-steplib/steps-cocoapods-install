@@ -115,7 +115,7 @@ workflows:
                 echo "2.6.0" >> .ruby-version
       - path::./:
           inputs:
-            - source_root_path: ./_tmp
+            - source_root_path: "$BITRISE_SOURCE_DIR/_tmp"
             - command: $COMMAND
             - podfile_path: $PODFILE_PATH
             - verbose: $VERBOSE
