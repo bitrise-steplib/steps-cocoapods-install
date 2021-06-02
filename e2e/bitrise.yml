@@ -39,16 +39,6 @@ workflows:
       - _run
       - _check_cache_include_paths
 
-  test_podfile_at_root:
-    envs:
-      # Podfile is in repo root
-      - TEST_APP_URL: https://github.com/bitrise-samples/ios-cocoapods-at-root.git
-      - TEST_APP_BRANCH: master
-      - COMMAND: install
-    after_run:
-      - _run
-      - _check_cache_include_paths
-
   test_without_gemfile_with_podfile_path:
     envs:
       # Without Gemfile:
