@@ -27,10 +27,6 @@ workflows:
             - bitrise_config_path: ./e2e/bitrise.yml
       - bitrise-run:
           inputs:
-            - workflow_id: test_podfile_at_root
-            - bitrise_config_path: ./e2e/bitrise.yml
-      - bitrise-run:
-          inputs:
             - workflow_id: test_without_gemfile_with_podfile_path
             - bitrise_config_path: ./e2e/bitrise.yml
       - bitrise-run:
