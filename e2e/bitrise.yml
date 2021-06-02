@@ -1,0 +1,131 @@
+format_version: "11"
+default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
+
+app:
+  envs:
+    # Shared test configs
+    - PODFILE_PTH: ""
+    - VERBOSE: "false"
+    - PIN_RUBY: "false"
+
+workflows:
+  test_with_no_podfile_lock:
+    envs:
+      # With Only Gemfile (no Podfile.lock):
+      - TEST_APP_URL: https://github.com/bitrise-samples/ios-cocoapods-1.x-Gemfile.git
+      - TEST_APP_BRANCH: no-podfile-lock
+      - COMMAND: install
+    after_run:
+      - _run
+      - _check_cache_include_paths
+
+  test_update_with_gemfile:
+    envs:
+      # With Gemfile:
+      - TEST_APP_URL: https://github.com/bitrise-samples/ios-cocoapods-1.x-Gemfile.git
+      - TEST_APP_BRANCH: master
+      - COMMAND: update
+    after_run:
+      - _run
+      - _check_cache_include_paths
+
+  test_without_gemfile:
+    envs:
+      # Without Gemfile:
+      - TEST_APP_URL: https://github.com/bitrise-samples/ios-cocoapods-1.x.git
+      - TEST_APP_BRANCH: master
+      - COMMAND: install
+    after_run:
+      - _run
+      - _check_cache_include_paths
+
+  test_podfile_at_root:
+    envs:
+      # Podfile is in repo root
+      - TEST_APP_URL: https://github.com/bitrise-samples/ios-cocoapods-at-root.git
+      - TEST_APP_BRANCH: master
+      - COMMAND: install
+    after_run:
+      - _run
+      - _check_cache_include_paths
+
+  test_without_gemfile_with_podfile_path:
+    envs:
+      # Without Gemfile:
+      - TEST_APP_URL: https://github.com/bitrise-samples/ios-cocoapods-1.x.git
+      - TEST_APP_BRANCH: master
+      - PODFILE_PTH: "CocoaPods1X/Podfile"
+      - COMMAND: install
+    after_run:
+      - _run
+      - _check_cache_include_paths
+
+  test_with_verbose:
+    envs:
+      # With Gemfile:
+      - TEST_APP_URL: https://github.com/bitrise-samples/ios-cocoapods-1.x-Gemfile.git
+      - TEST_APP_BRANCH: master
+      - COMMAND: install
+      - VERBOSE: "true"
+    after_run:
+      - _run
+      - _check_cache_include_paths
+
+  test_with_specific_ruby:
+    envs:
+      # Podfile is in repo root
+      - TEST_APP_URL: https://github.com/bitrise-samples/ios-cocoapods-1.x.git
+      - TEST_APP_BRANCH: master
+      - COMMAND: install
+      - PIN_RUBY: "true"
+    after_run:
+      - _run
+      - _check_cache_include_paths
+
+  test_with_plugins:
+    envs:
+      # With Gemfile:
+      - TEST_APP_URL: https://github.com/bitrise-io/sample-apps-ios-cocoapods-plugins.git
+      - TEST_APP_BRANCH: master
+      - COMMAND: install
+    after_run:
+      - _run
+      - _check_cache_include_paths
+
+  _run:
+    steps:
+      - script:
+          inputs:
+            - content: |-
+                #!/bin/bash
+                set -ex
+                rm -rf ./_tmp
+      - git::https://github.com/bitrise-steplib/bitrise-step-simple-git-clone.git@master:
+          inputs:
+            - repository_url: $TEST_APP_URL
+            - branch: $TEST_APP_BRANCH
+            - clone_into_dir: ./_tmp
+      - script:
+          run_if: '{{enveq "PIN_RUBY" "true"}}'
+          inputs:
+            - content: |-
+                #!/bin/bash
+                set -ex
+
+                echo "2.6.0" >> .ruby-version
+      - path::./:
+          inputs:
+            - source_root_path: ./_tmp
+            - command: $COMMAND
+            - podfile_path: $PODFILE_PATH
+            - verbose: $VERBOSE
+
+  _check_cache_include_paths:
+    steps:
+      - script:
+          title: Validate cache include paths
+          inputs:
+            - content: |-
+                #!/usr/bin/env bash
+
+                echo $BITRISE_CACHE_INCLUDE_PATHS
