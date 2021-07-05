@@ -2,16 +2,12 @@ format_version: "11"
 default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
 
 workflows:
-  test:
-    after_run:
-      - check
-      - e2e_tests
 
   check:
     steps:
       - git::https://github.com/bitrise-steplib/steps-check.git:
 
-  e2e_tests:
+  e2e:
     steps:
       - bitrise-run:
           inputs:
