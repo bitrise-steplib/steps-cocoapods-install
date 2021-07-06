@@ -2,45 +2,16 @@ format_version: "11"
 default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
 
 workflows:
-  test:
-    after_run:
-      - check
-      - e2e_tests
 
   check:
     steps:
       - git::https://github.com/bitrise-steplib/steps-check.git:
 
-  e2e_tests:
+  e2e:
     steps:
-      - bitrise-run:
+      - git::https://github.com/bitrise-steplib/steps-check.git:
           inputs:
-            - workflow_id: test_with_no_podfile_lock
-            - bitrise_config_path: ./e2e/bitrise.yml
-      - bitrise-run:
-          inputs:
-            - workflow_id: test_update_with_gemfile
-            - bitrise_config_path: ./e2e/bitrise.yml
-      - bitrise-run:
-          inputs:
-            - workflow_id: test_without_gemfile
-            - bitrise_config_path: ./e2e/bitrise.yml
-      - bitrise-run:
-          inputs:
-            - workflow_id: test_without_gemfile_with_podfile_path
-            - bitrise_config_path: ./e2e/bitrise.yml
-      - bitrise-run:
-          inputs:
-            - workflow_id: test_with_verbose
-            - bitrise_config_path: ./e2e/bitrise.yml
-      - bitrise-run:
-          inputs:
-            - workflow_id: test_with_specific_ruby
-            - bitrise_config_path: ./e2e/bitrise.yml
-      - bitrise-run:
-          inputs:
-            - workflow_id: test_with_plugins
-            - bitrise_config_path: ./e2e/bitrise.yml
+            - workflow: e2e
 
   sample:
     envs:
