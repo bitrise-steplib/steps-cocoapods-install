@@ -34,3 +34,7 @@ workflows:
           inputs:
             - source_root_path: ./_tmp
             - command: $COMMAND
+
+  generate_readme:
+    steps:
+    - git::https://github.com/bitrise-steplib/steps-readme-generator.git@main:

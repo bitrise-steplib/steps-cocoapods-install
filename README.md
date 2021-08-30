@@ -1,92 +1,76 @@
-# CocoaPods install step
+# Run CocoaPods install
 
-Calls `pod install` for a specified project.
+[![Step changelog](https://shields.io/github/v/release/bitrise-io/steps-cocoapods-install?include_prereleases&label=changelog&color=blueviolet)](https://github.com/bitrise-io/steps-cocoapods-install/releases)
 
-## How to use this Step
+You don't need to keep the installed Pods in your repo. Simply add this Step
+and Bitrise will do the Pod install for you on the VM!
 
-Can be run directly with the [bitrise CLI](https://github.com/bitrise-io/bitrise),
-just `git clone` this repository, `cd` into it's folder in your Terminal/Command Line
-and call `bitrise run test`.
-
-*Check the `bitrise.yml` file for required inputs which have to be
-added to your `.bitrise.secrets.yml` file!*
-
-Step by step:
-
-1. Open up your Terminal / Command Line
-2. `git clone` the repository
-3. `cd` into the directory of the step (the one you just `git clone`d)
-5. Create a `.bitrise.secrets.yml` file in the same directory of `bitrise.yml`
-   (the `.bitrise.secrets.yml` is a git ignored file, you can store your secrets in it)
-6. Check the `bitrise.yml` file for any secret you should set in `.bitrise.secrets.yml`
-  * Best practice is to mark these options with something like `# define these in your .bitrise.secrets.yml`, in the `app:envs` section.
-7. Once you have all the required secret parameters in your `.bitrise.secrets.yml` you can just run this step with the [bitrise CLI](https://github.com/bitrise-io/bitrise): `bitrise run test`
-
-An example `.bitrise.secrets.yml` file:
-
-```
-envs:
-- A_SECRET_PARAM_ONE: the value for secret one
-- A_SECRET_PARAM_TWO: the value for secret two
-```
-
-## How to create your own step
-
-1. Create a new git repository for your step (**don't fork** the *step template*, create a *new* repository)
-2. Copy the [step template](https://github.com/bitrise-steplib/step-template) files into your repository
-3. Fill the `step.sh` with your functionality
-4. Wire out your inputs to `step.yml` (`inputs` section)
-5. Fill out the other parts of the `step.yml` too
-6. Provide test values for the inputs in the `bitrise.yml`
-7. Run your step with `bitrise run test` - if it works, you're ready
-
-__For Step development guidelines & best practices__ check this documentation: [https://github.com/bitrise-io/bitrise/blob/master/_docs/step-development-guideline.md](https://github.com/bitrise-io/bitrise/blob/master/_docs/step-development-guideline.md).
-
-**NOTE:**
-
-If you want to use your step in your project's `bitrise.yml`:
-
-1. git push the step into it's repository
-2. reference it in your `bitrise.yml` with the `git::PUBLIC-GIT-CLONE-URL@BRANCH` step reference style:
-
-```
-- git::https://github.com/user/my-step.git@branch:
-   title: My step
-   inputs:
-   - my_input_1: "my value 1"
-   - my_input_2: "my value 2"
-```
-
-You can find more examples of step reference styles
-in the [bitrise CLI repository](https://github.com/bitrise-io/bitrise/blob/master/_examples/tutorials/steps-and-workflows/bitrise.yml#L65).
-
-## How to contribute to this Step
-
-1. Fork this repository
-2. `git clone` it
-3. Create a branch you'll work on
-4. To use/test the step just follow the **How to use this Step** section
-5. Do the changes you want to
-6. Run/test the step before sending your contribution
-  * You can also test the step in your `bitrise` project, either on your Mac or on [bitrise.io](https://www.bitrise.io)
-  * You just have to replace the step ID in your project's `bitrise.yml` with either a relative path, or with a git URL format
-  * (relative) path format: instead of `- original-step-id:` use `- path::./relative/path/of/script/on/your/Mac:`
-  * direct git URL format: instead of `- original-step-id:` use `- git::https://github.com/user/step.git@branch:`
-  * You can find more example of alternative step referencing at: https://github.com/bitrise-io/bitrise/blob/master/_examples/tutorials/steps-and-workflows/bitrise.yml
-7. Once you're done just commit your changes & create a Pull Request
+<details>
+<summary>Description</summary>
 
 
-## Share your own Step
+CocoaPods is a dependency manager for Swift and Objective-C projects. This Step uses CocoaPods' `pod install` or `pod update` command to install your dependencies on the virtual machine where your Bitrise build runs.   
+CocoaPods version is determined based on the Podfile.lock file or on the Gemfile.lock file. If your Gemfile.lock file contains the `cocoapods` gem, then the Step will call the pod `install` command with `bundle exec`. Otherwise, the Cocoapods version in the Podfile.lock will be installed as a global gem.
+If no Cocoapods version is defined in Podfile.lock or Gemfile.lock, the preinstalled sytem Cocoapods version will be used.
 
-You can share your Step or step version with the [bitrise CLI](https://github.com/bitrise-io/bitrise). If you use the `bitrise.yml` included in this repository, all you have to do is:
+### Configuring the Step
 
-1. In your Terminal / Command Line `cd` into this directory (where the `bitrise.yml` of the step is located)
-1. Run: `bitrise run test` to test the step
-1. Run: `bitrise run audit-this-step` to audit the `step.yml`
-1. Check the `share-this-step` workflow in the `bitrise.yml`, and fill out the
-   `envs` if you haven't done so already (don't forget to bump the version number if this is an update
-   of your step!)
-1. Then run: `bitrise run share-this-step` to share the step (version) you specified in the `envs`
-1. Send the Pull Request, as described in the logs of `bitrise run share-this-step`
+1. Set the **Source Code Directory path** to the path of your app's source code.
 
-That's all ;)
+1. Optionally, provide a Podfile in the **Podfile path** input.
+
+   Without a specific Podfile, the Step does a recursive search for the Podfile in the root of your app's directory, and uses the first Podfile it finds.
+
+### Troubleshooting
+
+If the Step fails, check out the Podfile and the Gemfile of your app. Make sure there is no compatibility issue with the different versions of your Pods.  
+Check that both Podfile.lock and Gemfile.lock is committed and the Cocoapods versions defined in both match.
+
+You can set the **Execute cocoapods in verbose mode?** input to true to get detailed logs of the Step.
+
+### Useful links
+
+* [Caching Cocoapods](https://devcenter.bitrise.io/builds/caching/caching-cocoapods/)
+* [Include your dependencies in your repository](https://devcenter.bitrise.io/tips-and-tricks/optimize-your-build-times/#include-your-dependencies-in-your-repository)
+
+### Related Steps
+
+* [Run yarn command](https://www.bitrise.io/integrations/steps/yarn)
+* [Carthage](https://www.bitrise.io/integrations/steps/carthage)
+</details>
+
+## 🧩 Get started
+
+Add this step directly to your workflow in the [Bitrise Workflow Editor](https://devcenter.bitrise.io/steps-and-workflows/steps-and-workflows-index/).
+
+You can also run this step directly with [Bitrise CLI](https://github.com/bitrise-io/bitrise).
+
+## ⚙️ Configuration
+
+<details>
+<summary>Inputs</summary>
+
+| Key | Description | Flags | Default |
+| --- | --- | --- | --- |
+| `command` | Use pod `install` to download the explicit version listed in the Podfile.lock without trying to check if a newer version is available.   Use pod `update` to update every Pod listed in your Podfile to the latest version possible. | required | `install` |
+| `source_root_path` | Directory path where the project's Podfile (and optionally Gemfile) is placed.   CocoaPods commands will be executed in this directory. | required | `$BITRISE_SOURCE_DIR` |
+| `podfile_path` | By specifying this input `Workdir` gets overriden by the provided file's directory path. |  |  |
+| `verbose` | If enabled the `--verbose` flag will be appended to all CocoaPods commands.  |  | `false` |
+| `is_cache_disabled` | By default the Step adds the Pods directory in the `Workdir` to the Bitrise Build Cache.   Set this input to disable automatic cache item collection for this Step.  |  | `false` |
+</details>
+
+<details>
+<summary>Outputs</summary>
+There are no outputs defined in this step
+</details>
+
+## 🙋 Contributing
+
+We welcome [pull requests](https://github.com/bitrise-io/steps-cocoapods-install/pulls) and [issues](https://github.com/bitrise-io/steps-cocoapods-install/issues) against this repository.
+
+For pull requests, work on your changes in a forked repository and use the Bitrise CLI to [run step tests locally](https://devcenter.bitrise.io/bitrise-cli/run-your-first-build/).
+
+Learn more about developing steps:
+
+- [Create your own step](https://devcenter.bitrise.io/contributors/create-your-own-step/)
+- [Testing your Step](https://devcenter.bitrise.io/contributors/testing-and-versioning-your-steps/)
