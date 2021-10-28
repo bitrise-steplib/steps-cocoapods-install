@@ -83,7 +83,7 @@ inputs:
     description: |
       If enabled the `--verbose` flag will be appended to all CocoaPods commands.
     value_options:
-    - true,
+    - true
     - false
 - is_cache_disabled: "false"
   opts:
