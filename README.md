@@ -2,14 +2,14 @@
 
 [![Step changelog](https://shields.io/github/v/release/bitrise-io/steps-cocoapods-install?include_prereleases&label=changelog&color=blueviolet)](https://github.com/bitrise-io/steps-cocoapods-install/releases)
 
-You don't need to keep the installed Pods in your repo. Simply add this Step
-and Bitrise will do the Pod install for you on the VM!
+This Step uses CocoaPods' `pod install` or `pod update` command to install your dependencies.
 
 <details>
 <summary>Description</summary>
 
 
-CocoaPods is a dependency manager for Swift and Objective-C projects. This Step uses CocoaPods' `pod install` or `pod update` command to install your dependencies on the virtual machine where your Bitrise build runs.   
+CocoaPods is a dependency manager for Swift and Objective-C projects. This Step uses CocoaPods' `pod install` or `pod update` command to install your dependencies on the virtual machine where your Bitrise build runs.
+
 CocoaPods version is determined based on the Podfile.lock file or on the Gemfile.lock file. If your Gemfile.lock file contains the `cocoapods` gem, then the Step will call the pod `install` command with `bundle exec`. Otherwise, the Cocoapods version in the Podfile.lock will be installed as a global gem.
 If no Cocoapods version is defined in Podfile.lock or Gemfile.lock, the preinstalled sytem Cocoapods version will be used.
 
@@ -23,7 +23,8 @@ If no Cocoapods version is defined in Podfile.lock or Gemfile.lock, the preinsta
 
 ### Troubleshooting
 
-If the Step fails, check out the Podfile and the Gemfile of your app. Make sure there is no compatibility issue with the different versions of your Pods.  
+If the Step fails, check out the Podfile and the Gemfile of your app. Make sure there is no compatibility issue with the different versions of your Pods.
+
 Check that both Podfile.lock and Gemfile.lock is committed and the Cocoapods versions defined in both match.
 
 You can set the **Execute cocoapods in verbose mode?** input to true to get detailed logs of the Step.
@@ -52,11 +53,11 @@ You can also run this step directly with [Bitrise CLI](https://github.com/bitris
 
 | Key | Description | Flags | Default |
 | --- | --- | --- | --- |
-| `command` | Use pod `install` to download the explicit version listed in the Podfile.lock without trying to check if a newer version is available.   Use pod `update` to update every Pod listed in your Podfile to the latest version possible. | required | `install` |
-| `source_root_path` | Directory path where the project's Podfile (and optionally Gemfile) is placed.   CocoaPods commands will be executed in this directory. | required | `$BITRISE_SOURCE_DIR` |
-| `podfile_path` | By specifying this input `Workdir` gets overriden by the provided file's directory path. |  |  |
-| `verbose` | If enabled the `--verbose` flag will be appended to all CocoaPods commands.  |  | `false` |
-| `is_cache_disabled` | By default the Step adds the Pods directory in the `Workdir` to the Bitrise Build Cache.   Set this input to disable automatic cache item collection for this Step.  |  | `false` |
+| `command` | CocoaPods command to use for installing dependencies.  Available options: - `install`: Use `pod install` to download the explicit version listed in the Podfile.lock without trying to check if a newer version is available. - `update`: Use `pod update` to update every Pod listed in your Podfile to the latest version possible.  | required | `install` |
+| `source_root_path` | Directory path where the project's Podfile (and optionally Gemfile) is placed.  CocoaPods commands will be executed in this directory.  | required | `$BITRISE_SOURCE_DIR` |
+| `podfile_path` | Path of the project's Podfile.  By specifying this input `Workdir` gets overriden by the provided file's directory path. |  |  |
+| `verbose` | Execute all CocoaPods commands in verbose mode?  If enabled the `--verbose` flag will be appended to all CocoaPods commands.  |  | `false` |
+| `is_cache_disabled` | Disables automatic cache content collection.  By default the Step adds the Pods directory in the `Workdir` to the Bitrise Build Cache.  Set this input to disable automatic cache item collection for this Step.  |  | `false` |
 </details>
 
 <details>
