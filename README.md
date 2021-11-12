@@ -56,7 +56,7 @@ You can also run this step directly with [Bitrise CLI](https://github.com/bitris
 | `command` | CocoaPods command to use for installing dependencies.  Available options: - `install`: Use `pod install` to download the explicit version listed in the Podfile.lock without trying to check if a newer version is available. - `update`: Use `pod update` to update every Pod listed in your Podfile to the latest version possible.  | required | `install` |
 | `source_root_path` | Directory path where the project's Podfile (and optionally Gemfile) is placed.  CocoaPods commands will be executed in this directory.  | required | `$BITRISE_SOURCE_DIR` |
 | `podfile_path` | Path of the project's Podfile.  By specifying this input `Workdir` gets overriden by the provided file's directory path. |  |  |
-| `verbose` | Execute all CocoaPods commands in verbose mode?  If enabled the `--verbose` flag will be appended to all CocoaPods commands.  |  | `false` |
+| `verbose` | Execute all CocoaPods commands in verbose mode.  If enabled the `--verbose` flag will be appended to all CocoaPods commands.  |  | `false` |
 | `is_cache_disabled` | Disables automatic cache content collection.  By default the Step adds the Pods directory in the `Workdir` to the Bitrise Build Cache.  Set this input to disable automatic cache item collection for this Step.  |  | `false` |
 </details>
 

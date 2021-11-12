@@ -86,9 +86,9 @@ inputs:
 - verbose: "false"
   opts:
     title: Enable verbose logging
-    summary: Execute all CocoaPods commands in verbose mode?
+    summary: Execute all CocoaPods commands in verbose mode.
     description: |
-      Execute all CocoaPods commands in verbose mode?
+      Execute all CocoaPods commands in verbose mode.
 
       If enabled the `--verbose` flag will be appended to all CocoaPods commands.
     value_options:
