@@ -83,8 +83,8 @@ inputs:
     description: |
       If enabled the `--verbose` flag will be appended to all CocoaPods commands.
     value_options:
-    - true
-    - false
+    - "true"
+    - "false"
 - is_cache_disabled: "false"
   opts:
     title: Disable automatic cache item collection
@@ -92,5 +92,5 @@ inputs:
       By default the Step adds the Pods directory in the `Workdir` to the Bitrise Build Cache.
       Set this input to disable automatic cache item collection for this Step.
     value_options:
-    - true
-    - false
+    - "true"
+    - "false"
