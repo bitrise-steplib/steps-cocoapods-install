@@ -427,8 +427,8 @@ func main() {
 
 				cmd.SetDir(podfileDir)
 
-				if err := cmd.Run(); err != nil {
-					failf("Command failed, error: %s", err)
+				if out, err := cmd.RunAndReturnTrimmedCombinedOutput(); err != nil {
+					failf("Command failed: %s\noutput: %s", err, out)
 				}
 			}
 		} else {
