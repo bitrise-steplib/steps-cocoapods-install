@@ -82,6 +82,15 @@ workflows:
     - _run
     - _check_cache_include_paths
 
+  test_recent_cocoapods:
+    envs:
+    - TEST_APP_URL: https://github.com/bitrise-io/Bitrise-iOS-Cocoapods-Sample.git
+    - TEST_APP_BRANCH: main
+    - COMMAND: install
+    after_run:
+    - _run
+    - _check_cache_include_paths
+
   _run:
     steps:
     - script:
