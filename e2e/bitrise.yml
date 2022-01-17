@@ -12,7 +12,7 @@ workflows:
   test_with_no_podfile_lock:
     envs:
     # With Only Gemfile (no Podfile.lock):
-    - TEST_APP_URL: https://github.com/bitrise-samples/ios-cocoapods-1.x-Gemfile.git
+    - TEST_APP_URL: https://github.com/bitrise-io/ios-cocoapods-1.x-Gemfile.git
     - TEST_APP_BRANCH: no-podfile-lock
     - COMMAND: install
     after_run:
@@ -22,7 +22,7 @@ workflows:
   test_update_with_gemfile:
     envs:
     # With Gemfile:
-    - TEST_APP_URL: https://github.com/bitrise-samples/ios-cocoapods-1.x-Gemfile.git
+    - TEST_APP_URL: https://github.com/bitrise-io/ios-cocoapods-1.x-Gemfile.git
     - TEST_APP_BRANCH: master
     - COMMAND: update
     after_run:
@@ -32,7 +32,7 @@ workflows:
   test_without_gemfile:
     envs:
     # Without Gemfile:
-    - TEST_APP_URL: https://github.com/bitrise-samples/ios-cocoapods-1.x.git
+    - TEST_APP_URL: https://github.com/bitrise-io/ios-cocoapods-1.x.git
     - TEST_APP_BRANCH: master
     - COMMAND: install
     after_run:
@@ -42,7 +42,7 @@ workflows:
   test_without_gemfile_with_podfile_path:
     envs:
     # Without Gemfile:
-    - TEST_APP_URL: https://github.com/bitrise-samples/ios-cocoapods-1.x.git
+    - TEST_APP_URL: https://github.com/bitrise-io/ios-cocoapods-1.x.git
     - TEST_APP_BRANCH: master
     - PODFILE_PTH: CocoaPods1X/Podfile
     - COMMAND: install
@@ -53,7 +53,7 @@ workflows:
   test_with_verbose:
     envs:
     # With Gemfile:
-    - TEST_APP_URL: https://github.com/bitrise-samples/ios-cocoapods-1.x-Gemfile.git
+    - TEST_APP_URL: https://github.com/bitrise-io/ios-cocoapods-1.x-Gemfile.git
     - TEST_APP_BRANCH: master
     - COMMAND: install
     - VERBOSE: "true"
@@ -64,7 +64,7 @@ workflows:
   test_with_specific_ruby:
     envs:
     # Podfile is in repo root
-    - TEST_APP_URL: https://github.com/bitrise-samples/ios-cocoapods-1.x.git
+    - TEST_APP_URL: https://github.com/bitrise-io/ios-cocoapods-1.x.git
     - TEST_APP_BRANCH: master
     - COMMAND: install
     - PIN_RUBY: "true"
@@ -98,12 +98,13 @@ workflows:
     - script:
         run_if: |-
           {{ enveq "PIN_RUBY" "true" }}
+        title: Pin Ruby version
         inputs:
         - content: |-
             #!/bin/bash
             set -ex
 
-            echo "2.6.0" >> .ruby-version
+            echo "2.6.4" >> .ruby-version
     - path::./:
         inputs:
         - source_root_path: $BITRISE_SOURCE_DIR/_tmp
