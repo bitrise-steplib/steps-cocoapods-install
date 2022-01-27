@@ -99,6 +99,14 @@ workflows:
             #!/bin/bash
             set -ex
             rm -rf ./_tmp
+    - script:
+        title: Use Ruby 2.x
+        inputs:
+        - content: |-
+            #!/bin/bash
+            set -ex
+            rbenv local 2.7.2
+            rbenv global 2.7.2
     - git::https://github.com/bitrise-steplib/bitrise-step-simple-git-clone.git:
         inputs:
         - repository_url: $TEST_APP_URL
