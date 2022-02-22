@@ -1,12 +1,13 @@
-# github.com/bitrise-io/go-steputils v0.0.0-20210514150206-5b6261447e77
+# github.com/bitrise-io/go-plist v0.0.0-20210301100253-4b1a112ccd10
+github.com/bitrise-io/go-plist
+# github.com/bitrise-io/go-steputils v1.0.2
 ## explicit
 github.com/bitrise-io/go-steputils/cache
 github.com/bitrise-io/go-steputils/command/gems
 github.com/bitrise-io/go-steputils/command/rubycommand
-github.com/bitrise-io/go-steputils/command/rubyscript
 github.com/bitrise-io/go-steputils/stepconf
 github.com/bitrise-io/go-steputils/tools
-# github.com/bitrise-io/go-utils v0.0.0-20210517140706-aa64fd88ca49
+# github.com/bitrise-io/go-utils v1.0.1
 ## explicit
 github.com/bitrise-io/go-utils/colorstring
 github.com/bitrise-io/go-utils/command
@@ -16,26 +17,26 @@ github.com/bitrise-io/go-utils/log
 github.com/bitrise-io/go-utils/parseutil
 github.com/bitrise-io/go-utils/pathutil
 github.com/bitrise-io/go-utils/pointers
-# github.com/bitrise-io/go-xcode v0.0.0-20210517092111-792daa927657
+github.com/bitrise-io/go-utils/pretty
+github.com/bitrise-io/go-utils/sliceutil
+# github.com/bitrise-io/go-xcode v1.0.3
 ## explicit
 github.com/bitrise-io/go-xcode/pathfilters
-github.com/bitrise-io/go-xcode/plistutil
-github.com/bitrise-io/go-xcode/xcodeproj
-# github.com/bitrise-io/xcode-project v0.0.0-20210302080829-f3e0bfbcd5cb
-## explicit
-github.com/bitrise-io/xcode-project/xcscheme
+github.com/bitrise-io/go-xcode/xcodebuild
+github.com/bitrise-io/go-xcode/xcodeproject/serialized
+github.com/bitrise-io/go-xcode/xcodeproject/xcodeproj
+github.com/bitrise-io/go-xcode/xcodeproject/xcscheme
+github.com/bitrise-io/go-xcode/xcodeproject/xcworkspace
 # github.com/davecgh/go-spew v1.1.1
 github.com/davecgh/go-spew/spew
-# github.com/pkg/errors v0.9.1
-## explicit
-github.com/pkg/errors
 # github.com/pmezard/go-difflib v1.0.0
 github.com/pmezard/go-difflib/difflib
 # github.com/stretchr/testify v1.7.0
 ## explicit
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/require
+# golang.org/x/text v0.3.7
+golang.org/x/text/transform
+golang.org/x/text/unicode/norm
 # gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 gopkg.in/yaml.v3
-# howett.net/plist v0.0.0-20201203080718-1454fab16a06
-howett.net/plist
