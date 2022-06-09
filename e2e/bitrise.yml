@@ -113,7 +113,7 @@ workflows:
             #!/bin/bash
             set -ex
 
-            echo "2.6.0" >> .ruby-version
+            echo "2.6.9" >> .ruby-version
     - path::./:
         inputs:
         - source_root_path: $BITRISE_SOURCE_DIR/_tmp
