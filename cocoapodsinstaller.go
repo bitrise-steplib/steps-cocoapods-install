@@ -2,7 +2,10 @@ package main
 
 import (
 	"bufio"
+	"errors"
+	"fmt"
 	"os"
+	"os/exec"
 	"strings"
 
 	"github.com/bitrise-io/go-steputils/v2/ruby"
@@ -22,30 +25,48 @@ func NewCocoapodsInstaller(rubyCmdFactory ruby.CommandFactory) CocoapodsInstalle
 
 // InstallPods ...
 func (i CocoapodsInstaller) InstallPods(podArg []string, podCmd string, podfileDir string, verbose bool) error {
-	cmdSlice := podInstallCmdSlice(podArg, podCmd, verbose)
-	cmd := createPodCommand(i.rubyCmdFactory, cmdSlice, podfileDir)
-	log.Donef("$ %s", cmd.PrintableCommandArgs())
-	err := cmd.Run()
-	if err == nil {
+	if err := i.runPodInstall(podArg, podCmd, podfileDir, verbose); err == nil {
 		return nil
+	} else {
+		log.Warnf("pod install failed: %s, retrying with repo update...", err)
 	}
 
-	log.Warnf("pod install failed: %s, retrying with repo update...", err)
-
-	cmdSlice = podRepoUpdateCmdSlice(podArg, verbose)
-	cmd = createPodCommand(i.rubyCmdFactory, cmdSlice, podfileDir)
-	log.Donef("$ %s", cmd.PrintableCommandArgs())
-	if err := cmd.Run(); err != nil {
+	if err := i.runPodRepoUpdate(podArg, podfileDir, verbose); err != nil {
 		return err
 	}
 
-	cmdSlice = podInstallCmdSlice(podArg, podCmd, verbose)
-	cmd = createPodCommand(i.rubyCmdFactory, cmdSlice, podfileDir)
-	log.Donef("$ %s", cmd.PrintableCommandArgs())
-	if err := cmd.Run(); err != nil {
+	if err := i.runPodInstall(podArg, podCmd, podfileDir, verbose); err != nil {
 		return err
 	}
 
+	return nil
+}
+
+func (i CocoapodsInstaller) runPodInstall(podArg []string, podCmd string, podfileDir string, verbose bool) error {
+	errorFinder := cocoapodsCmdErrorFinder{}
+	cmdSlice := podInstallCmdSlice(podArg, podCmd, verbose)
+	cmd := createPodCommand(i.rubyCmdFactory, cmdSlice, podfileDir, errorFinder)
+	log.Donef("$ %s", cmd.PrintableCommandArgs())
+	if err := cmd.Run(); err != nil {
+		var exitErr *exec.ExitError
+		if errors.As(err, &exitErr) && errorFinder.IsTransientProblem {
+			return fmt.Errorf("transient error: %w", err)
+		}
+	}
+	return nil
+}
+
+func (i CocoapodsInstaller) runPodRepoUpdate(podArg []string, podfileDir string, verbose bool) error {
+	errorFinder := cocoapodsCmdErrorFinder{}
+	cmdSlice := podRepoUpdateCmdSlice(podArg, verbose)
+	cmd := createPodCommand(i.rubyCmdFactory, cmdSlice, podfileDir, errorFinder)
+	log.Donef("$ %s", cmd.PrintableCommandArgs())
+	if err := cmd.Run(); err != nil {
+		var exitErr *exec.ExitError
+		if errors.As(err, &exitErr) && errorFinder.IsTransientProblem {
+			return fmt.Errorf("transient error: %w", err)
+		}
+	}
 	return nil
 }
 
@@ -65,18 +86,22 @@ func podRepoUpdateCmdSlice(podArg []string, verbose bool) []string {
 	return cmdSlice
 }
 
-func createPodCommand(factory ruby.CommandFactory, args []string, dir string) command.Command {
+func createPodCommand(factory ruby.CommandFactory, args []string, dir string, errorFinder cocoapodsCmdErrorFinder) command.Command {
 	return factory.Create(args[0], args[1:], &command.Opts{
 		Stdout:      os.Stdout,
 		Stderr:      os.Stderr,
 		Stdin:       nil,
 		Env:         nil,
 		Dir:         dir,
-		ErrorFinder: cocoapodsCmdErrorFinder,
+		ErrorFinder: errorFinder.findErrors,
 	})
 }
 
-func cocoapodsCmdErrorFinder(out string) []string {
+type cocoapodsCmdErrorFinder struct {
+	IsTransientProblem bool
+}
+
+func (f *cocoapodsCmdErrorFinder) findErrors(out string) []string {
 	/*
 		example 1:
 
@@ -108,6 +133,10 @@ func cocoapodsCmdErrorFinder(out string) []string {
 		if strings.HasPrefix(line, "[!] ") ||
 			strings.HasPrefix(line, "curl: ") {
 			errors = append(errors, line)
+		}
+
+		if strings.HasPrefix(line, "Warning: Transient problem: ") {
+			f.IsTransientProblem = true
 		}
 	}
 	if err := scanner.Err(); err != nil {

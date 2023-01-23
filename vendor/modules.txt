@@ -41,9 +41,12 @@ github.com/bitrise-io/go-xcode/xcodeproject/xcworkspace
 github.com/davecgh/go-spew/spew
 # github.com/pmezard/go-difflib v1.0.0
 github.com/pmezard/go-difflib/difflib
+# github.com/stretchr/objx v0.5.0
+github.com/stretchr/objx
 # github.com/stretchr/testify v1.8.1
 ## explicit
 github.com/stretchr/testify/assert
+github.com/stretchr/testify/mock
 github.com/stretchr/testify/require
 # golang.org/x/text v0.3.7
 golang.org/x/text/transform
