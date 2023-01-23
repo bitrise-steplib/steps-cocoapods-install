@@ -10,7 +10,7 @@ github.com/bitrise-io/go-steputils/tools
 # github.com/bitrise-io/go-steputils/v2 v2.0.0-alpha.16
 ## explicit
 github.com/bitrise-io/go-steputils/v2/ruby
-# github.com/bitrise-io/go-utils v1.0.1
+# github.com/bitrise-io/go-utils v1.0.4
 ## explicit
 github.com/bitrise-io/go-utils/colorstring
 github.com/bitrise-io/go-utils/command
@@ -29,7 +29,7 @@ github.com/bitrise-io/go-utils/v2/env
 github.com/bitrise-io/go-utils/v2/log
 github.com/bitrise-io/go-utils/v2/log/colorstring
 github.com/bitrise-io/go-utils/v2/pathutil
-# github.com/bitrise-io/go-xcode v1.0.3
+# github.com/bitrise-io/go-xcode v1.0.10
 ## explicit
 github.com/bitrise-io/go-xcode/pathfilters
 github.com/bitrise-io/go-xcode/xcodebuild
@@ -48,7 +48,8 @@ github.com/stretchr/objx
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/mock
 github.com/stretchr/testify/require
-# golang.org/x/text v0.3.7
+# golang.org/x/text v0.6.0
+## explicit
 golang.org/x/text/transform
 golang.org/x/text/unicode/norm
 # gopkg.in/yaml.v3 v3.0.1

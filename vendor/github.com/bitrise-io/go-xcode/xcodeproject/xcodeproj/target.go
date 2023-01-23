@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"path/filepath"
 
+	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-io/go-xcode/xcodeproject/serialized"
 )
 
@@ -31,47 +32,14 @@ type Target struct {
 	buildPhaseIDs          []string
 }
 
-// DependentTargets ...
-func (t Target) DependentTargets() []Target {
-	var targets []Target
+// DependsOn ...
+func (t Target) DependsOn(targetID string) bool {
 	for _, targetDependency := range t.Dependencies {
-		childTarget := targetDependency.Target
-		targets = append(targets, childTarget)
-
-		childDependentTargets := childTarget.DependentTargets()
-		targets = append(targets, childDependentTargets...)
-	}
-
-	return targets
-}
-
-// DependesOn ...
-func (t Target) DependesOn(targetID string) bool {
-	for _, targetDependency := range t.Dependencies {
-		childTarget := targetDependency.Target
-		if childTarget.ID == targetID {
+		if targetDependency.TargetID == targetID {
 			return true
 		}
 	}
 	return false
-}
-
-// DependentExecutableProductTargets ...
-func (t Target) DependentExecutableProductTargets() []Target {
-	var targets []Target
-	for _, targetDependency := range t.Dependencies {
-		childTarget := targetDependency.Target
-		if !childTarget.IsExecutableProduct() {
-			continue
-		}
-
-		targets = append(targets, childTarget)
-
-		childDependentTargets := childTarget.DependentExecutableProductTargets()
-		targets = append(targets, childDependentTargets...)
-	}
-
-	return targets
 }
 
 // IsAppProduct ...
@@ -107,20 +75,9 @@ func (t Target) IsUITestProduct() bool {
 	return filepath.Ext(t.ProductType) == ".ui-testing"
 }
 
-func (t Target) isAppClipProduct() bool {
+// IsAppClipProduct ...
+func (t Target) IsAppClipProduct() bool {
 	return t.ProductType == appClipProductType
-}
-
-// CanExportAppClip ...
-func (t Target) CanExportAppClip() bool {
-	deps := t.DependentTargets()
-	for _, target := range deps {
-		if target.isAppClipProduct() {
-			return true
-		}
-	}
-
-	return false
 }
 
 func parseTarget(id string, objects serialized.Object) (Target, error) {
@@ -161,10 +118,14 @@ func parseTarget(id string, objects serialized.Object) (Target, error) {
 		return Target{}, err
 	}
 
+	log.TDebugf("Parsing build configuration list for target: %s", id)
+
 	buildConfigurationList, err := parseConfigurationList(buildConfigurationListID, objects)
 	if err != nil {
 		return Target{}, err
 	}
+
+	log.TDebugf("Parsed build configuration list")
 
 	dependencyIDs, err := rawTarget.StringSlice("dependencies")
 	if err != nil {
@@ -172,6 +133,9 @@ func parseTarget(id string, objects serialized.Object) (Target, error) {
 	}
 
 	var dependencies []TargetDependency
+
+	log.TDebugf("Parsing all target dependencies for target: %s", id)
+
 	for _, dependencyID := range dependencyIDs {
 		dependency, err := parseTargetDependency(dependencyID, objects)
 		if err != nil {
@@ -186,6 +150,8 @@ func parseTarget(id string, objects serialized.Object) (Target, error) {
 
 		dependencies = append(dependencies, dependency)
 	}
+
+	log.TDebugf("Parsed %v target dependencies", len(dependencies))
 
 	var productReference ProductReference
 	productReferenceID, err := rawTarget.String("productReference")

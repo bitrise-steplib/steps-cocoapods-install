@@ -44,6 +44,8 @@ func (p XcodeProj) SaveSharedScheme(scheme xcscheme.Scheme) error {
 
 // ReCreateSchemes creates new schemes based on the available Targets
 func (p XcodeProj) ReCreateSchemes() []xcscheme.Scheme {
+	fmt.Printf("Recreating xcode scheme")
+
 	var schemes []xcscheme.Scheme
 	for _, buildTarget := range p.Proj.Targets {
 		if buildTarget.Type != NativeTargetType || buildTarget.IsTest() {
@@ -52,13 +54,15 @@ func (p XcodeProj) ReCreateSchemes() []xcscheme.Scheme {
 
 		var testTargets []Target
 		for _, testTarget := range p.Proj.Targets {
-			if testTarget.IsTest() && testTarget.DependesOn(buildTarget.ID) {
+			if testTarget.IsTest() && testTarget.DependsOn(buildTarget.ID) {
 				testTargets = append(testTargets, testTarget)
 			}
 		}
 
 		schemes = append(schemes, newScheme(buildTarget, testTargets, filepath.Base(p.Path)))
 	}
+
+	fmt.Printf("Recreated %v xcode schemes", len(schemes))
 
 	return schemes
 }
