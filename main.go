@@ -12,10 +12,13 @@ import (
 	"github.com/bitrise-io/go-steputils/command/gems"
 	"github.com/bitrise-io/go-steputils/command/rubycommand"
 	"github.com/bitrise-io/go-steputils/stepconf"
+	"github.com/bitrise-io/go-steputils/v2/ruby"
 	"github.com/bitrise-io/go-utils/command"
 	"github.com/bitrise-io/go-utils/fileutil"
 	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-io/go-utils/pathutil"
+	v2command "github.com/bitrise-io/go-utils/v2/command"
+	"github.com/bitrise-io/go-utils/v2/env"
 	"github.com/bitrise-io/go-xcode/pathfilters"
 )
 
@@ -460,7 +463,16 @@ func main() {
 	// Run pod install
 	fmt.Println()
 	log.Infof("Installing Pods")
-	installer := NewCocoapodsInstaller(RubyCmdRunner{})
+
+	envRepository := env.NewRepository()
+	cmdLocator := env.NewCommandLocator()
+	cmdFactory := v2command.NewFactory(envRepository)
+	rubyCmdFactory, err := ruby.NewCommandFactory(cmdFactory, cmdLocator)
+	if err != nil {
+		failf("failed to create ruby command factory: %s", err)
+	}
+
+	installer := NewCocoapodsInstaller(rubyCmdFactory)
 	if err := installer.InstallPods(podCmdSlice, configs.Command, podfileDir, configs.Verbose); err != nil {
 		failf("command failed, error: %s", err)
 	}
@@ -479,71 +491,4 @@ func main() {
 	}
 
 	log.Donef("Success!")
-}
-
-// CmdRunner ...
-type CmdRunner interface {
-	Run(args []string, dir string) error
-}
-
-// RubyCmdRunner ...
-type RubyCmdRunner struct {
-}
-
-// Run ...
-func (r RubyCmdRunner) Run(args []string, dir string) error {
-	cmd, err := rubycommand.NewFromSlice(args)
-	if err != nil {
-		failf("Failed to create command model, error: %s", err)
-	}
-
-	cmd.SetStdout(os.Stdout).SetStderr(os.Stderr)
-	cmd.SetDir(dir)
-
-	log.Donef("$ %s", cmd.PrintableCommandArgs())
-	if err := cmd.Run(); err != nil {
-		return err
-	}
-	return nil
-}
-
-// CocoapodsInstaller ...
-type CocoapodsInstaller struct {
-	cmdRunner CmdRunner
-}
-
-// NewCocoapodsInstaller ...
-func NewCocoapodsInstaller(cmdRunner CmdRunner) CocoapodsInstaller {
-	return CocoapodsInstaller{cmdRunner: cmdRunner}
-}
-
-// InstallPods ...
-func (i CocoapodsInstaller) InstallPods(podArg []string, podCmd string, podfileDir string, verbose bool) error {
-	resolveCmdSlice := append(podArg, podCmd, "--no-repo-update")
-	if verbose {
-		resolveCmdSlice = append(resolveCmdSlice, "--verbose")
-	}
-
-	err := i.cmdRunner.Run(resolveCmdSlice, podfileDir)
-	if err == nil {
-		return nil
-	}
-
-	log.Warnf("pod install failed: %s, retrying without --no-repo-update ...", err)
-
-	// Repo update
-	repoUpdateCmdSlice := append(podArg, "repo", "update")
-	if verbose {
-		repoUpdateCmdSlice = append(repoUpdateCmdSlice, "--verbose")
-	}
-
-	if err := i.cmdRunner.Run(repoUpdateCmdSlice, podfileDir); err != nil {
-		return fmt.Errorf("pod repo update failed: %s", err)
-	}
-
-	// Pod install
-	if err := i.cmdRunner.Run(resolveCmdSlice, podfileDir); err != nil {
-		return fmt.Errorf("pod install failed: %s", err)
-	}
-	return nil
 }
