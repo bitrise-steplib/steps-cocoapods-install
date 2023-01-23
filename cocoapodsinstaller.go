@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bufio"
 	"os"
+	"strings"
 
 	"github.com/bitrise-io/go-steputils/v2/ruby"
 	"github.com/bitrise-io/go-utils/log"
@@ -75,5 +77,43 @@ func createPodCommand(factory ruby.CommandFactory, args []string, dir string) co
 }
 
 func cocoapodsCmdErrorFinder(out string) []string {
-	return nil
+	/*
+		example 1:
+
+		[!] Error installing boost
+		[!] /usr/bin/curl -f -L -o /var/folders/v9/hjkgcpmn6bq99p7gvyhpq6800000gn/T/d20221018-3650-smj60t/file.tbz https://boostorg.jfrog.io/artifactory/main/release/1.76.0/source/boost_1_76_0.tar.bz2 --create-dirs --netrc-optional --retry 2 -A 'CocoaPods/1.11.3 cocoapods-downloader/1.6.3'
+		Warning: Transient problem: HTTP error Will retry in 1 seconds. 2 retries
+		Warning: left.
+		...
+		curl: (22) The requested URL returned error: 502 Bad Gateway
+
+		example 2:
+
+		[!] Error installing boost
+		[!] /usr/bin/curl -f -L -o /var/folders/v9/hjkgcpmn6bq99p7gvyhpq6800000gn/T/d20221018-7204-3bfs7/file.tbz https://boostorg.jfrog.io/artifactory/main/release/1.76.0/source/boost_1_76_0.tar.bz2 --create-dirs --netrc-optional --retry 2 -A 'CocoaPods/1.11.3 cocoapods-downloader/1.6.3'
+		Warning: Transient problem: HTTP error Will retry in 1 seconds. 2 retries
+		Warning: left.
+		...
+		curl: (22) The requested URL returned error: 504 Gateway Time-out
+	*/
+
+	var errors []string
+
+	reader := strings.NewReader(out)
+	scanner := bufio.NewScanner(reader)
+	scanner.Split(bufio.ScanLines)
+	for scanner.Scan() {
+		line := scanner.Text()
+
+		if strings.HasPrefix(line, "[!] ") ||
+			strings.HasPrefix(line, "curl: ") {
+			errors = append(errors, line)
+		}
+	}
+	if err := scanner.Err(); err != nil {
+		// todo: error handling
+		return nil
+	}
+
+	return errors
 }
