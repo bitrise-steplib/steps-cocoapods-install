@@ -67,7 +67,7 @@ func Test_GivenCocoapodsInstaller_WhenArgsGiven_ThenRunsExpectedCommand(t *testi
 	}
 }
 
-func Test_GivenCocoapodsInstaller_WhenCommandFails_ThenPrintsErrors(t *testing.T) {
+func Test_GivenCocoapodsErrorFinder_WhenCommandFails_ThenPrintsErrors(t *testing.T) {
 	expectedErrors := []string{
 		"[!] Error installing boost",
 		"[!] /usr/bin/curl -f -L -o /var/folders/v9/hjkgcpmn6bq99p7gvyhpq6800000gn/T/d20221018-7204-3bfs7/file.tbz https://boostorg.jfrog.io/artifactory/main/release/1.76.0/source/boost_1_76_0.tar.bz2 --create-dirs --netrc-optional --retry 2 -A 'CocoaPods/1.11.3 cocoapods-downloader/1.6.3'",

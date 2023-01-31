@@ -2,10 +2,8 @@ package main
 
 import (
 	"bufio"
-	"errors"
 	"fmt"
 	"os"
-	"os/exec"
 	"strings"
 
 	"github.com/bitrise-io/go-steputils/v2/ruby"
@@ -43,31 +41,27 @@ func (i CocoapodsInstaller) InstallPods(podArg []string, podCmd string, podfileD
 }
 
 func (i CocoapodsInstaller) runPodInstall(podArg []string, podCmd string, podfileDir string, verbose bool) error {
-	errorFinder := cocoapodsCmdErrorFinder{}
+	errorFinder := &cocoapodsCmdErrorFinder{}
 	cmdSlice := podInstallCmdSlice(podArg, podCmd, verbose)
 	cmd := createPodCommand(i.rubyCmdFactory, cmdSlice, podfileDir, errorFinder)
 	log.Donef("$ %s", cmd.PrintableCommandArgs())
-	if err := cmd.Run(); err != nil {
-		var exitErr *exec.ExitError
-		if errors.As(err, &exitErr) && errorFinder.IsTransientProblem {
-			return fmt.Errorf("transient error: %w", err)
-		}
+	err := cmd.Run()
+	if errorFinder.IsTransientProblem {
+		return fmt.Errorf("transitent error: %w", err)
 	}
-	return nil
+	return err
 }
 
 func (i CocoapodsInstaller) runPodRepoUpdate(podArg []string, podfileDir string, verbose bool) error {
-	errorFinder := cocoapodsCmdErrorFinder{}
+	errorFinder := &cocoapodsCmdErrorFinder{}
 	cmdSlice := podRepoUpdateCmdSlice(podArg, verbose)
 	cmd := createPodCommand(i.rubyCmdFactory, cmdSlice, podfileDir, errorFinder)
 	log.Donef("$ %s", cmd.PrintableCommandArgs())
-	if err := cmd.Run(); err != nil {
-		var exitErr *exec.ExitError
-		if errors.As(err, &exitErr) && errorFinder.IsTransientProblem {
-			return fmt.Errorf("transient error: %w", err)
-		}
+	err := cmd.Run()
+	if errorFinder.IsTransientProblem {
+		return fmt.Errorf("transitent error: %w", err)
 	}
-	return nil
+	return err
 }
 
 func podInstallCmdSlice(podArg []string, podCmd string, verbose bool) []string {
@@ -86,7 +80,7 @@ func podRepoUpdateCmdSlice(podArg []string, verbose bool) []string {
 	return cmdSlice
 }
 
-func createPodCommand(factory ruby.CommandFactory, args []string, dir string, errorFinder cocoapodsCmdErrorFinder) command.Command {
+func createPodCommand(factory ruby.CommandFactory, args []string, dir string, errorFinder *cocoapodsCmdErrorFinder) command.Command {
 	return factory.Create(args[0], args[1:], &command.Opts{
 		Stdout:      os.Stdout,
 		Stderr:      os.Stderr,
@@ -102,26 +96,6 @@ type cocoapodsCmdErrorFinder struct {
 }
 
 func (f *cocoapodsCmdErrorFinder) findErrors(out string) []string {
-	/*
-		example 1:
-
-		[!] Error installing boost
-		[!] /usr/bin/curl -f -L -o /var/folders/v9/hjkgcpmn6bq99p7gvyhpq6800000gn/T/d20221018-3650-smj60t/file.tbz https://boostorg.jfrog.io/artifactory/main/release/1.76.0/source/boost_1_76_0.tar.bz2 --create-dirs --netrc-optional --retry 2 -A 'CocoaPods/1.11.3 cocoapods-downloader/1.6.3'
-		Warning: Transient problem: HTTP error Will retry in 1 seconds. 2 retries
-		Warning: left.
-		...
-		curl: (22) The requested URL returned error: 502 Bad Gateway
-
-		example 2:
-
-		[!] Error installing boost
-		[!] /usr/bin/curl -f -L -o /var/folders/v9/hjkgcpmn6bq99p7gvyhpq6800000gn/T/d20221018-7204-3bfs7/file.tbz https://boostorg.jfrog.io/artifactory/main/release/1.76.0/source/boost_1_76_0.tar.bz2 --create-dirs --netrc-optional --retry 2 -A 'CocoaPods/1.11.3 cocoapods-downloader/1.6.3'
-		Warning: Transient problem: HTTP error Will retry in 1 seconds. 2 retries
-		Warning: left.
-		...
-		curl: (22) The requested URL returned error: 504 Gateway Time-out
-	*/
-
 	var errors []string
 
 	reader := strings.NewReader(out)

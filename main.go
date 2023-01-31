@@ -19,6 +19,7 @@ import (
 	"github.com/bitrise-io/go-utils/pathutil"
 	v2command "github.com/bitrise-io/go-utils/v2/command"
 	"github.com/bitrise-io/go-utils/v2/env"
+	"github.com/bitrise-io/go-utils/v2/errorutil"
 	"github.com/bitrise-io/go-xcode/pathfilters"
 )
 
@@ -473,8 +474,9 @@ func main() {
 	}
 
 	installer := NewCocoapodsInstaller(rubyCmdFactory)
+	podCmdSlice = []string{"/Users/godrei/Development/go/steps-cocoapods-install/script.sh"}
 	if err := installer.InstallPods(podCmdSlice, configs.Command, podfileDir, configs.Verbose); err != nil {
-		failf("command failed, error: %s", err)
+		failf(errorutil.FormattedError(err))
 	}
 
 	// Collecting caches
