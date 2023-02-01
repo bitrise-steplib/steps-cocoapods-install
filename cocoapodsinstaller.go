@@ -9,6 +9,7 @@ import (
 	"github.com/bitrise-io/go-steputils/v2/ruby"
 	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-io/go-utils/v2/command"
+	"github.com/bitrise-io/go-utils/v2/errorutil"
 )
 
 // CocoapodsInstaller ...
@@ -26,7 +27,10 @@ func (i CocoapodsInstaller) InstallPods(podArg []string, podCmd string, podfileD
 	if err := i.runPodInstall(podArg, podCmd, podfileDir, verbose); err == nil {
 		return nil
 	} else {
-		log.Warnf("pod install failed: %s, retrying with repo update...", err)
+		log.Printf("")
+		log.Warnf(errorutil.FormattedError(fmt.Errorf("Failed to install Pods: %w", err)))
+		log.Warnf("Retrying with pod repo update...")
+		log.Printf("")
 	}
 
 	if err := i.runPodRepoUpdate(podArg, podfileDir, verbose); err != nil {
@@ -45,11 +49,7 @@ func (i CocoapodsInstaller) runPodInstall(podArg []string, podCmd string, podfil
 	cmdSlice := podInstallCmdSlice(podArg, podCmd, verbose)
 	cmd := createPodCommand(i.rubyCmdFactory, cmdSlice, podfileDir, errorFinder)
 	log.Donef("$ %s", cmd.PrintableCommandArgs())
-	err := cmd.Run()
-	if errorFinder.IsTransientProblem {
-		return fmt.Errorf("transitent error: %w", err)
-	}
-	return err
+	return cmd.Run()
 }
 
 func (i CocoapodsInstaller) runPodRepoUpdate(podArg []string, podfileDir string, verbose bool) error {
@@ -57,11 +57,7 @@ func (i CocoapodsInstaller) runPodRepoUpdate(podArg []string, podfileDir string,
 	cmdSlice := podRepoUpdateCmdSlice(podArg, verbose)
 	cmd := createPodCommand(i.rubyCmdFactory, cmdSlice, podfileDir, errorFinder)
 	log.Donef("$ %s", cmd.PrintableCommandArgs())
-	err := cmd.Run()
-	if errorFinder.IsTransientProblem {
-		return fmt.Errorf("transitent error: %w", err)
-	}
-	return err
+	return cmd.Run()
 }
 
 func podInstallCmdSlice(podArg []string, podCmd string, verbose bool) []string {
@@ -92,7 +88,7 @@ func createPodCommand(factory ruby.CommandFactory, args []string, dir string, er
 }
 
 type cocoapodsCmdErrorFinder struct {
-	IsTransientProblem bool
+	transientProblemAlreadySeen bool
 }
 
 func (f *cocoapodsCmdErrorFinder) findErrors(out string) []string {
@@ -110,11 +106,13 @@ func (f *cocoapodsCmdErrorFinder) findErrors(out string) []string {
 		}
 
 		if strings.HasPrefix(line, "Warning: Transient problem: ") {
-			f.IsTransientProblem = true
+			if !f.transientProblemAlreadySeen {
+				errors = append(errors, "Transient problem")
+				f.transientProblemAlreadySeen = true
+			}
 		}
 	}
 	if err := scanner.Err(); err != nil {
-		// todo: error handling
 		return nil
 	}
 

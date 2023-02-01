@@ -474,9 +474,8 @@ func main() {
 	}
 
 	installer := NewCocoapodsInstaller(rubyCmdFactory)
-	podCmdSlice = []string{"/Users/godrei/Development/go/steps-cocoapods-install/script.sh"}
 	if err := installer.InstallPods(podCmdSlice, configs.Command, podfileDir, configs.Verbose); err != nil {
-		failf(errorutil.FormattedError(err))
+		failf(errorutil.FormattedError(fmt.Errorf("Failed to install Pods: %w", err)))
 	}
 
 	// Collecting caches
