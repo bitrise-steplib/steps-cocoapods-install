@@ -7,19 +7,23 @@ import (
 	"strings"
 
 	"github.com/bitrise-io/go-steputils/v2/ruby"
-	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-io/go-utils/v2/command"
 	"github.com/bitrise-io/go-utils/v2/errorutil"
+	"github.com/bitrise-io/go-utils/v2/log"
 )
 
 // CocoapodsInstaller ...
 type CocoapodsInstaller struct {
 	rubyCmdFactory ruby.CommandFactory
+	logger         log.Logger
 }
 
 // NewCocoapodsInstaller ...
-func NewCocoapodsInstaller(rubyCmdFactory ruby.CommandFactory) CocoapodsInstaller {
-	return CocoapodsInstaller{rubyCmdFactory: rubyCmdFactory}
+func NewCocoapodsInstaller(rubyCmdFactory ruby.CommandFactory, logger log.Logger) CocoapodsInstaller {
+	return CocoapodsInstaller{
+		rubyCmdFactory: rubyCmdFactory,
+		logger:         logger,
+	}
 }
 
 // InstallPods ...
@@ -27,10 +31,10 @@ func (i CocoapodsInstaller) InstallPods(podArg []string, podCmd string, podfileD
 	if err := i.runPodInstall(podArg, podCmd, podfileDir, verbose); err == nil {
 		return nil
 	} else {
-		log.Printf("")
-		log.Warnf(errorutil.FormattedError(fmt.Errorf("Failed to install Pods: %w", err)))
-		log.Warnf("Retrying with pod repo update...")
-		log.Printf("")
+		i.logger.Printf("")
+		i.logger.Warnf(errorutil.FormattedError(fmt.Errorf("Failed to install Pods: %w", err)))
+		i.logger.Warnf("Retrying with pod repo update...")
+		i.logger.Printf("")
 	}
 
 	if err := i.runPodRepoUpdate(podArg, podfileDir, verbose); err != nil {
@@ -48,7 +52,7 @@ func (i CocoapodsInstaller) runPodInstall(podArg []string, podCmd string, podfil
 	errorFinder := &cocoapodsCmdErrorFinder{}
 	cmdSlice := podInstallCmdSlice(podArg, podCmd, verbose)
 	cmd := createPodCommand(i.rubyCmdFactory, cmdSlice, podfileDir, errorFinder)
-	log.Donef("$ %s", cmd.PrintableCommandArgs())
+	i.logger.Donef("$ %s", cmd.PrintableCommandArgs())
 	return cmd.Run()
 }
 
@@ -56,7 +60,7 @@ func (i CocoapodsInstaller) runPodRepoUpdate(podArg []string, podfileDir string,
 	errorFinder := &cocoapodsCmdErrorFinder{}
 	cmdSlice := podRepoUpdateCmdSlice(podArg, verbose)
 	cmd := createPodCommand(i.rubyCmdFactory, cmdSlice, podfileDir, errorFinder)
-	log.Donef("$ %s", cmd.PrintableCommandArgs())
+	i.logger.Donef("$ %s", cmd.PrintableCommandArgs())
 	return cmd.Run()
 }
 

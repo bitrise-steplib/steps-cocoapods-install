@@ -52,7 +52,10 @@ func Test_GivenCocoapodsInstaller_WhenArgsGiven_ThenRunsExpectedCommand(t *testi
 			cmdFactory := new(mocks.CommandFactory)
 			cmdFactory.On("Create", tt.wantCmd[0], tt.wantCmd[1:], mock.Anything).Return(cmd)
 
-			installer := NewCocoapodsInstaller(cmdFactory)
+			logger := new(mocks.Logger)
+			logger.On("Donef", mock.Anything, mock.Anything)
+
+			installer := NewCocoapodsInstaller(cmdFactory, logger)
 
 			// When
 			err := installer.InstallPods(tt.args.podArg, tt.args.podCmd, tt.args.podfileDir, tt.args.verbose)

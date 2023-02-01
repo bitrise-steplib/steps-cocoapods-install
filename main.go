@@ -20,6 +20,7 @@ import (
 	v2command "github.com/bitrise-io/go-utils/v2/command"
 	"github.com/bitrise-io/go-utils/v2/env"
 	"github.com/bitrise-io/go-utils/v2/errorutil"
+	v2log "github.com/bitrise-io/go-utils/v2/log"
 	"github.com/bitrise-io/go-xcode/pathfilters"
 )
 
@@ -472,8 +473,9 @@ func main() {
 	if err != nil {
 		failf("failed to create ruby command factory: %s", err)
 	}
+	logger := v2log.NewLogger()
 
-	installer := NewCocoapodsInstaller(rubyCmdFactory)
+	installer := NewCocoapodsInstaller(rubyCmdFactory, logger)
 	if err := installer.InstallPods(podCmdSlice, configs.Command, podfileDir, configs.Verbose); err != nil {
 		failf(errorutil.FormattedError(fmt.Errorf("Failed to install Pods: %w", err)))
 	}
