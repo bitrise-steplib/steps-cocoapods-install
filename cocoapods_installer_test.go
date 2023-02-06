@@ -20,25 +20,21 @@ func Test_GivenCocoapodsInstaller_WhenArgsGiven_ThenRunsExpectedCommand(t *testi
 	tests := []struct {
 		name    string
 		args    args
-		wantErr bool
 		wantCmd []string
 	}{
 		{
 			name:    "simple pod install",
 			args:    args{podArg: []string{"pod"}, podCmd: "install", verbose: false},
-			wantErr: false,
 			wantCmd: []string{"pod", "install", "--no-repo-update"},
 		},
 		{
 			name:    "verbose pod install",
 			args:    args{podArg: []string{"pod"}, podCmd: "install", verbose: true},
-			wantErr: false,
 			wantCmd: []string{"pod", "install", "--no-repo-update", "--verbose"},
 		},
 		{
 			name:    "verbose pod update",
 			args:    args{podArg: []string{"pod"}, podCmd: "update", verbose: true},
-			wantErr: false,
 			wantCmd: []string{"pod", "update", "--no-repo-update", "--verbose"},
 		},
 	}
@@ -61,9 +57,7 @@ func Test_GivenCocoapodsInstaller_WhenArgsGiven_ThenRunsExpectedCommand(t *testi
 			err := installer.InstallPods(tt.args.podArg, tt.args.podCmd, "", tt.args.verbose)
 
 			// Then
-			if (err != nil) != tt.wantErr {
-				t.Errorf("CocoapodsInstaller.InstallPods() error = %v, wantErr %v", err, tt.wantErr)
-			}
+			require.NoError(t, err)
 			cmdFactory.AssertExpectations(t)
 			cmd.AssertExpectations(t)
 		})
