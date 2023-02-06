@@ -104,12 +104,9 @@ func (f *cocoapodsCmdErrorFinder) findErrors(out string) []string {
 	for scanner.Scan() {
 		line := scanner.Text()
 
-		if strings.HasPrefix(line, "[!] ") ||
-			strings.HasPrefix(line, "curl: ") {
+		if strings.HasPrefix(line, "[!] ") || strings.HasPrefix(line, "curl: ") {
 			errors = append(errors, line)
-		}
-
-		if strings.HasPrefix(line, "Warning: Transient problem: ") {
+		} else if strings.HasPrefix(line, "Warning: Transient problem: ") {
 			if !f.transientProblemAlreadySeen {
 				errors = append(errors, "Transient problem")
 				f.transientProblemAlreadySeen = true
