@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"strings"
 	"testing"
 
@@ -12,10 +13,9 @@ import (
 
 func Test_GivenCocoapodsInstaller_WhenArgsGiven_ThenRunsExpectedCommand(t *testing.T) {
 	type args struct {
-		podArg     []string
-		podCmd     string
-		podfileDir string
-		verbose    bool
+		podArg  []string
+		podCmd  string
+		verbose bool
 	}
 	tests := []struct {
 		name    string
@@ -58,7 +58,7 @@ func Test_GivenCocoapodsInstaller_WhenArgsGiven_ThenRunsExpectedCommand(t *testi
 			installer := NewCocoapodsInstaller(cmdFactory, logger)
 
 			// When
-			err := installer.InstallPods(tt.args.podArg, tt.args.podCmd, tt.args.podfileDir, tt.args.verbose)
+			err := installer.InstallPods(tt.args.podArg, tt.args.podCmd, "", tt.args.verbose)
 
 			// Then
 			if (err != nil) != tt.wantErr {
@@ -68,6 +68,46 @@ func Test_GivenCocoapodsInstaller_WhenArgsGiven_ThenRunsExpectedCommand(t *testi
 			cmd.AssertExpectations(t)
 		})
 	}
+}
+
+func Test_GivenCocoapodsInstaller_WhenInstallFails_ThenRunsRepoUpdateAndRetries(t *testing.T) {
+	// Given
+	podArg := []string{"pod"}
+	podCmd := "install"
+
+	firstInstallCmd := new(mocks.Command)
+	firstInstallCmd.On("PrintableCommandArgs").Return(mock.Anything)
+	firstInstallCmd.On("Run").Return(errors.New("[!] Error installing boost")).Once()
+
+	repoUpdateCmd := new(mocks.Command)
+	repoUpdateCmd.On("PrintableCommandArgs").Return(mock.Anything)
+	repoUpdateCmd.On("Run").Return(nil).Once()
+
+	secondInstallCmd := new(mocks.Command)
+	secondInstallCmd.On("PrintableCommandArgs").Return(mock.Anything)
+	secondInstallCmd.On("Run").Return(nil).Once()
+
+	cmdFactory := new(mocks.CommandFactory)
+	cmdFactory.On("Create", podArg[0], []string{podCmd, "--no-repo-update"}, mock.Anything).Return(firstInstallCmd).Once()
+	cmdFactory.On("Create", podArg[0], []string{"repo", "update"}, mock.Anything).Return(repoUpdateCmd).Once()
+	cmdFactory.On("Create", podArg[0], []string{podCmd, "--no-repo-update"}, mock.Anything).Return(secondInstallCmd).Once()
+
+	logger := new(mocks.Logger)
+	logger.On("Donef", mock.Anything, mock.Anything)
+	logger.On("Printf", mock.Anything, mock.Anything)
+	logger.On("Warnf", mock.Anything, mock.Anything)
+
+	installer := NewCocoapodsInstaller(cmdFactory, logger)
+
+	// When
+	err := installer.InstallPods(podArg, podCmd, "", false)
+
+	// Then
+	require.NoError(t, err)
+	cmdFactory.AssertExpectations(t)
+	firstInstallCmd.AssertExpectations(t)
+	repoUpdateCmd.AssertExpectations(t)
+	secondInstallCmd.AssertExpectations(t)
 }
 
 func Test_GivenCocoapodsErrorFinder_WhenGatewayTimeOut_ThenFindsErrors(t *testing.T) {
