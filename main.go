@@ -226,7 +226,8 @@ func main() {
 		failf("failed to create ruby command factory: %s", err)
 	}
 	logger := v2log.NewLogger()
-	tracker := analytics.NewDefaultTracker(v2log.NewLogger(), analytics.Properties{})
+	tracker := analytics.NewDefaultTracker(logger, analytics.Properties{})
+	defer tracker.Wait()
 
 	//
 	// Search for Podfile
@@ -394,7 +395,6 @@ func main() {
 			effectiveRubyVersion = rversion
 		}
 
-		log.Infof("Sending analytics...")
 		tracker.Enqueue("step_ruby_version_selected", analytics.Properties{
 			"step_execution_id":         envRepository.Get("BITRISE_STEP_EXECUTION_ID"),
 			"build_slug":                envRepository.Get("BITRISE_BUILD_SLUG"),
@@ -403,7 +403,6 @@ func main() {
 			"effective_ruby_version":    effectiveRubyVersion,
 			"version_change_duration_s": int64(rubySelectDuration.Seconds()),
 		})
-		defer tracker.Wait()
 	}
 
 	// Install cocoapods
