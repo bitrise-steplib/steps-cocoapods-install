@@ -226,6 +226,7 @@ func main() {
 		failf("failed to create ruby command factory: %s", err)
 	}
 	logger := v2log.NewLogger()
+	tracker := analytics.NewDefaultTracker(v2log.NewLogger(), analytics.Properties{})
 
 	//
 	// Search for Podfile
@@ -385,21 +386,22 @@ func main() {
 			log.Errorf("Failed to check if selected ruby is installed: %s", err)
 		}
 
-		effectiveRubyVersion := ""
+		effectiveRubyVersion, err := command.New("rbenv", "global").RunAndReturnTrimmedOutput()
+		if err != nil {
+			log.Errorf("Failed to check global rbenv version: %w", err)
+		}
 		if isRequiredRubyInstalled {
 			effectiveRubyVersion = rversion
 		}
 
-		tracker := analytics.NewDefaultTracker(v2log.NewLogger(), analytics.Properties{
-			"step_id": "cocoapods-install",
-		})
+		log.Infof("Sending analytics...")
 		tracker.Enqueue("step_ruby_version_selected", analytics.Properties{
 			"step_execution_id":         envRepository.Get("BITRISE_STEP_EXECUTION_ID"),
 			"build_slug":                envRepository.Get("BITRISE_BUILD_SLUG"),
 			"step_id":                   "cocoapods-install",
 			"requested_ruby_version":    rversion,
 			"effective_ruby_version":    effectiveRubyVersion,
-			"version_change_duration_s": rubySelectDuration.Seconds(),
+			"version_change_duration_s": int64(rubySelectDuration.Seconds()),
 		})
 		defer tracker.Wait()
 	}
