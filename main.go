@@ -381,7 +381,7 @@ func main() {
 		}
 
 		rubySelectDuration := time.Since(rubySelectStart)
-		isRequiredRubyInstalled, _, err := rubycommand.IsSpecifiedRbenvRubyInstalled(podfileDir)\
+		isRequiredRubyInstalled, _, err := rubycommand.IsSpecifiedRbenvRubyInstalled(podfileDir)
 		if err != nil {
 			log.Errorf("Failed to check if selected ruby is installed: %s", err)
 		}
@@ -393,11 +393,11 @@ func main() {
 
 		// effectiveRubyVersion, installationType := rubycommand.CurrentRubyVersion()
 		tracker.Enqueue("step_ruby_version_selected", analytics.Properties{
-			"step_execution_id":      envRepository.Get("BITRISE_STEP_EXECUTION_ID"),
-			"build_slug":             envRepository.Get("BITRISE_BUILD_SLUG"),
-			"step_id":                "cocoapods-install",
-			"requested_ruby_version": rversion,
-			"effective_ruby_version": effectiveRubyVersion,
+			"step_execution_id":         envRepository.Get("BITRISE_STEP_EXECUTION_ID"),
+			"build_slug":                envRepository.Get("BITRISE_BUILD_SLUG"),
+			"step_id":                   "cocoapods-install",
+			"requested_ruby_version":    rversion,
+			"effective_ruby_version":    effectiveRubyVersion,
 			"version_change_duration_s": rubySelectDuration.Seconds(),
 		})
 		defer tracker.Wait()
