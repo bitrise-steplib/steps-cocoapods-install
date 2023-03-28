@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/bitrise-io/go-steputils/cache"
 	"github.com/bitrise-io/go-steputils/command/gems"
@@ -17,6 +18,7 @@ import (
 	"github.com/bitrise-io/go-utils/fileutil"
 	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-io/go-utils/pathutil"
+	"github.com/bitrise-io/go-utils/v2/analytics"
 	v2command "github.com/bitrise-io/go-utils/v2/command"
 	"github.com/bitrise-io/go-utils/v2/env"
 	"github.com/bitrise-io/go-utils/v2/errorutil"
@@ -216,6 +218,16 @@ func main() {
 	}
 	stepconf.Print(configs)
 
+	envRepository := env.NewRepository()
+	cmdLocator := env.NewCommandLocator()
+	cmdFactory := v2command.NewFactory(envRepository)
+	rubyCmdFactory, err := ruby.NewCommandFactory(cmdFactory, cmdLocator)
+	if err != nil {
+		failf("failed to create ruby command factory: %s", err)
+	}
+	logger := v2log.NewLogger()
+	tracker := analytics.NewDefaultTracker(v2log.NewLogger(), analytics.Properties{})
+
 	//
 	// Search for Podfile
 	podfilePath := ""
@@ -341,30 +353,54 @@ func main() {
 		log.Donef("Using system installed CocoaPods version")
 	}
 
-	// Check ruby version
-	// Run this logic only in CI environment when the ruby was installed via rbenv for the virtual machine
-	if os.Getenv("CI") == "true" && rubycommand.RubyInstallType() == rubycommand.RbenvRuby {
-		fmt.Println()
-		log.Infof("Check selected Ruby is installed")
-
+	if rubycommand.RubyInstallType() == rubycommand.RbenvRuby {
+		rubySelectStart := time.Now()
 		rubyInstalled, rversion, err := rubycommand.IsSpecifiedRbenvRubyInstalled(configs.SourceRootPath)
 		if err != nil {
-			log.Errorf("Failed to check if selected ruby is installed, error: %s", err)
+			log.Errorf("Failed to check if selected ruby is installed: %s", err)
 		}
 
-		if !rubyInstalled {
-			log.Errorf("Ruby %s is not installed", rversion)
+		// Check ruby version
+		// Run this logic only in CI environment when the ruby was installed via rbenv for the virtual machine
+		if os.Getenv("CI") == "true" {
 			fmt.Println()
+			log.Infof("Check selected Ruby is installed")
 
-			cmd := command.New("rbenv", "install", rversion).SetStdout(os.Stdout).SetStderr(os.Stderr)
-			log.Donef("$ %s", cmd.PrintableCommandArgs())
-			if err := cmd.Run(); err != nil {
-				log.Errorf("Failed to install Ruby version %s, error: %s", rversion, err)
+			if !rubyInstalled {
+				log.Errorf("Ruby %s is not installed", rversion)
+				fmt.Println()
+
+				cmd := command.New("rbenv", "install", rversion).SetStdout(os.Stdout).SetStderr(os.Stderr)
+				log.Donef("$ %s", cmd.PrintableCommandArgs())
+				if err := cmd.Run(); err != nil {
+					log.Errorf("Failed to install Ruby version %s, error: %s", rversion, err)
+				}
+			} else {
+				log.Donef("Ruby %s is installed", rversion)
 			}
-		} else {
-			log.Donef("Ruby %s is installed", rversion)
 		}
 
+		rubySelectDuration := time.Since(rubySelectStart)
+		isRequiredRubyInstalled, _, err := rubycommand.IsSpecifiedRbenvRubyInstalled(podfileDir)\
+		if err != nil {
+			log.Errorf("Failed to check if selected ruby is installed: %s", err)
+		}
+
+		effectiveRubyVersion := ""
+		if isRequiredRubyInstalled {
+			effectiveRubyVersion = rversion
+		}
+
+		// effectiveRubyVersion, installationType := rubycommand.CurrentRubyVersion()
+		tracker.Enqueue("step_ruby_version_selected", analytics.Properties{
+			"step_execution_id":      envRepository.Get("BITRISE_STEP_EXECUTION_ID"),
+			"build_slug":             envRepository.Get("BITRISE_BUILD_SLUG"),
+			"step_id":                "cocoapods-install",
+			"requested_ruby_version": rversion,
+			"effective_ruby_version": effectiveRubyVersion,
+			"version_change_duration_s": rubySelectDuration.Seconds(),
+		})
+		defer tracker.Wait()
 	}
 
 	// Install cocoapods
@@ -465,15 +501,6 @@ func main() {
 	// Run pod install
 	fmt.Println()
 	log.Infof("Installing Pods")
-
-	envRepository := env.NewRepository()
-	cmdLocator := env.NewCommandLocator()
-	cmdFactory := v2command.NewFactory(envRepository)
-	rubyCmdFactory, err := ruby.NewCommandFactory(cmdFactory, cmdLocator)
-	if err != nil {
-		failf("failed to create ruby command factory: %s", err)
-	}
-	logger := v2log.NewLogger()
 
 	installer := NewCocoapodsInstaller(rubyCmdFactory, logger)
 	if err := installer.InstallPods(podCmdSlice, configs.Command, podfileDir, configs.Verbose); err != nil {
