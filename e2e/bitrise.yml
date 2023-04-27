@@ -9,43 +9,22 @@ app:
   - PIN_RUBY: "false"
 
 workflows:
-#  test_with_no_podfile_lock:
-#    envs:
-#    # With Only Gemfile (no Podfile.lock):
-#    - TEST_APP_URL: https://github.com/bitrise-io/ios-cocoapods-1.x-Gemfile.git
-#    - TEST_APP_BRANCH: no-podfile-lock
-#    - COMMAND: install
-#    after_run:
-#    - _run
-#    - _check_cache_include_paths
-
-#  test_update_with_gemfile:
-#    envs:
-#    # With Gemfile:
-#    - TEST_APP_URL: https://github.com/bitrise-io/ios-cocoapods-1.x-Gemfile.git
-#    - TEST_APP_BRANCH: master
-#    - COMMAND: update
-#    after_run:
-#    - _run
-#    - _check_cache_include_paths
-#
-#  test_without_gemfile:
-#    envs:
-#    # Without Gemfile:
-#    - TEST_APP_URL: https://github.com/bitrise-io/ios-cocoapods-1.x.git
-#    - TEST_APP_BRANCH: master
-#    - COMMAND: install
-#    after_run:
-#    - _run
-#    - _check_cache_include_paths
-#
-  test_without_gemfile_with_podfile_path:
+  test_with_no_podfile_lock:
     envs:
-    # Without Gemfile:
-    - TEST_APP_URL: https://github.com/bitrise-io/ios-cocoapods-1.x.git
-    - TEST_APP_BRANCH: master
-    - PODFILE_PTH: CocoaPods1X/Podfile
+    # With Only Gemfile (no Podfile.lock):
+    - TEST_APP_URL: https://github.com/bitrise-io/ios-cocoapods-1.x-Gemfile.git
+    - TEST_APP_BRANCH: no-podfile-lock
     - COMMAND: install
+    after_run:
+    - _run
+    - _check_cache_include_paths
+
+  test_update_with_gemfile:
+    envs:
+    # With Gemfile:
+    - TEST_APP_URL: https://github.com/bitrise-io/ios-cocoapods-1.x-Gemfile.git
+    - TEST_APP_BRANCH: master
+    - COMMAND: update
     after_run:
     - _run
     - _check_cache_include_paths
