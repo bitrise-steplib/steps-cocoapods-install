@@ -61,16 +61,16 @@ workflows:
 #    - _run
 #    - _check_cache_include_paths
 #
-#  test_with_specific_ruby:
-#    envs:
-#    # Podfile is in repo root
-#    - TEST_APP_URL: https://github.com/bitrise-io/ios-cocoapods-1.x-Gemfile.git
-#    - TEST_APP_BRANCH: master
-#    - COMMAND: install
-#    - PIN_RUBY: "true"
-#    after_run:
-#    - _run
-#    - _check_cache_include_paths
+  test_with_specific_ruby:
+    envs:
+    # Podfile is in repo root
+    - TEST_APP_URL: https://github.com/bitrise-io/ios-cocoapods-1.x-Gemfile.git
+    - TEST_APP_BRANCH: master
+    - COMMAND: install
+    - PIN_RUBY: "true"
+    after_run:
+    - _run
+    - _check_cache_include_paths
 
   test_with_plugins:
     envs:
