@@ -3,9 +3,9 @@ module bitrise-steplib/steps-cocoapods-install
 go 1.20
 
 require (
-	github.com/bitrise-io/go-steputils v1.0.5
-	github.com/bitrise-io/go-steputils/v2 v2.0.0-alpha.16
-	github.com/bitrise-io/go-utils v1.0.9
+	github.com/bitrise-io/go-steputils v1.0.4
+	github.com/bitrise-io/go-steputils/v2 v2.0.0-alpha.18.0.20230817075229-32f2763d90ab
+	github.com/bitrise-io/go-utils v1.0.4
 	github.com/bitrise-io/go-utils/v2 v2.0.0-alpha.15
 	github.com/bitrise-io/go-xcode v1.0.16
 	github.com/stretchr/testify v1.8.4
