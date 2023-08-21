@@ -265,6 +265,17 @@ func main() {
 		podfilePath = absPodfilePath
 	}
 
+	isUsingSpecsRepo, err := isPodfileUsingSpecsRepo(podfilePath)
+	if err != nil {
+		log.Warnf("Failed to determine if Podfile is using Specs repo, error: %s", err)
+	} else {
+		tracker.Enqueue("step_cocoapods_install_podfile_used", analytics.Properties{
+			"step_execution_id":   envRepository.Get("BITRISE_STEP_EXECUTION_ID"),
+			"build_slug":          envRepository.Get("BITRISE_BUILD_SLUG"),
+			"is_using_specs_repo": isUsingSpecsRepo,
+		})
+	}
+
 	podfileDir := filepath.Dir(podfilePath)
 
 	//
