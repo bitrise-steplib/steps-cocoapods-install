@@ -62,7 +62,7 @@ workflows:
             fi
             envman add --key XCODE_MAJOR_VERSION_IS_NOT_15 --value "true"
     - script:
-        run_if: '{{enveq "XCODE_MAJOR_VERSION_IS_NOT_15" "true"}}'
+        run_if: "{{enveq \"XCODE_MAJOR_VERSION_IS_NOT_15\" \"true\"}}"
         inputs:
         - content: |-
             #!/bin/env bash
