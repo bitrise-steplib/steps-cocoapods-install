@@ -54,17 +54,7 @@ workflows:
     - _expose_xcode_version
     steps:
     - script:
-        inputs:
-        - content: |-
-            #!/bin/env bash
-            set -e
-            if [[ ${XCODE_MAJOR_VERSION} -eq 15 ]]; then
-              echo "This test case is temporarily skipped on Xcode 15..."
-              exit 0
-            fi
-            envman add --key XCODE_MAJOR_VERSION_IS_NOT_15 --value "true"
-    - script:
-        run_if: "{{enveq \"XCODE_MAJOR_VERSION_IS_NOT_15\" \"true\"}}"
+        run_if: "{{enveq \"XCODE_MAJOR_VERSION\" \"15\"}}"
         inputs:
         - content: |-
             #!/bin/env bash
@@ -82,6 +72,18 @@ workflows:
     - _check_cache_include_paths
 
   test_with_plugins:
+    before_run:
+    - _expose_xcode_version
+    steps:
+    - script:
+        run_if: "{{enveq \"XCODE_MAJOR_VERSION\" \"15\"}}"
+        inputs:
+        - content: |-
+            #!/bin/env bash
+            set -x # Do not set -e as bitrise command is expected to fail
+            bitrise run --config=./e2e/bitrise.yml utility_test_with_plugins
+
+  utility_test_with_plugins:
     envs:
     # With Gemfile:
     - TEST_APP_URL: https://github.com/bitrise-io/sample-apps-ios-cocoapods-plugins.git
