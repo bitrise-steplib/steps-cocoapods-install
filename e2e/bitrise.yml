@@ -54,6 +54,7 @@ workflows:
     - _expose_xcode_version
     steps:
     - script:
+        # TODO: Ruby compilation fails on Xcode 15 Beta, revisit this later
         run_if: "{{getenv \"XCODE_MAJOR_VERSION\" | ne \"15\"}}"
         inputs:
         - content: |-
@@ -76,6 +77,7 @@ workflows:
     - _expose_xcode_version
     steps:
     - script:
+        # TODO: Ruby compilation fails on Xcode 15 Beta, revisit this later
         run_if: "{{getenv \"XCODE_MAJOR_VERSION\" | ne \"15\"}}"
         inputs:
         - content: |-
