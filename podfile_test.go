@@ -43,6 +43,12 @@ func TestIsPodfileUsingSpecsRepo(t *testing.T) {
 			expected: false,
 			wantErr: false,
 		},
+		{
+			name: "Specs repo with lowercase URL",
+			podfileContent: repoPodfileLowercase,
+			expected: true,
+			wantErr: false,
+		},
 	}
 
 	for _, tt := range tests {
@@ -97,6 +103,16 @@ end
 const otherRepoPodfile = `
 source 'https://cdn.cocoapods.org/'
 source 'https://github.com/artsy/Specs.git'
+
+platform :ios, '11.7'
+
+def common_pods
+    pod 'FirebaseAnalytics', '~> 9.4'
+end
+`
+
+const repoPodfileLowercase = `
+source 'https://github.com/cocoapods/specs.git'
 
 platform :ios, '11.7'
 

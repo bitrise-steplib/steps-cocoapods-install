@@ -19,7 +19,9 @@ func isPodfileUsingSpecsRepo(path string) (bool, error) {
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
-		if strings.ReplaceAll(line, "\"", "'") == "source 'https://github.com/CocoaPods/Specs.git'" {
+		cleanLine := strings.ReplaceAll(line, "\"", "'")
+		cleanLine = strings.ToLower(cleanLine)
+		if cleanLine == "source 'https://github.com/cocoapods/specs.git'" {
 			specsRepoDefined = true
 			break
 		}
