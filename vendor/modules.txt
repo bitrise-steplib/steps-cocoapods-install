@@ -1,6 +1,6 @@
 # github.com/bitrise-io/go-plist v0.0.0-20210301100253-4b1a112ccd10
 github.com/bitrise-io/go-plist
-# github.com/bitrise-io/go-steputils v1.0.4
+# github.com/bitrise-io/go-steputils v1.0.5
 ## explicit
 github.com/bitrise-io/go-steputils/cache
 github.com/bitrise-io/go-steputils/command/gems
@@ -10,7 +10,7 @@ github.com/bitrise-io/go-steputils/tools
 # github.com/bitrise-io/go-steputils/v2 v2.0.0-alpha.16
 ## explicit
 github.com/bitrise-io/go-steputils/v2/ruby
-# github.com/bitrise-io/go-utils v1.0.4
+# github.com/bitrise-io/go-utils v1.0.9
 ## explicit
 github.com/bitrise-io/go-utils/colorstring
 github.com/bitrise-io/go-utils/command
@@ -32,7 +32,7 @@ github.com/bitrise-io/go-utils/v2/log
 github.com/bitrise-io/go-utils/v2/log/colorstring
 github.com/bitrise-io/go-utils/v2/pathutil
 github.com/bitrise-io/go-utils/v2/retryhttp
-# github.com/bitrise-io/go-xcode v1.0.10
+# github.com/bitrise-io/go-xcode v1.0.15
 ## explicit
 github.com/bitrise-io/go-xcode/pathfilters
 github.com/bitrise-io/go-xcode/xcodebuild
@@ -54,14 +54,15 @@ github.com/mitchellh/mapstructure
 github.com/pmezard/go-difflib/difflib
 # github.com/stretchr/objx v0.5.0
 github.com/stretchr/objx
-# github.com/stretchr/testify v1.8.1
+# github.com/stretchr/testify v1.8.4
 ## explicit
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/mock
 github.com/stretchr/testify/require
-# golang.org/x/text v0.6.0
-## explicit
+# golang.org/x/text v0.12.0
 golang.org/x/text/transform
 golang.org/x/text/unicode/norm
 # gopkg.in/yaml.v3 v3.0.1
 gopkg.in/yaml.v3
+# howett.net/plist v1.0.0
+howett.net/plist
