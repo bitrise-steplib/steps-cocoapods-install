@@ -365,7 +365,30 @@ func main() {
 		log.Donef("Using system installed CocoaPods version")
 	}
 
-	if rubycommand.RubyInstallType() == rubycommand.RbenvRuby {
+	if rubycommand.RubyInstallType() == rubycommand.ASDFRuby {
+		isRubyVersionInstalled, rubyVersion, err := rubycommand.IsSpecifiedASDFRubyInstalled(configs.SourceRootPath)
+		if err != nil {
+			failf("Failed to check if selected ruby is installed: %s", err)
+		}
+
+		if os.Getenv("CI") == "true" {
+			fmt.Println()
+			log.Infof("Check selected Ruby is installed")
+
+			if !isRubyVersionInstalled {
+				log.Errorf("Ruby %s is not installed", rubyVersion)
+				fmt.Println()
+
+				cmd := command.New("asdf", "install", "ruby", rubyVersion).SetStdout(os.Stdout).SetStderr(os.Stderr)
+				log.Donef("$ %s", cmd.PrintableCommandArgs())
+				if err := cmd.Run(); err != nil {
+					log.Errorf("Failed to install Ruby version %s, error: %s", rubyVersion, err)
+				}
+			} else {
+				log.Donef("Ruby %s is installed", rubyVersion)
+			}
+		}
+	} else if rubycommand.RubyInstallType() == rubycommand.RbenvRuby {
 		rubySelectStart := time.Now()
 		rubyInstalled, rversion, err := rubycommand.IsSpecifiedRbenvRubyInstalled(configs.SourceRootPath)
 		if err != nil {
