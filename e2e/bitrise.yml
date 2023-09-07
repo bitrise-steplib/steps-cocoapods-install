@@ -67,7 +67,7 @@ workflows:
     - TEST_APP_URL: https://github.com/bitrise-io/Bitrise-iOS-Cocoapods-Sample.git
     - TEST_APP_BRANCH: main
     - COMMAND: install
-    - PIN_RUBY: "true"
+    - PIN_RUBY: "3.1.4"
     after_run:
     - _run
     - _check_cache_include_paths
@@ -75,9 +75,9 @@ workflows:
   test_with_specific_missing_ruby:
     envs:
     - TEST_APP_URL: https://github.com/bitrise-io/Bitrise-iOS-Cocoapods-Sample.git
-    - TEST_APP_BRANCH: test-ruby-version
+    - TEST_APP_BRANCH: main
     - COMMAND: install
-    - PIN_RUBY: "true"
+    - PIN_RUBY: "3.2.0"
     after_run:
     - _run
     - _check_cache_include_paths
@@ -120,14 +120,14 @@ workflows:
         - clone_into_dir: ./_tmp
     - script:
         run_if: |-
-          {{ enveq "PIN_RUBY" "true" }}
+          {{ getenv "PIN_RUBY" | ne "" }}
         title: Pin Ruby version
         inputs:
         - content: |-
             #!/bin/bash
             set -ex
 
-            echo "3.1.4" >> .ruby-version
+            echo "$PIN_RUBY" >> .ruby-version
     - path::./:
         inputs:
         - source_root_path: $BITRISE_SOURCE_DIR/_tmp
