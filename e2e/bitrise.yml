@@ -120,12 +120,6 @@ workflows:
         - branch: $TEST_APP_BRANCH
         - clone_into_dir: ./_tmp
     - script:
-        inputs:
-        - content: |-
-            #!/bin/bash
-            set -ex
-            asdf current
-    - script:
         run_if: |-
           {{ getenv "PIN_RBENV_RUBY" | ne "" }}
         title: Pin .ruby-version Ruby version
@@ -145,6 +139,12 @@ workflows:
             set -ex
 
             echo "ruby $PIN_ASDF_RUBY" >> .tool-versions
+    - script:
+        inputs:
+        - content: |-
+            #!/bin/bash
+            set -ex
+            asdf current
     - path::./:
         inputs:
         - source_root_path: $BITRISE_SOURCE_DIR/_tmp
