@@ -8,7 +8,7 @@ github.com/bitrise-io/go-steputils/command/gems
 github.com/bitrise-io/go-steputils/command/rubycommand
 github.com/bitrise-io/go-steputils/stepconf
 github.com/bitrise-io/go-steputils/tools
-# github.com/bitrise-io/go-steputils/v2 v2.0.0-alpha.18.0.20230817075229-32f2763d90ab
+# github.com/bitrise-io/go-steputils/v2 v2.0.0-alpha.20
 ## explicit; go 1.17
 github.com/bitrise-io/go-steputils/v2/ruby
 # github.com/bitrise-io/go-utils v1.0.9
