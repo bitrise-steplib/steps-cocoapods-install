@@ -72,6 +72,16 @@ workflows:
     - _run
     - _check_cache_include_paths
 
+  test_with_specific_missing_ruby:
+    envs:
+    - TEST_APP_URL: https://github.com/bitrise-io/Bitrise-iOS-Cocoapods-Sample.git
+    - TEST_APP_BRANCH: test-ruby-version
+    - COMMAND: install
+    - PIN_RUBY: "true"
+    after_run:
+    - _run
+    - _check_cache_include_paths
+
   test_with_plugins:
     before_run:
     - _expose_xcode_version
