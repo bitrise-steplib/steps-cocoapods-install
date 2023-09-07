@@ -124,7 +124,7 @@ workflows:
         - content: |-
             #!/bin/bash
             set -ex
-            asdf current ruby
+            asdf current
     - script:
         run_if: |-
           {{ getenv "PIN_RBENV_RUBY" | ne "" }}
