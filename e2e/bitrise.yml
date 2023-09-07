@@ -6,7 +6,7 @@ app:
   # Shared test configs
   - PODFILE_PTH: ""
   - VERBOSE: "false"
-  - PIN_RUBY: "false"
+  - PIN_RUBY: ""
 
 workflows:
   test_no_gemfile:
