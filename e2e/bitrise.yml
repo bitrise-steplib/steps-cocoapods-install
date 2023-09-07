@@ -60,7 +60,7 @@ workflows:
     - _run
     - _check_cache_include_paths
 
-  # previous test isntalled required ruby version  
+  # previous test isntalled required ruby version
   test_with_specific_installed_ruby_rbenv:
     envs:
     - TEST_APP_URL: https://github.com/bitrise-io/Bitrise-iOS-Cocoapods-Sample.git
