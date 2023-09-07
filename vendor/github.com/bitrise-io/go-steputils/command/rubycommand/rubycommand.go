@@ -66,13 +66,8 @@ func RubyInstallType() InstallType {
 		installType = BrewRuby
 	} else if cmdExist("rvm", "-v") {
 		installType = RVMRuby
-	} else if cmdExist("asdf") {
-		// asdf doesn't store its installs in a definite location,
-		// but it does store its shims in a 'shims' directory, which
-		// is what we'll get from the `which ruby` call above.
-		if strings.Contains(whichRuby, "shims/ruby") {
-			installType = ASDFRuby
-		}
+	} else if cmdExist("asdf") && strings.Contains(whichRuby, ".asdf/shims/ruby") {
+		installType = ASDFRuby
 	} else if cmdExist("rbenv", "-v") {
 		installType = RbenvRuby
 	}

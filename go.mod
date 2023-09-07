@@ -3,7 +3,7 @@ module bitrise-steplib/steps-cocoapods-install
 go 1.20
 
 require (
-	github.com/bitrise-io/go-steputils v1.0.6-0.20230907150114-485a14e612d0
+	github.com/bitrise-io/go-steputils v1.0.6-0.20230907154309-944d57bfefd0
 	github.com/bitrise-io/go-steputils/v2 v2.0.0-alpha.20
 	github.com/bitrise-io/go-utils v1.0.9
 	github.com/bitrise-io/go-utils/v2 v2.0.0-alpha.15

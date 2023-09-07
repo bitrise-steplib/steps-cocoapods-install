@@ -1,7 +1,7 @@
 # github.com/bitrise-io/go-plist v0.0.0-20210301100253-4b1a112ccd10
 ## explicit; go 1.15
 github.com/bitrise-io/go-plist
-# github.com/bitrise-io/go-steputils v1.0.6-0.20230907150114-485a14e612d0
+# github.com/bitrise-io/go-steputils v1.0.6-0.20230907154309-944d57bfefd0
 ## explicit; go 1.15
 github.com/bitrise-io/go-steputils/cache
 github.com/bitrise-io/go-steputils/command/gems
