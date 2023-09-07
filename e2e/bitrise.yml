@@ -133,6 +133,7 @@ workflows:
             #!/bin/bash
             set -ex
 
+            which ruby
             cd ./_tmp
             asdf current
             cd -

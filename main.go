@@ -371,21 +371,28 @@ func main() {
 			failf("Failed to check if selected ruby is installed: %s", err)
 		}
 
-		if os.Getenv("CI") == "true" {
+		fmt.Println()
+		log.Infof("Checking selected Ruby version")
+		asdfCurrentCmd := command.New("asdf", "current", "ruby").SetStdout(os.Stdout).SetStderr(os.Stderr)
+		log.Donef("$ %s", asdfCurrentCmd.PrintableCommandArgs())
+		if err := asdfCurrentCmd.Run(); err != nil {
+			log.Errorf("Failed to print selected Ruby version.")
+		}
+
+		fmt.Println()
+		if !isRubyVersionInstalled {
+			log.Errorf("The selected Ruby version (%s) is not installed.", rubyVersion)
+		} else {
+			log.Donef("The selected Ruby version (%s) is installed.")
+		}
+
+		if !isRubyVersionInstalled && os.Getenv("CI") == "true" {
 			fmt.Println()
-			log.Infof("Check selected Ruby is installed")
-
-			if !isRubyVersionInstalled {
-				log.Errorf("Ruby %s is not installed", rubyVersion)
-				fmt.Println()
-
-				cmd := command.New("asdf", "install", "ruby", rubyVersion).SetStdout(os.Stdout).SetStderr(os.Stderr)
-				log.Donef("$ %s", cmd.PrintableCommandArgs())
-				if err := cmd.Run(); err != nil {
-					log.Errorf("Failed to install Ruby version %s, error: %s", rubyVersion, err)
-				}
-			} else {
-				log.Donef("Ruby %s is installed", rubyVersion)
+			log.Infof("Installing missing Ruby version")
+			cmd := command.New("asdf", "install", "ruby", rubyVersion).SetStdout(os.Stdout).SetStderr(os.Stderr)
+			log.Donef("$ %s", cmd.PrintableCommandArgs())
+			if err := cmd.Run(); err != nil {
+				log.Errorf("Failed to install Ruby version %s, error: %s", rubyVersion, err)
 			}
 		}
 	} else if rubycommand.RubyInstallType() == rubycommand.RbenvRuby {
