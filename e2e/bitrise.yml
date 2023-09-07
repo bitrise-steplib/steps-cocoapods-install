@@ -128,7 +128,7 @@ workflows:
             #!/bin/bash
             set -ex
 
-            echo "$PIN_RBENV_RUBY" >> .ruby-version
+            echo "$PIN_RBENV_RUBY" >> ./_tmp/.ruby-version
     - script:
         run_if: |-
           {{ getenv "PIN_ASDF_RUBY" | ne "" }}
@@ -138,7 +138,7 @@ workflows:
             #!/bin/bash
             set -ex
 
-            echo "ruby $PIN_ASDF_RUBY" >> .tool-versions
+            echo "ruby $PIN_ASDF_RUBY" >> ./_tmp/.tool-versions
     - script:
         inputs:
         - content: |-
