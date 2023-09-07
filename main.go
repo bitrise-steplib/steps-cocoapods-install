@@ -373,10 +373,13 @@ func main() {
 
 		fmt.Println()
 		log.Infof("Checking selected Ruby version")
-		asdfCurrentCmd := command.New("asdf", "current", "ruby").SetStdout(os.Stdout).SetStderr(os.Stderr)
+		asdfCurrentCmd := command.New("asdf", "current", "ruby").
+			SetStdout(os.Stdout).
+			SetStderr(os.Stderr).
+			SetDir(configs.SourceRootPath)
 		log.Donef("$ %s", asdfCurrentCmd.PrintableCommandArgs())
 		if err := asdfCurrentCmd.Run(); err != nil {
-			log.Errorf("Failed to print selected Ruby version.")
+			log.Errorf("Failed to print selected Ruby version: %w", err)
 		}
 
 		fmt.Println()
@@ -387,7 +390,6 @@ func main() {
 		}
 
 		if !isRubyVersionInstalled && os.Getenv("CI") == "true" {
-			fmt.Println()
 			log.Infof("Installing missing Ruby version")
 			cmd := command.New("asdf", "install", "ruby", rubyVersion).SetStdout(os.Stdout).SetStderr(os.Stderr)
 			log.Donef("$ %s", cmd.PrintableCommandArgs())
@@ -406,7 +408,7 @@ func main() {
 		// Run this logic only in CI environment when the ruby was installed via rbenv for the virtual machine
 		if os.Getenv("CI") == "true" {
 			fmt.Println()
-			log.Infof("Check selected Ruby is installed")
+			log.Infof("Checking selected Ruby version using rbenv")
 
 			if !rubyInstalled {
 				log.Errorf("Ruby %s is not installed", rversion)
