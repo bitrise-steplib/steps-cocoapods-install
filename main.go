@@ -365,7 +365,39 @@ func main() {
 		log.Donef("Using system installed CocoaPods version")
 	}
 
-	if rubycommand.RubyInstallType() == rubycommand.RbenvRuby {
+	if rubycommand.RubyInstallType() == rubycommand.ASDFRuby {
+		isRubyVersionInstalled, rubyVersion, err := rubycommand.IsSpecifiedASDFRubyInstalled(configs.SourceRootPath)
+		if err != nil {
+			failf("Failed to check if selected ruby is installed: %s", err)
+		}
+
+		fmt.Println()
+		log.Infof("Checking selected Ruby version")
+		asdfCurrentCmd := command.New("asdf", "current", "ruby").
+			SetStdout(os.Stdout).
+			SetStderr(os.Stderr).
+			SetDir(configs.SourceRootPath)
+		log.Donef("$ %s", asdfCurrentCmd.PrintableCommandArgs())
+		if err := asdfCurrentCmd.Run(); err != nil {
+			log.Warnf("Failed to print selected Ruby version: %s", err)
+		}
+
+		fmt.Println()
+		if !isRubyVersionInstalled {
+			log.Errorf("The selected Ruby version (%s) is not installed.", rubyVersion)
+		} else {
+			log.Donef("The selected Ruby version (%s) is installed.", rubyVersion)
+		}
+
+		if !isRubyVersionInstalled && os.Getenv("CI") == "true" {
+			log.Infof("Installing missing Ruby version")
+			cmd := command.New("asdf", "install", "ruby", rubyVersion).SetStdout(os.Stdout).SetStderr(os.Stderr)
+			log.Donef("$ %s", cmd.PrintableCommandArgs())
+			if err := cmd.Run(); err != nil {
+				log.Errorf("Failed to install Ruby version %s, error: %s", rubyVersion, err)
+			}
+		}
+	} else if rubycommand.RubyInstallType() == rubycommand.RbenvRuby {
 		rubySelectStart := time.Now()
 		rubyInstalled, rversion, err := rubycommand.IsSpecifiedRbenvRubyInstalled(configs.SourceRootPath)
 		if err != nil {
@@ -376,7 +408,7 @@ func main() {
 		// Run this logic only in CI environment when the ruby was installed via rbenv for the virtual machine
 		if os.Getenv("CI") == "true" {
 			fmt.Println()
-			log.Infof("Check selected Ruby is installed")
+			log.Infof("Checking selected Ruby version using rbenv")
 
 			if !rubyInstalled {
 				log.Errorf("Ruby %s is not installed", rversion)

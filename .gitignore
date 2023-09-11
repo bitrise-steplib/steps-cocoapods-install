@@ -4,3 +4,6 @@ go/bin/
 go/pkg/
 .gows.user.yml
 .idea
+.DS_Store
+.ruby-version
+steps-cocoapods-install

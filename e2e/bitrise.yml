@@ -6,7 +6,8 @@ app:
   # Shared test configs
   - PODFILE_PTH: ""
   - VERBOSE: "false"
-  - PIN_RUBY: "false"
+  - PIN_RBENV_RUBY: ""
+  - PIN_ASDF_RUBY: ""
 
 workflows:
   test_no_gemfile:
@@ -49,25 +50,23 @@ workflows:
     - _run
     - _check_cache_include_paths
 
-  test_with_specific_ruby:
-    before_run:
-    - _expose_xcode_version
-    steps:
-    - script:
-        # TODO: Ruby compilation fails on Xcode 15 Beta, revisit this later
-        run_if: "{{getenv \"XCODE_MAJOR_VERSION\" | ne \"15\"}}"
-        inputs:
-        - content: |-
-            #!/bin/env bash
-            set -x # Do not set -e as bitrise command is expected to fail
-            bitrise run --config=./e2e/bitrise.yml utility_test_with_specific_ruby
-
-  utility_test_with_specific_ruby:
+  test_with_specific_missing_ruby_asdf:
     envs:
     - TEST_APP_URL: https://github.com/bitrise-io/Bitrise-iOS-Cocoapods-Sample.git
     - TEST_APP_BRANCH: main
     - COMMAND: install
-    - PIN_RUBY: "true"
+    - PIN_ASDF_RUBY: 3.2.0
+    after_run:
+    - _run
+    - _check_cache_include_paths
+
+  # previous test isntalled required ruby version
+  test_with_specific_installed_ruby_rbenv:
+    envs:
+    - TEST_APP_URL: https://github.com/bitrise-io/Bitrise-iOS-Cocoapods-Sample.git
+    - TEST_APP_BRANCH: main
+    - COMMAND: install
+    - PIN_RBENV_RUBY: 3.2.0
     after_run:
     - _run
     - _check_cache_include_paths
@@ -110,14 +109,34 @@ workflows:
         - clone_into_dir: ./_tmp
     - script:
         run_if: |-
-          {{ enveq "PIN_RUBY" "true" }}
-        title: Pin Ruby version
+          {{ getenv "PIN_RBENV_RUBY" | ne "" }}
+        title: Pin .ruby-version Ruby version
         inputs:
         - content: |-
             #!/bin/bash
             set -ex
 
-            echo "3.1.4" >> .ruby-version
+            echo "$PIN_RBENV_RUBY" >> ./_tmp/.ruby-version
+    - script:
+        run_if: |-
+          {{ getenv "PIN_ASDF_RUBY" | ne "" }}
+        title: Pin .tool-versions Ruby version
+        inputs:
+        - content: |-
+            #!/bin/bash
+            set -ex
+
+            echo "ruby $PIN_ASDF_RUBY" >> ./_tmp/.tool-versions
+    - script:
+        inputs:
+        - content: |-
+            #!/bin/bash
+            set -ex
+
+            which ruby
+            cd ./_tmp
+            asdf current
+            cd -
     - path::./:
         inputs:
         - source_root_path: $BITRISE_SOURCE_DIR/_tmp
