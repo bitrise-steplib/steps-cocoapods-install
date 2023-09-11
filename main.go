@@ -379,14 +379,14 @@ func main() {
 			SetDir(configs.SourceRootPath)
 		log.Donef("$ %s", asdfCurrentCmd.PrintableCommandArgs())
 		if err := asdfCurrentCmd.Run(); err != nil {
-			log.Errorf("Failed to print selected Ruby version: %w", err)
+			log.Warnf("Failed to print selected Ruby version: %s", err)
 		}
 
 		fmt.Println()
 		if !isRubyVersionInstalled {
 			log.Errorf("The selected Ruby version (%s) is not installed.", rubyVersion)
 		} else {
-			log.Donef("The selected Ruby version (%s) is installed.")
+			log.Donef("The selected Ruby version (%s) is installed.", rubyVersion)
 		}
 
 		if !isRubyVersionInstalled && os.Getenv("CI") == "true" {
