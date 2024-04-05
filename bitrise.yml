@@ -5,11 +5,11 @@ workflows:
 
   check:
     steps:
-    - git::https://github.com/bitrise-steplib/steps-check.git: { }
+    - git::https://github.com/bitrise-steplib/steps-check.git@ofalvai/yamllint-install: { }
 
   e2e:
     steps:
-    - git::https://github.com/bitrise-steplib/steps-check.git:
+    - git::https://github.com/bitrise-steplib/steps-check.git@ofalvai/yamllint-install:
         inputs:
         - workflow: e2e
 
