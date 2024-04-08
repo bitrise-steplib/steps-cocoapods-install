@@ -72,19 +72,6 @@ workflows:
     - _check_cache_include_paths
 
   test_with_plugins:
-    before_run:
-    - _expose_xcode_version
-    steps:
-    - script:
-        # TODO: Ruby compilation fails on Xcode 15 Beta, revisit this later
-        run_if: "{{getenv \"XCODE_MAJOR_VERSION\" | ne \"15\"}}"
-        inputs:
-        - content: |-
-            #!/bin/env bash
-            set -x # Do not set -e as bitrise command is expected to fail
-            bitrise run --config=./e2e/bitrise.yml utility_test_with_plugins
-
-  utility_test_with_plugins:
     envs:
     # With Gemfile:
     - TEST_APP_URL: https://github.com/bitrise-io/sample-apps-ios-cocoapods-plugins.git
@@ -153,28 +140,3 @@ workflows:
             #!/usr/bin/env bash
 
             echo $BITRISE_CACHE_INCLUDE_PATHS
-
-  _expose_xcode_version:
-    steps:
-    - script:
-        title: Expose Xcode major version
-        inputs:
-        - content: |-
-            #!/bin/env bash
-            set -e
-
-            if [[ ! -z "$XCODE_MAJOR_VERSION" ]]; then
-              echo "Xcode major version already exposed: $XCODE_MAJOR_VERSION"
-              exit 0
-            fi
-
-            version=`xcodebuild -version`
-            regex="Xcode ([0-9]*)."
-            if [[ ! $version =~ $regex ]]; then
-              echo "Failed to determine Xcode major version"
-              exit 1
-            fi
-
-            xcode_major_version=${BASH_REMATCH[1]}
-            echo "Xcode major version: $xcode_major_version"
-            envman add --key XCODE_MAJOR_VERSION --value $xcode_major_version
