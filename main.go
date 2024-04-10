@@ -269,6 +269,9 @@ func main() {
 	if err != nil {
 		log.Warnf("Failed to determine if Podfile is using Specs repo, error: %s", err)
 	} else {
+		if isUsingSpecsRepo {
+			addSpecsRepoAnnotation(cmdFactory)
+		}
 		tracker.Enqueue("step_cocoapods_install_podfile_used", analytics.Properties{
 			"step_execution_id":   envRepository.Get("BITRISE_STEP_EXECUTION_ID"),
 			"build_slug":          envRepository.Get("BITRISE_BUILD_SLUG"),
