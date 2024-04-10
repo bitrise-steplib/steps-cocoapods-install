@@ -9,8 +9,9 @@ import (
 )
 
 const specsRepoWarning = `### CocoaPods tip
-Your Podfile is still using the Specs repo. Switch to the CDN source for faster and more reliable dependency installs!
-Learn more about the one-line change [here](https://blog.cocoapods.org/CocoaPods-1.8.0-beta/).
+Your Podfile is still using the Specs repo. Switch to the CDN source for **faster and more reliable** dependency installs!
+
+Learn more about the **one-line change** [here](https://blog.cocoapods.org/CocoaPods-1.8.0-beta/).
 `
 
 // isPodfileUsingSpecsRepo returns true if the Podfile contains a source 'https://github.com/CocoaPods/Specs.git'.
