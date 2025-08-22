@@ -7,7 +7,7 @@ require (
 	github.com/bitrise-io/go-steputils/v2 v2.0.0-alpha.29
 	github.com/bitrise-io/go-utils v1.0.13
 	github.com/bitrise-io/go-utils/v2 v2.0.0-alpha.21
-	github.com/bitrise-io/go-xcode v1.0.19
+	github.com/bitrise-io/go-xcode v1.0.1
 	github.com/stretchr/testify v1.9.0
 )
 
@@ -22,5 +22,4 @@ require (
 	github.com/stretchr/objx v0.5.2 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	howett.net/plist v1.0.1 // indirect
 )

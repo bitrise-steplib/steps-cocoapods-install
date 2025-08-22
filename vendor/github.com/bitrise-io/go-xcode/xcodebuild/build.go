@@ -3,16 +3,8 @@ package xcodebuild
 import (
 	"os"
 	"os/exec"
-	"path/filepath"
 
 	"github.com/bitrise-io/go-utils/command"
-)
-
-const (
-	// XCWorkspaceExtension ...
-	XCWorkspaceExtension = ".xcworkspace"
-	// XCProjExtension ...
-	XCProjExtension = ".xcodeproj"
 )
 
 /*
@@ -36,32 +28,48 @@ xcodebuild -workspace <workspacename> \
 	[<buildaction>]...
 */
 
+// const ...
+const (
+	ArchiveAction Action = "archiveAction"
+	BuildAction   Action = "buildAction"
+	AnalyzeAction Action = "analyzeAction"
+)
+
+// Action ...
+type Action string
+
 // CommandBuilder ...
 type CommandBuilder struct {
-	actions []string
+	projectPath    string
+	isWorkspace    bool
+	scheme         string
+	configuration  string
+	destination    string
+	xcconfigPath   string
+	authentication *AuthenticationParams
+
+	// buildsetting
+	disableCodesign bool
+
+	// buildaction
+	customBuildActions []string
 
 	// Options
-	projectPath      string
-	scheme           string
-	configuration    string
-	destination      string
-	xcconfigPath     string
-	authentication   *AuthenticationParams
 	archivePath      string
 	customOptions    []string
 	sdk              string
 	resultBundlePath string
-	testPlan         string
 
-	// buildsetting
-	disableCodesign bool
+	// Archive
+	action Action
 }
 
 // NewCommandBuilder ...
-func NewCommandBuilder(projectPath string, actions ...string) *CommandBuilder {
+func NewCommandBuilder(projectPath string, isWorkspace bool, action Action) *CommandBuilder {
 	return &CommandBuilder{
 		projectPath: projectPath,
-		actions:     actions,
+		isWorkspace: isWorkspace,
+		action:      action,
 	}
 }
 
@@ -95,6 +103,12 @@ func (c *CommandBuilder) SetAuthentication(authenticationParams AuthenticationPa
 	return c
 }
 
+// SetCustomBuildAction ...
+func (c *CommandBuilder) SetCustomBuildAction(buildAction ...string) *CommandBuilder {
+	c.customBuildActions = buildAction
+	return c
+}
+
 // SetArchivePath ...
 func (c *CommandBuilder) SetArchivePath(archivePath string) *CommandBuilder {
 	c.archivePath = archivePath
@@ -125,18 +139,11 @@ func (c *CommandBuilder) SetDisableCodesign(disable bool) *CommandBuilder {
 	return c
 }
 
-// SetTestPlan ...
-func (c *CommandBuilder) SetTestPlan(testPlan string) *CommandBuilder {
-	c.testPlan = testPlan
-	return c
-}
-
 func (c *CommandBuilder) cmdSlice() []string {
 	slice := []string{toolName}
-	slice = append(slice, c.actions...)
 
 	if c.projectPath != "" {
-		if filepath.Ext(c.projectPath) == XCWorkspaceExtension {
+		if c.isWorkspace {
 			slice = append(slice, "-workspace", c.projectPath)
 		} else {
 			slice = append(slice, "-project", c.projectPath)
@@ -160,8 +167,23 @@ func (c *CommandBuilder) cmdSlice() []string {
 		slice = append(slice, "-xcconfig", c.xcconfigPath)
 	}
 
-	if c.archivePath != "" {
-		slice = append(slice, "-archivePath", c.archivePath)
+	if c.disableCodesign {
+		slice = append(slice, "CODE_SIGNING_ALLOWED=NO")
+	}
+
+	slice = append(slice, c.customBuildActions...)
+
+	switch c.action {
+	case ArchiveAction:
+		slice = append(slice, "archive")
+
+		if c.archivePath != "" {
+			slice = append(slice, "-archivePath", c.archivePath)
+		}
+	case BuildAction:
+		slice = append(slice, "build")
+	case AnalyzeAction:
+		slice = append(slice, "analyze")
 	}
 
 	if c.sdk != "" {
@@ -174,14 +196,6 @@ func (c *CommandBuilder) cmdSlice() []string {
 
 	if c.authentication != nil {
 		slice = append(slice, c.authentication.args()...)
-	}
-
-	if c.testPlan != "" {
-		slice = append(slice, "-testPlan", c.testPlan)
-	}
-
-	if c.disableCodesign {
-		slice = append(slice, "CODE_SIGNING_ALLOWED=NO")
 	}
 
 	slice = append(slice, c.customOptions...)

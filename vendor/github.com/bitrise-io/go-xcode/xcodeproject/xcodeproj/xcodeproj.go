@@ -11,13 +11,15 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/bitrise-io/go-plist"
+	plist "github.com/bitrise-io/go-plist"
 	"github.com/bitrise-io/go-utils/fileutil"
 	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-io/go-utils/pathutil"
 	"github.com/bitrise-io/go-utils/pretty"
 	"github.com/bitrise-io/go-xcode/xcodebuild"
 	"github.com/bitrise-io/go-xcode/xcodeproject/serialized"
+	"github.com/bitrise-io/go-xcode/xcodeproject/xcscheme"
+	"golang.org/x/text/unicode/norm"
 )
 
 const (
@@ -104,30 +106,6 @@ func (p XcodeProj) TargetInfoplistPath(target, configuration string) (string, er
 	return p.buildSettingsFilePath(target, configuration, "INFOPLIST_FILE")
 }
 
-// DependentTargetsOfTarget returns with all dependencies of a given target, including the transitive dependencies.
-// The returned list contains each target only once, using the target ID for uniqueness.
-func (p XcodeProj) DependentTargetsOfTarget(target Target) []Target {
-	var dependentTargets []Target
-
-	log.TDebugf("Locating all dependencies of target: %s", target.Name)
-
-	for _, dependency := range target.Dependencies {
-		childTarget, ok := p.Proj.Target(dependency.TargetID)
-		if !ok {
-			log.Warnf("couldn't find dependency %s of target %s (%s), skipping", dependency.TargetID, target.Name, target.ID)
-			continue
-		}
-		dependentTargets = append(dependentTargets, childTarget)
-
-		childDependentTargets := p.DependentTargetsOfTarget(childTarget)
-		dependentTargets = append(dependentTargets, childDependentTargets...)
-	}
-
-	log.TDebugf("Located %v dependencies of target: %s", len(dependentTargets), target.Name)
-
-	return deduplicateTargetList(dependentTargets)
-}
-
 // ReadTargetInfoplist ...
 func (p XcodeProj) ReadTargetInfoplist(target, configuration string) (serialized.Object, int, error) {
 	informationPropertyListPth, err := p.TargetInfoplistPath(target, configuration)
@@ -204,7 +182,7 @@ func (p XcodeProj) TargetBundleID(target, configuration string) (string, error) 
 	}
 
 	if bundleID != "" {
-		return resolve(bundleID, buildSettings)
+		return Resolve(bundleID, buildSettings)
 	}
 
 	informationPropertyList, _, err := p.ReadTargetInfoplist(target, configuration)
@@ -221,16 +199,16 @@ func (p XcodeProj) TargetBundleID(target, configuration string) (string, error) 
 		return "", errors.New("no PRODUCT_BUNDLE_IDENTIFIER build settings nor CFBundleIdentifier information property found")
 	}
 
-	return resolve(bundleID, buildSettings)
+	return Resolve(bundleID, buildSettings)
 }
 
-// resolve returns the resolved bundleID. We need this, because the bundleID is not exposed in the .pbxproj file ( raw ).
+// Resolve returns the resolved bundleID. We need this, because the bundleID is not exposed in the .pbxproj file ( raw ).
 // If the raw BundleID contains an environment variable we have to replace it.
 //
 // **Example:**
 // BundleID in the .pbxproj: Bitrise.Test.$(PRODUCT_NAME:rfc1034identifier).Suffix
 // BundleID after the env is expanded: Bitrise.Test.Sample.Suffix
-func resolve(bundleID string, buildSettings serialized.Object) (string, error) {
+func Resolve(bundleID string, buildSettings serialized.Object) (string, error) {
 	resolvedBundleIDs := map[string]bool{}
 	resolved := bundleID
 	for true {
@@ -328,6 +306,28 @@ func (p XcodeProj) TargetBuildSettings(target, configuration string, customOptio
 	return commandModel.RunAndReturnSettings()
 }
 
+// Scheme returns the project's scheme by name and the project's absolute path.
+func (p XcodeProj) Scheme(name string) (*xcscheme.Scheme, string, error) {
+	schemes, err := p.Schemes()
+	if err != nil {
+		return nil, "", err
+	}
+
+	normName := norm.NFC.String(name)
+	for _, scheme := range schemes {
+		if norm.NFC.String(scheme.Name) == normName {
+			return &scheme, p.Path, nil
+		}
+	}
+
+	return nil, "", xcscheme.NotFoundError{Scheme: name, Container: p.Name}
+}
+
+// Schemes ...
+func (p XcodeProj) Schemes() ([]xcscheme.Scheme, error) {
+	return xcscheme.FindSchemesIn(p.Path)
+}
+
 // Open ...
 func Open(pth string) (XcodeProj, error) {
 	absPth, err := pathutil.AbsPath(pth)
@@ -349,8 +349,6 @@ func Open(pth string) (XcodeProj, error) {
 
 	p.Path = absPth
 	p.Name = strings.TrimSuffix(filepath.Base(absPth), filepath.Ext(absPth))
-
-	log.TDebugf("Opened xcode project")
 
 	return *p, nil
 }
@@ -523,13 +521,7 @@ func writeAttributeForAllSDKs(buildSettings serialized.Object, newKey string, ne
 //
 // Overrides the project.pbxproj file of the XcodeProj with the contents of `rawProj`
 func (p XcodeProj) Save() error {
-	log.Debugf("Saving PBX file")
-
-	err := p.savePBXProj()
-
-	log.Debugf("Saved PBX file")
-
-	return err
+	return p.savePBXProj()
 }
 
 // savePBXProj overrides the project.pbxproj file of  the XcodeProj with the contents of `rawProj`
@@ -716,20 +708,4 @@ func (p XcodeProj) perObjectModify() ([]byte, error) {
 	}
 
 	return contentsMod, nil
-}
-
-func deduplicateTargetList(targets []Target) []Target {
-	inResult := make(map[string]bool)
-	uniqueTargets := []Target{}
-
-	for _, target := range targets {
-		if _, ok := inResult[target.ID]; !ok {
-			inResult[target.ID] = true
-			uniqueTargets = append(uniqueTargets, target)
-		}
-	}
-
-	log.Debugf("Deduplicating targets result: %v/%v", len(targets), len(uniqueTargets))
-
-	return uniqueTargets
 }

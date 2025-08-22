@@ -33,8 +33,8 @@ github.com/bitrise-io/go-utils/v2/log
 github.com/bitrise-io/go-utils/v2/log/colorstring
 github.com/bitrise-io/go-utils/v2/pathutil
 github.com/bitrise-io/go-utils/v2/retryhttp
-# github.com/bitrise-io/go-xcode v1.0.19
-## explicit; go 1.20
+# github.com/bitrise-io/go-xcode v1.0.1
+## explicit; go 1.15
 github.com/bitrise-io/go-xcode/pathfilters
 github.com/bitrise-io/go-xcode/xcodebuild
 github.com/bitrise-io/go-xcode/xcodeproject/serialized
@@ -74,6 +74,3 @@ golang.org/x/text/unicode/norm
 # gopkg.in/yaml.v3 v3.0.1
 ## explicit
 gopkg.in/yaml.v3
-# howett.net/plist v1.0.1
-## explicit; go 1.12
-howett.net/plist

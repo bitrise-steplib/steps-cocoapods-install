@@ -3,7 +3,6 @@ package xcodebuild
 import (
 	"os"
 	"os/exec"
-	"path/filepath"
 
 	"github.com/bitrise-io/go-utils/command"
 )
@@ -33,9 +32,9 @@ xcodebuild -workspace <workspacename> \
 // TestCommandModel ...
 type TestCommandModel struct {
 	projectPath string
+	isWorkspace bool
 	scheme      string
 	destination string
-	workDir     string
 
 	// buildsetting
 	generateCodeCoverage      bool
@@ -49,21 +48,16 @@ type TestCommandModel struct {
 }
 
 // NewTestCommand ...
-func NewTestCommand(projectPath string) *TestCommandModel {
+func NewTestCommand(projectPath string, isWorkspace bool) *TestCommandModel {
 	return &TestCommandModel{
 		projectPath: projectPath,
+		isWorkspace: isWorkspace,
 	}
 }
 
 // SetScheme ...
 func (c *TestCommandModel) SetScheme(scheme string) *TestCommandModel {
 	c.scheme = scheme
-	return c
-}
-
-// SetDir ...
-func (c *TestCommandModel) SetDir(workDir string) *TestCommandModel {
-	c.workDir = workDir
 	return c
 }
 
@@ -101,9 +95,9 @@ func (c *TestCommandModel) cmdSlice() []string {
 	slice := []string{toolName}
 
 	if c.projectPath != "" {
-		if filepath.Ext(c.projectPath) == XCWorkspaceExtension {
+		if c.isWorkspace {
 			slice = append(slice, "-workspace", c.projectPath)
-		} else if filepath.Ext(c.projectPath) == XCProjExtension {
+		} else {
 			slice = append(slice, "-project", c.projectPath)
 		}
 	}
@@ -140,9 +134,7 @@ func (c TestCommandModel) PrintableCmd() string {
 // Command ...
 func (c TestCommandModel) Command() *command.Model {
 	cmdSlice := c.cmdSlice()
-	cmd := command.New(cmdSlice[0], cmdSlice[1:]...)
-	cmd.SetDir(c.workDir)
-	return cmd
+	return command.New(cmdSlice[0], cmdSlice[1:]...)
 }
 
 // Cmd ...

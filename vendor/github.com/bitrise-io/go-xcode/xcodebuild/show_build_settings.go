@@ -2,15 +2,12 @@ package xcodebuild
 
 import (
 	"bufio"
-	"bytes"
 	"fmt"
-	"io"
 	"path/filepath"
 	"strings"
 
 	"github.com/bitrise-io/go-utils/command"
 	"github.com/bitrise-io/go-utils/errorutil"
-	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-io/go-xcode/xcodeproject/serialized"
 )
 
@@ -99,34 +96,20 @@ func (c ShowBuildSettingsCommandModel) PrintableCmd() string {
 func parseBuildSettings(out string) (serialized.Object, error) {
 	settings := serialized.Object{}
 
-	reader := bufio.NewReader(strings.NewReader(out))
-	var buffer bytes.Buffer
+	scanner := bufio.NewScanner(strings.NewReader(out))
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
 
-	for {
-		b, isPrefix, err := reader.ReadLine()
-		if err == io.EOF {
-			break
-		} else if err != nil {
-			return nil, err
+		if split := strings.Split(line, "="); len(split) > 1 {
+			key := strings.TrimSpace(split[0])
+			value := strings.TrimSpace(strings.Join(split[1:], "="))
+			value = strings.Trim(value, `"`)
+
+			settings[key] = value
 		}
-
-		lineFragment := string(b)
-		buffer.WriteString(lineFragment)
-
-		// isPrefix is set to false once a full line has been read
-		if isPrefix == false {
-			line := strings.TrimSpace(buffer.String())
-
-			if split := strings.Split(line, "="); len(split) > 1 {
-				key := strings.TrimSpace(split[0])
-				value := strings.TrimSpace(strings.Join(split[1:], "="))
-				value = strings.Trim(value, `"`)
-
-				settings[key] = value
-			}
-
-			buffer.Reset()
-		}
+	}
+	if err := scanner.Err(); err != nil {
+		return nil, err
 	}
 
 	return settings, nil
@@ -134,20 +117,14 @@ func parseBuildSettings(out string) (serialized.Object, error) {
 
 // RunAndReturnSettings ...
 func (c ShowBuildSettingsCommandModel) RunAndReturnSettings() (serialized.Object, error) {
-	var cmd = c.Command()
-
-	log.TPrintf("Reading build settings...")
-
-	log.TDonef("$ %s", cmd.PrintableCommandArgs())
+	cmd := c.Command()
 	out, err := cmd.RunAndReturnTrimmedCombinedOutput()
 	if err != nil {
 		if errorutil.IsExitStatusError(err) {
-			return nil, fmt.Errorf("%s command failed, output: %s", cmd.PrintableCommandArgs(), out)
+			return nil, fmt.Errorf("%s command failed: output: %s", cmd.PrintableCommandArgs(), out)
 		}
 		return nil, fmt.Errorf("failed to run command %s: %s", cmd.PrintableCommandArgs(), err)
 	}
-
-	log.TPrintf("Read target settings.")
 
 	return parseBuildSettings(out)
 }
