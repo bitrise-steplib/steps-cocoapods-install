@@ -37,12 +37,13 @@ source_code_url: https://github.com/bitrise-io/steps-cocoapods-install
 support_url: https://github.com/bitrise-io/steps-cocoapods-install/issues
 
 project_type_tags:
-- ios
-- macos
 - cordova
-- ionic
-- react-native
 - flutter
+- ionic
+- ios
+- kotlin-multiplatform
+- macos
+- react-native
 type_tags:
 - dependency
 

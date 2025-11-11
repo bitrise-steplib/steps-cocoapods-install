@@ -38,16 +38,16 @@ func TestIsPodfileUsingSpecsRepo(t *testing.T) {
 			wantErr:        false,
 		},
 		{
-			name: "Other specs repo defined",
+			name:           "Other specs repo defined",
 			podfileContent: otherRepoPodfile,
-			expected: false,
-			wantErr: false,
+			expected:       false,
+			wantErr:        false,
 		},
 		{
-			name: "Specs repo with lowercase URL",
+			name:           "Specs repo with lowercase URL",
 			podfileContent: repoPodfileLowercase,
-			expected: true,
-			wantErr: false,
+			expected:       true,
+			wantErr:        false,
 		},
 	}
 
@@ -56,7 +56,7 @@ func TestIsPodfileUsingSpecsRepo(t *testing.T) {
 			path := filepath.Join(t.TempDir(), "Podfile")
 			err := os.WriteFile(path, []byte(tt.podfileContent), 0777)
 			if err != nil {
-				t.Fatalf(err.Error())
+				t.Fatal(err.Error())
 			}
 
 			actual, err := isPodfileUsingSpecsRepo(path)
