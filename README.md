@@ -31,6 +31,7 @@ You can set the **Execute cocoapods in verbose mode?** input to true to get deta
 
 ### Useful links
 
+* [Cache save](https://github.com/bitrise-steplib/bitrise-step-save-cocoapods-cache) and [restore](https://github.com/bitrise-steplib/bitrise-step-restore-cocoapods-cache) steps
 * [Include your dependencies in your repository](https://devcenter.bitrise.io/tips-and-tricks/optimize-your-build-times/#include-your-dependencies-in-your-repository)
 
 ### Related Steps
