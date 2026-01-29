@@ -31,7 +31,6 @@ You can set the **Execute cocoapods in verbose mode?** input to true to get deta
 
 ### Useful links
 
-* [Caching Cocoapods](https://devcenter.bitrise.io/builds/caching/caching-cocoapods/)
 * [Include your dependencies in your repository](https://devcenter.bitrise.io/tips-and-tricks/optimize-your-build-times/#include-your-dependencies-in-your-repository)
 
 ### Related Steps
@@ -57,7 +56,6 @@ You can also run this step directly with [Bitrise CLI](https://github.com/bitris
 | `source_root_path` | Directory path where the project's Podfile (and optionally Gemfile) is placed.  CocoaPods commands will be executed in this directory.  | required | `$BITRISE_SOURCE_DIR` |
 | `podfile_path` | Path of the project's Podfile.  By specifying this input `Workdir` gets overriden by the provided file's directory path. |  |  |
 | `verbose` | Execute all CocoaPods commands in verbose mode.  If enabled the `--verbose` flag will be appended to all CocoaPods commands.  |  | `false` |
-| `is_cache_disabled` | Disables automatic cache content collection.  By default the Step adds the Pods directory in the `Workdir` to the Bitrise Build Cache.  Set this input to disable automatic cache item collection for this Step.  |  | `false` |
 </details>
 
 <details>
