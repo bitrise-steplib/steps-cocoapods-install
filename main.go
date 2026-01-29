@@ -12,11 +12,10 @@ import (
 	"github.com/bitrise-io/go-steputils/cache"
 	"github.com/bitrise-io/go-steputils/command/gems"
 	"github.com/bitrise-io/go-steputils/command/rubycommand"
-	"github.com/bitrise-io/go-steputils/stepconf"
+	"github.com/bitrise-io/go-steputils/v2/stepconf"
 	"github.com/bitrise-io/go-steputils/v2/ruby"
 	"github.com/bitrise-io/go-utils/command"
 	"github.com/bitrise-io/go-utils/fileutil"
-	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-io/go-utils/pathutil"
 	"github.com/bitrise-io/go-utils/v2/analytics"
 	v2command "github.com/bitrise-io/go-utils/v2/command"
@@ -26,8 +25,7 @@ import (
 	"github.com/bitrise-io/go-xcode/pathfilters"
 )
 
-// ConfigsModel ...
-type ConfigsModel struct {
+type Config struct {
 	Command         string `env:"command,opt[install,update]"`
 	SourceRootPath  string `env:"source_root_path,dir"`
 	PodfilePath     string `env:"podfile_path"`
@@ -35,15 +33,18 @@ type ConfigsModel struct {
 	IsCacheDisabled bool   `env:"is_cache_disabled,opt[true,false]"`
 }
 
-func createConfigsModelFromEnvs() (ConfigsModel, error) {
-	var c ConfigsModel
-	if err := stepconf.Parse(&c); err != nil {
-		return ConfigsModel{}, err
+var logger = v2log.NewLogger()
+
+func createConfig(envRepository env.Repository) (Config, error) {
+	var c Config
+	parser := stepconf.NewInputParser(envRepository)
+	if err := parser.Parse(&c); err != nil {
+		return Config{}, err
 	}
 
 	if c.PodfilePath != "" {
 		if _, err := os.Stat(c.PodfilePath); os.IsNotExist(err) {
-			return ConfigsModel{}, fmt.Errorf("%s is not exist", c.PodfilePath)
+			return Config{}, fmt.Errorf("%s is not exist", c.PodfilePath)
 		}
 	}
 
@@ -51,7 +52,7 @@ func createConfigsModelFromEnvs() (ConfigsModel, error) {
 }
 
 func failf(format string, v ...interface{}) {
-	log.Errorf(format, v...)
+	logger.Errorf(format, v...)
 	os.Exit(1)
 }
 
@@ -212,12 +213,7 @@ func isIncludedInGemfileLockVersionRanges(input string, gemfileLockVersion strin
 }
 
 func main() {
-	configs, err := createConfigsModelFromEnvs()
-	if err != nil {
-		failf(err.Error())
-	}
-	stepconf.Print(configs)
-
+	
 	envRepository := env.NewRepository()
 	cmdLocator := env.NewCommandLocator()
 	cmdFactory := v2command.NewFactory(envRepository)
@@ -225,9 +221,14 @@ func main() {
 	if err != nil {
 		failf("failed to create ruby command factory: %s", err)
 	}
-	logger := v2log.NewLogger()
 	tracker := analytics.NewDefaultTracker(logger, analytics.Properties{})
 	defer tracker.Wait()
+	
+	configs, err := createConfig(envRepository)
+	if err != nil {
+		failf(err.Error())
+	}
+	stepconf.Print(configs)
 
 	//
 	// Search for Podfile
@@ -235,7 +236,7 @@ func main() {
 
 	if configs.PodfilePath == "" {
 		fmt.Println()
-		log.Infof("Searching for Podfile")
+		logger.Infof("Searching for Podfile")
 
 		absSourceRootPath, err := pathutil.AbsPath(configs.SourceRootPath)
 		if err != nil {
@@ -250,7 +251,7 @@ func main() {
 			failf("No Podfile found")
 		}
 
-		log.Donef("Found Podfile: %s", absPodfilePath)
+		logger.Donef("Found Podfile: %s", absPodfilePath)
 
 		podfilePath = absPodfilePath
 	} else {
@@ -260,14 +261,14 @@ func main() {
 		}
 
 		fmt.Println()
-		log.Infof("Using Podfile: %s", absPodfilePath)
+		logger.Infof("Using Podfile: %s", absPodfilePath)
 
 		podfilePath = absPodfilePath
 	}
 
 	isUsingSpecsRepo, err := isPodfileUsingSpecsRepo(podfilePath)
 	if err != nil {
-		log.Warnf("Failed to determine if Podfile is using Specs repo, error: %s", err)
+		logger.Warnf("Failed to determine if Podfile is using Specs repo, error: %s", err)
 	} else {
 		if isUsingSpecsRepo {
 			addSpecsRepoAnnotation(cmdFactory)
@@ -284,13 +285,13 @@ func main() {
 	//
 	// Install required cocoapods version
 	fmt.Println()
-	log.Infof("Determining required cocoapods version")
+	logger.Infof("Determining required cocoapods version")
 
 	useBundler := false
 	useCocoapodsVersionFromPodfileLock := ""
 	useCocoapodsVersionFromGemfileLock := ""
 
-	log.Printf("Searching for Podfile.lock")
+	logger.Infof("Searching for Podfile.lock")
 
 	// Check Podfile.lock for CocoaPods version
 	podfileLockPth := filepath.Join(podfileDir, "Podfile.lock")
@@ -301,7 +302,7 @@ func main() {
 
 	if isPodfileLockExists {
 		// Podfile.lock exist search for version
-		log.Printf("Found Podfile.lock: %s", podfileLockPth)
+		logger.Infof("Found Podfile.lock: %s", podfileLockPth)
 
 		version, err := cocoapodsVersionFromPodfileLock(podfileLockPth)
 		if err != nil {
@@ -310,19 +311,19 @@ func main() {
 
 		if version != "" {
 			useCocoapodsVersionFromPodfileLock = version
-			log.Donef("Required CocoaPods version (from Podfile.lock): %s", useCocoapodsVersionFromPodfileLock)
+			logger.Donef("Required CocoaPods version (from Podfile.lock): %s", useCocoapodsVersionFromPodfileLock)
 		} else {
-			log.Warnf("No CocoaPods version found in Podfile.lock! (%s)", podfileLockPth)
+			logger.Warnf("No CocoaPods version found in Podfile.lock! (%s)", podfileLockPth)
 		}
 	} else {
-		log.Warnf("No Podfile.lock found at: %s", podfileLockPth)
-		log.Warnf("Make sure it's committed into your repository!")
+		logger.Warnf("No Podfile.lock found at: %s", podfileLockPth)
+		logger.Warnf("Make sure it's committed into your repository!")
 	}
 
 	var pod gems.Version
 	var bundler gems.Version
 
-	log.Printf("Searching for gem lockfile with cocoapods gem")
+	logger.Infof("Searching for gem lockfile with cocoapods gem")
 
 	// Check gem lockfile for CocoaPods version
 	gemfileLockPth, err := gems.GemFileLockPth(podfileDir)
@@ -332,7 +333,7 @@ func main() {
 
 	if gemfileLockPth != "" {
 		// CocoaPods exist search for version in gem lockfile
-		log.Printf("Found gem lockfile: %s", gemfileLockPth)
+		logger.Infof("Found gem lockfile: %s", gemfileLockPth)
 
 		content, err := fileutil.ReadStringFromFile(gemfileLockPth)
 		if err != nil {
@@ -351,7 +352,7 @@ func main() {
 
 		if pod.Found {
 			useCocoapodsVersionFromGemfileLock = pod.Version
-			log.Donef("Required CocoaPods version (from gem lockfile): %s", useCocoapodsVersionFromGemfileLock)
+			logger.Donef("Required CocoaPods version (from gem lockfile): %s", useCocoapodsVersionFromGemfileLock)
 
 			isIncludedVersionRange, err := isIncludedInGemfileLockVersionRanges(useCocoapodsVersionFromPodfileLock, useCocoapodsVersionFromGemfileLock)
 			if err != nil {
@@ -359,13 +360,13 @@ func main() {
 			}
 
 			if !isIncludedVersionRange {
-				log.Warnf("Cocoapods version required in Podfile.lock (%s) does not match Gemfile.lock (%s). Will install Cocoapods using bundler.", useCocoapodsVersionFromPodfileLock, useCocoapodsVersionFromGemfileLock)
+				logger.Warnf("Cocoapods version required in Podfile.lock (%s) does not match Gemfile.lock (%s). Will install Cocoapods using bundler.", useCocoapodsVersionFromPodfileLock, useCocoapodsVersionFromGemfileLock)
 			}
 			useBundler = true
 		}
 	} else {
-		log.Printf("No gem lockfile with cocoapods gem found at: %s", gemfileLockPth)
-		log.Donef("Using system installed CocoaPods version")
+		logger.Infof("No gem lockfile with cocoapods gem found at: %s", gemfileLockPth)
+		logger.Donef("Using system installed CocoaPods version")
 	}
 
 	if rubycommand.RubyInstallType() == rubycommand.ASDFRuby {
@@ -375,67 +376,67 @@ func main() {
 		}
 
 		fmt.Println()
-		log.Infof("Checking selected Ruby version")
+		logger.Infof("Checking selected Ruby version")
 		asdfCurrentCmd := command.New("asdf", "current", "ruby").
 			SetStdout(os.Stdout).
 			SetStderr(os.Stderr).
 			SetDir(configs.SourceRootPath)
-		log.Donef("$ %s", asdfCurrentCmd.PrintableCommandArgs())
+		logger.Donef("$ %s", asdfCurrentCmd.PrintableCommandArgs())
 		if err := asdfCurrentCmd.Run(); err != nil {
-			log.Warnf("Failed to print selected Ruby version: %s", err)
+			logger.Warnf("Failed to print selected Ruby version: %s", err)
 		}
 
 		fmt.Println()
 		if !isRubyVersionInstalled {
-			log.Errorf("The selected Ruby version (%s) is not installed.", rubyVersion)
+			logger.Errorf("The selected Ruby version (%s) is not installed.", rubyVersion)
 		} else {
-			log.Donef("The selected Ruby version (%s) is installed.", rubyVersion)
+			logger.Donef("The selected Ruby version (%s) is installed.", rubyVersion)
 		}
 
 		if !isRubyVersionInstalled && os.Getenv("CI") == "true" {
-			log.Infof("Installing missing Ruby version")
+			logger.Infof("Installing missing Ruby version")
 			cmd := command.New("asdf", "install", "ruby", rubyVersion).SetStdout(os.Stdout).SetStderr(os.Stderr)
-			log.Donef("$ %s", cmd.PrintableCommandArgs())
+			logger.Donef("$ %s", cmd.PrintableCommandArgs())
 			if err := cmd.Run(); err != nil {
-				log.Errorf("Failed to install Ruby version %s, error: %s", rubyVersion, err)
+				logger.Errorf("Failed to install Ruby version %s, error: %s", rubyVersion, err)
 			}
 		}
 	} else if rubycommand.RubyInstallType() == rubycommand.RbenvRuby {
 		rubySelectStart := time.Now()
 		rubyInstalled, rversion, err := rubycommand.IsSpecifiedRbenvRubyInstalled(configs.SourceRootPath)
 		if err != nil {
-			log.Errorf("Failed to check if selected ruby is installed: %s", err)
+			logger.Errorf("Failed to check if selected ruby is installed: %s", err)
 		}
 
 		// Check ruby version
 		// Run this logic only in CI environment when the ruby was installed via rbenv for the virtual machine
 		if os.Getenv("CI") == "true" {
 			fmt.Println()
-			log.Infof("Checking selected Ruby version using rbenv")
+			logger.Infof("Checking selected Ruby version using rbenv")
 
 			if !rubyInstalled {
-				log.Errorf("Ruby %s is not installed", rversion)
+				logger.Errorf("Ruby %s is not installed", rversion)
 				fmt.Println()
 
 				cmd := command.New("rbenv", "install", rversion).SetStdout(os.Stdout).SetStderr(os.Stderr)
-				log.Donef("$ %s", cmd.PrintableCommandArgs())
+				logger.Donef("$ %s", cmd.PrintableCommandArgs())
 				if err := cmd.Run(); err != nil {
-					log.Errorf("Failed to install Ruby version %s, error: %s", rversion, err)
+					logger.Errorf("Failed to install Ruby version %s, error: %s", rversion, err)
 				}
 			} else {
-				log.Donef("Ruby %s is installed", rversion)
+				logger.Donef("Ruby %s is installed", rversion)
 			}
 		}
 
 		rubySelectDuration := time.Since(rubySelectStart)
 		isRequiredRubyInstalled, _, err := rubycommand.IsSpecifiedRbenvRubyInstalled(podfileDir)
 		if err != nil {
-			log.Errorf("Failed to check if selected ruby is installed: %s", err)
+			logger.Errorf("Failed to check if selected ruby is installed: %s", err)
 		}
 
 		effectiveRubyVersion, err := command.New("rbenv", "global").RunAndReturnTrimmedOutput()
 		if err != nil {
-			log.Errorf("Failed to check global rbenv version: %w", err)
+			logger.Errorf("Failed to check global rbenv version: %w", err)
 		}
 		if isRequiredRubyInstalled {
 			effectiveRubyVersion = rversion
@@ -453,13 +454,13 @@ func main() {
 
 	// Install cocoapods
 	fmt.Println()
-	log.Infof("Installing cocoapods")
+	logger.Infof("Installing cocoapods")
 
 	podCmdSlice := []string{"pod"}
 
 	if useBundler {
 		fmt.Println()
-		log.Infof("Installing bundler")
+		logger.Infof("Installing bundler")
 
 		// install bundler with `gem install bundler [-v version]`
 		// in some configurations, the command "bunder _1.2.3_" can return 'Command not found', installing bundler solves this
@@ -467,7 +468,7 @@ func main() {
 		installBundlerCommand.SetStdout(os.Stdout).SetStderr(os.Stderr)
 		installBundlerCommand.SetDir(podfileDir)
 
-		log.Donef("$ %s", installBundlerCommand.PrintableCommandArgs())
+		logger.Donef("$ %s", installBundlerCommand.PrintableCommandArgs())
 		fmt.Println()
 
 		if err := installBundlerCommand.Run(); err != nil {
@@ -476,7 +477,7 @@ func main() {
 
 		// install gem lockfile gems with `bundle [_version_] install ...`
 		fmt.Println()
-		log.Infof("Installing cocoapods with bundler")
+		logger.Infof("Installing cocoapods with bundler")
 
 		cmd, err := gems.BundleInstallCommand(bundler)
 		if err != nil {
@@ -485,7 +486,7 @@ func main() {
 		cmd.SetStdout(os.Stdout).SetStderr(os.Stderr)
 		cmd.SetDir(podfileDir)
 
-		log.Donef("$ %s", cmd.PrintableCommandArgs())
+		logger.Donef("$ %s", cmd.PrintableCommandArgs())
 		fmt.Println()
 
 		if err := cmd.Run(); err != nil {
@@ -496,7 +497,7 @@ func main() {
 			podCmdSlice = append(gems.BundleExecPrefix(bundler), podCmdSlice...)
 		}
 	} else if useCocoapodsVersionFromPodfileLock != "" {
-		log.Printf("Checking cocoapods %s gem", useCocoapodsVersionFromPodfileLock)
+		logger.Printf("Checking cocoapods %s gem", useCocoapodsVersionFromPodfileLock)
 
 		installed, err := rubycommand.IsGemInstalled("cocoapods", useCocoapodsVersionFromPodfileLock)
 		if err != nil {
@@ -504,7 +505,7 @@ func main() {
 		}
 
 		if !installed {
-			log.Printf("Installing")
+			logger.Printf("Installing")
 
 			cmds, err := rubycommand.GemInstall("cocoapods", useCocoapodsVersionFromPodfileLock, false)
 			if err != nil {
@@ -512,7 +513,7 @@ func main() {
 			}
 
 			for _, cmd := range cmds {
-				log.Donef("$ %s", cmd.PrintableCommandArgs())
+				logger.Donef("$ %s", cmd.PrintableCommandArgs())
 
 				cmd.SetDir(podfileDir)
 
@@ -521,16 +522,16 @@ func main() {
 				}
 			}
 		} else {
-			log.Printf("Installed")
+			logger.Printf("Installed")
 		}
 
 		podCmdSlice = append(podCmdSlice, fmt.Sprintf("_%s_", useCocoapodsVersionFromPodfileLock))
 	} else {
-		log.Printf("Using system installed cocoapods")
+		logger.Printf("Using system installed cocoapods")
 	}
 
 	fmt.Println()
-	log.Infof("cocoapods version:")
+	logger.Infof("cocoapods version:")
 
 	// pod can be in the PATH as an rbenv shim and pod --version will return "rbenv: pod: command not found"
 	cmd, err := rubycommand.NewFromSlice(append(podCmdSlice, "--version"))
@@ -541,14 +542,14 @@ func main() {
 	cmd.SetStdout(os.Stdout).SetStderr(os.Stderr)
 	cmd.SetDir(podfileDir)
 
-	log.Donef("$ %s", cmd.PrintableCommandArgs())
+	logger.Donef("$ %s", cmd.PrintableCommandArgs())
 	if err := cmd.Run(); err != nil {
 		failf("command failed, error: %s", err)
 	}
 
 	// Run pod install
 	fmt.Println()
-	log.Infof("Installing Pods")
+	logger.Infof("Installing Pods")
 
 	installer := NewCocoapodsInstaller(rubyCmdFactory, logger)
 	if err := installer.InstallPods(podCmdSlice, configs.Command, podfileDir, configs.Verbose); err != nil {
@@ -558,15 +559,15 @@ func main() {
 	// Collecting caches
 	if !configs.IsCacheDisabled && isPodfileLockExists {
 		fmt.Println()
-		log.Infof("Collecting Pod cache paths...")
+		logger.Infof("Collecting Pod cache paths...")
 
 		podsCache := cache.New()
 		podsCache.IncludePath(fmt.Sprintf("%s -> %s", filepath.Join(podfileDir, "Pods"), podfileLockPth))
 
 		if err := podsCache.Commit(); err != nil {
-			log.Warnf("Cache collection skipped: failed to commit cache paths.")
+			logger.Warnf("Cache collection skipped: failed to commit cache paths.")
 		}
 	}
 
-	log.Donef("Success!")
+	logger.Donef("Success!")
 }
