@@ -211,7 +211,6 @@ func isIncludedInGemfileLockVersionRanges(input string, gemfileLockVersion strin
 }
 
 func main() {
-	
 	envRepository := env.NewRepository()
 	cmdLocator := env.NewCommandLocator()
 	cmdFactory := v2command.NewFactory(envRepository)
@@ -219,7 +218,7 @@ func main() {
 	if err != nil {
 		failf("failed to create ruby command factory: %s", err)
 	}
-	tracker := analytics.NewDefaultTracker(logger, analytics.Properties{})
+	tracker := analytics.NewDefaultTracker(logger, envRepository, analytics.Properties{})
 	defer tracker.Wait()
 	
 	configs, err := createConfig(envRepository)
