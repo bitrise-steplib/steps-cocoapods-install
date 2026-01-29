@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bitrise-io/go-steputils/cache"
 	"github.com/bitrise-io/go-steputils/command/gems"
 	"github.com/bitrise-io/go-steputils/command/rubycommand"
 	"github.com/bitrise-io/go-steputils/v2/stepconf"
@@ -26,11 +25,10 @@ import (
 )
 
 type Config struct {
-	Command         string `env:"command,opt[install,update]"`
-	SourceRootPath  string `env:"source_root_path,dir"`
-	PodfilePath     string `env:"podfile_path"`
-	Verbose         bool   `env:"verbose,opt[true,false]"`
-	IsCacheDisabled bool   `env:"is_cache_disabled,opt[true,false]"`
+	Command        string `env:"command,opt[install,update]"`
+	SourceRootPath string `env:"source_root_path,dir"`
+	PodfilePath    string `env:"podfile_path"`
+	Verbose        bool   `env:"verbose,opt[true,false]"`
 }
 
 var logger = v2log.NewLogger()
@@ -213,7 +211,6 @@ func isIncludedInGemfileLockVersionRanges(input string, gemfileLockVersion strin
 }
 
 func main() {
-	
 	envRepository := env.NewRepository()
 	cmdLocator := env.NewCommandLocator()
 	cmdFactory := v2command.NewFactory(envRepository)
@@ -221,7 +218,7 @@ func main() {
 	if err != nil {
 		failf("failed to create ruby command factory: %s", err)
 	}
-	tracker := analytics.NewDefaultTracker(logger, analytics.Properties{})
+	tracker := analytics.NewDefaultTracker(logger, envRepository, analytics.Properties{})
 	defer tracker.Wait()
 	
 	configs, err := createConfig(envRepository)
@@ -554,19 +551,6 @@ func main() {
 	installer := NewCocoapodsInstaller(rubyCmdFactory, logger)
 	if err := installer.InstallPods(podCmdSlice, configs.Command, podfileDir, configs.Verbose); err != nil {
 		failf(errorutil.FormattedError(fmt.Errorf("Failed to install Pods: %w", err)))
-	}
-
-	// Collecting caches
-	if !configs.IsCacheDisabled && isPodfileLockExists {
-		fmt.Println()
-		logger.Infof("Collecting Pod cache paths...")
-
-		podsCache := cache.New()
-		podsCache.IncludePath(fmt.Sprintf("%s -> %s", filepath.Join(podfileDir, "Pods"), podfileLockPth))
-
-		if err := podsCache.Commit(); err != nil {
-			logger.Warnf("Cache collection skipped: failed to commit cache paths.")
-		}
 	}
 
 	logger.Donef("Success!")
