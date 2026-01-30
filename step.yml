@@ -25,7 +25,7 @@ description: |-
 
   ### Useful links
 
-  * [Caching Cocoapods](https://devcenter.bitrise.io/builds/caching/caching-cocoapods/)
+  * [Cache save](https://github.com/bitrise-steplib/bitrise-step-save-cocoapods-cache) and [restore](https://github.com/bitrise-steplib/bitrise-step-restore-cocoapods-cache) steps
   * [Include your dependencies in your repository](https://devcenter.bitrise.io/tips-and-tricks/optimize-your-build-times/#include-your-dependencies-in-your-repository)
 
   ### Related Steps
@@ -92,19 +92,6 @@ inputs:
       Execute all CocoaPods commands in verbose mode.
 
       If enabled the `--verbose` flag will be appended to all CocoaPods commands.
-    value_options:
-    - "true"
-    - "false"
-- is_cache_disabled: "false"
-  opts:
-    title: Disable collecting cache content
-    summary: Disables automatic cache content collection.
-    description: |
-      Disables automatic cache content collection.
-
-      By default the Step adds the Pods directory in the `Workdir` to the Bitrise Build Cache.
-
-      Set this input to disable automatic cache item collection for this Step.
     value_options:
     - "true"
     - "false"
