@@ -15,13 +15,13 @@ import (
 	"github.com/bitrise-io/go-steputils/v2/ruby"
 	"github.com/bitrise-io/go-utils/command"
 	"github.com/bitrise-io/go-utils/fileutil"
-	"github.com/bitrise-io/go-utils/pathutil"
+	pathutilv1 "github.com/bitrise-io/go-utils/pathutil"
 	"github.com/bitrise-io/go-utils/v2/analytics"
 	v2command "github.com/bitrise-io/go-utils/v2/command"
 	"github.com/bitrise-io/go-utils/v2/env"
 	"github.com/bitrise-io/go-utils/v2/errorutil"
 	v2log "github.com/bitrise-io/go-utils/v2/log"
-	"github.com/bitrise-io/go-xcode/pathfilters"
+	"github.com/bitrise-io/go-utils/v2/pathutil"
 )
 
 type Config struct {
@@ -56,11 +56,11 @@ func failf(format string, v ...interface{}) {
 
 func findMostRootPodfileInFileList(fileList []string) (string, error) {
 	podfiles, err := pathutil.FilterPaths(fileList,
-		pathfilters.AllowPodfileBaseFilter,
-		pathfilters.ForbidCarthageDirComponentFilter,
-		pathfilters.ForbidPodsDirComponentFilter,
-		pathfilters.ForbidGitDirComponentFilter,
-		pathfilters.ForbidFramworkComponentWithExtensionFilter)
+		pathutil.BaseFilter("Podfile", true),
+		pathutil.ComponentFilter("Carthage", false),
+		pathutil.ComponentFilter("Pods", false),
+		pathutil.ComponentFilter(".git", false),
+		pathutil.ComponentWithExtensionFilter(".framework", false))
 	if err != nil {
 		return "", err
 	}
@@ -235,7 +235,7 @@ func main() {
 		fmt.Println()
 		logger.Infof("Searching for Podfile")
 
-		absSourceRootPath, err := pathutil.AbsPath(configs.SourceRootPath)
+		absSourceRootPath, err := pathutilv1.AbsPath(configs.SourceRootPath)
 		if err != nil {
 			failf("Failed to expand (%s), error: %s", configs.SourceRootPath, err)
 		}
@@ -252,7 +252,7 @@ func main() {
 
 		podfilePath = absPodfilePath
 	} else {
-		absPodfilePath, err := pathutil.AbsPath(configs.PodfilePath)
+		absPodfilePath, err := pathutilv1.AbsPath(configs.PodfilePath)
 		if err != nil {
 			failf("Failed to expand (%s), error: %s", configs.PodfilePath, err)
 		}
@@ -292,7 +292,7 @@ func main() {
 
 	// Check Podfile.lock for CocoaPods version
 	podfileLockPth := filepath.Join(podfileDir, "Podfile.lock")
-	isPodfileLockExists, err := pathutil.IsPathExists(podfileLockPth)
+	isPodfileLockExists, err := pathutilv1.IsPathExists(podfileLockPth)
 	if err != nil {
 		failf("Failed to check Podfile.lock at: %s, error: %s", podfileLockPth, err)
 	}
