@@ -392,10 +392,16 @@ func main() {
 
 		if !isRubyVersionInstalled && os.Getenv("CI") == "true" {
 			logger.Infof("Installing missing Ruby version")
-			cmd := command.New("asdf", "install", "ruby", rubyVersion).SetStdout(os.Stdout).SetStderr(os.Stderr)
+			cmd := command.New("bitrise", "tools", "install", "--provider", "asdf", "ruby", rubyVersion).SetStdout(os.Stdout).SetStderr(os.Stderr)
 			logger.Donef("$ %s", cmd.PrintableCommandArgs())
 			if err := cmd.Run(); err != nil {
-				logger.Errorf("Failed to install Ruby version %s, error: %s", rubyVersion, err)
+				logger.Warnf("bitrise tools install failed: %s", err)
+				logger.Infof("Falling back to asdf install")
+				fallbackCmd := command.New("asdf", "install", "ruby", rubyVersion).SetStdout(os.Stdout).SetStderr(os.Stderr)
+				logger.Donef("$ %s", fallbackCmd.PrintableCommandArgs())
+				if err := fallbackCmd.Run(); err != nil {
+					logger.Errorf("Failed to install Ruby version %s, error: %s", rubyVersion, err)
+				}
 			}
 		}
 	} else if rubycommand.RubyInstallType() == rubycommand.RbenvRuby {
