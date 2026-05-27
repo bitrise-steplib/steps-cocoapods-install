@@ -1,7 +1,10 @@
 package main
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -11,8 +14,8 @@ import (
 
 	"github.com/bitrise-io/go-steputils/command/gems"
 	"github.com/bitrise-io/go-steputils/command/rubycommand"
-	"github.com/bitrise-io/go-steputils/v2/stepconf"
 	"github.com/bitrise-io/go-steputils/v2/ruby"
+	"github.com/bitrise-io/go-steputils/v2/stepconf"
 	"github.com/bitrise-io/go-utils/command"
 	"github.com/bitrise-io/go-utils/fileutil"
 	"github.com/bitrise-io/go-utils/pathutil"
@@ -107,6 +110,18 @@ func cocoapodsVersionFromPodfileLock(podfileLockPth string) (string, error) {
 type VersionSpec struct {
 	Operator string
 	Version  string
+}
+
+func parsePathFromInstallOutput(output string) (string, error) {
+	var result map[string]string
+	if err := json.Unmarshal([]byte(output), &result); err != nil {
+		return "", fmt.Errorf("failed to parse install output: %w", err)
+	}
+	path, ok := result["PATH"]
+	if !ok || path == "" {
+		return "", fmt.Errorf("PATH not found or empty in install output")
+	}
+	return path, nil
 }
 
 func splitOperatorAndVersion(input string) (VersionSpec, error) {
@@ -220,7 +235,7 @@ func main() {
 	}
 	tracker := analytics.NewDefaultTracker(logger, envRepository, analytics.Properties{})
 	defer tracker.Wait()
-	
+
 	configs, err := createConfig(envRepository)
 	if err != nil {
 		failf(err.Error())
@@ -392,7 +407,10 @@ func main() {
 
 		if !isRubyVersionInstalled && os.Getenv("CI") == "true" {
 			logger.Infof("Installing missing Ruby version")
-			cmd := command.New("bitrise", "tools", "install", "--provider", "asdf", "ruby", rubyVersion).SetStdout(os.Stdout).SetStderr(os.Stderr)
+			var outBuf bytes.Buffer
+			cmd := command.New("bitrise", "tools", "install", "ruby", rubyVersion, "--format", "json").
+				SetStdout(io.MultiWriter(os.Stdout, &outBuf)).
+				SetStderr(os.Stderr)
 			logger.Donef("$ %s", cmd.PrintableCommandArgs())
 			if err := cmd.Run(); err != nil {
 				logger.Warnf("bitrise tools install failed: %s", err)
@@ -401,6 +419,13 @@ func main() {
 				logger.Donef("$ %s", fallbackCmd.PrintableCommandArgs())
 				if err := fallbackCmd.Run(); err != nil {
 					logger.Errorf("Failed to install Ruby version %s, error: %s", rubyVersion, err)
+				}
+			} else if newPath, err := parsePathFromInstallOutput(outBuf.String()); err != nil {
+				logger.Warnf("Failed to parse PATH from install output: %s", err)
+			} else {
+				logger.Infof("Updating PATH from bitrise tools install output")
+				if err := os.Setenv("PATH", newPath); err != nil {
+					logger.Warnf("Failed to set PATH: %s", err)
 				}
 			}
 		}
