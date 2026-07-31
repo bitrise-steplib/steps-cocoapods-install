@@ -1,18 +1,17 @@
 module bitrise-steplib/steps-cocoapods-install
 
-go 1.20
+go 1.21
 
 require (
-	github.com/bitrise-io/go-steputils v1.0.5
 	github.com/bitrise-io/go-steputils/v2 v2.0.0-alpha.42
-	github.com/bitrise-io/go-utils v1.0.13
-	github.com/bitrise-io/go-utils/v2 v2.0.0-alpha.26
+	github.com/bitrise-io/go-utils/v2 v2.0.0-alpha.36
 	github.com/bitrise-io/go-xcode v1.0.19
 	github.com/stretchr/testify v1.9.0
 )
 
 require (
 	github.com/bitrise-io/go-plist v0.0.0-20210301100253-4b1a112ccd10 // indirect
+	github.com/bitrise-io/go-utils v1.0.13 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/gofrs/uuid/v5 v5.2.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
