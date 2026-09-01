@@ -23,7 +23,7 @@ workflows:
     envs:
     # With Only Gemfile (no Podfile.lock):
     - TEST_APP_URL: https://github.com/bitrise-io/Bitrise-iOS-Cocoapods-Sample.git
-    - TEST_APP_BRANCH: e2e/gemfile-no-podfile-lock
+    - TEST_APP_BRANCH: bb/gemfile-no-podfile-lock
     - COMMAND: install
     after_run:
     - _run
@@ -33,7 +33,7 @@ workflows:
     envs:
     # With Gemfile:
     - TEST_APP_URL: https://github.com/bitrise-io/Bitrise-iOS-Cocoapods-Sample.git
-    - TEST_APP_BRANCH: e2e/gemfile-podfile-lockfiles
+    - TEST_APP_BRANCH: bb/gemfile-podfile-lockfiles
     - COMMAND: update
     after_run:
     - _run
@@ -43,7 +43,7 @@ workflows:
     envs:
     # With Gemfile:
     - TEST_APP_URL: https://github.com/bitrise-io/Bitrise-iOS-Cocoapods-Sample.git
-    - TEST_APP_BRANCH: main
+    - TEST_APP_BRANCH: bb/dep_mismatch
     - COMMAND: install
     - VERBOSE: "true"
     after_run:
@@ -75,7 +75,7 @@ workflows:
     envs:
     # With Gemfile:
     - TEST_APP_URL: https://github.com/bitrise-io/sample-apps-ios-cocoapods-plugins.git
-    - TEST_APP_BRANCH: bb/dep_mismatch
+    - TEST_APP_BRANCH: master
     - COMMAND: install
     after_run:
     - _run
