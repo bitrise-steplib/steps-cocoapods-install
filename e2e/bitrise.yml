@@ -55,7 +55,7 @@ workflows:
     - TEST_APP_URL: https://github.com/bitrise-io/Bitrise-iOS-Cocoapods-Sample.git
     - TEST_APP_BRANCH: main
     - COMMAND: install
-    - PIN_ASDF_RUBY: 3.2.0
+    - PIN_ASDF_RUBY: 3.4.10
     after_run:
     - _run
     - _check_cache_include_paths
@@ -66,7 +66,7 @@ workflows:
     - TEST_APP_URL: https://github.com/bitrise-io/Bitrise-iOS-Cocoapods-Sample.git
     - TEST_APP_BRANCH: main
     - COMMAND: install
-    - PIN_RBENV_RUBY: 3.2.0
+    - PIN_RBENV_RUBY: 3.4.10
     after_run:
     - _run
     - _check_cache_include_paths
