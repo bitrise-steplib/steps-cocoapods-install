@@ -75,7 +75,7 @@ workflows:
     envs:
     # With Gemfile:
     - TEST_APP_URL: https://github.com/bitrise-io/sample-apps-ios-cocoapods-plugins.git
-    - TEST_APP_BRANCH: master
+    - TEST_APP_BRANCH: bb/dep_mismatch
     - COMMAND: install
     after_run:
     - _run
