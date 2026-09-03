@@ -25,6 +25,9 @@ workflows:
     - TEST_APP_URL: https://github.com/bitrise-io/Bitrise-iOS-Cocoapods-Sample.git
     - TEST_APP_BRANCH: e2e/gemfile-no-podfile-lock
     - COMMAND: install
+    # The Gemfile.lock of the test app pins CocoaPods 1.12.1, whose dependencies cannot run on
+    # Ruby 4, so pin the Ruby version instead of letting the Stack default decide.
+    - PIN_ASDF_RUBY: 3.4.5
     after_run:
     - _run
     - _check_cache_include_paths
@@ -35,6 +38,8 @@ workflows:
     - TEST_APP_URL: https://github.com/bitrise-io/Bitrise-iOS-Cocoapods-Sample.git
     - TEST_APP_BRANCH: e2e/gemfile-podfile-lockfiles
     - COMMAND: update
+    # Same pinned CocoaPods 1.12.1 as test_with_no_podfile_lock, see the note there.
+    - PIN_ASDF_RUBY: 3.4.5
     after_run:
     - _run
     - _check_cache_include_paths
