@@ -1,8 +1,8 @@
 # github.com/bitrise-io/go-plist v0.0.0-20210301100253-4b1a112ccd10
 ## explicit; go 1.15
 github.com/bitrise-io/go-plist
-# github.com/bitrise-io/go-steputils/v2 v2.0.0-alpha.42
-## explicit; go 1.17
+# github.com/bitrise-io/go-steputils/v2 v2.0.0-alpha.54
+## explicit; go 1.21
 github.com/bitrise-io/go-steputils/v2/ruby
 github.com/bitrise-io/go-steputils/v2/stepconf
 # github.com/bitrise-io/go-utils v1.0.13
@@ -15,15 +15,17 @@ github.com/bitrise-io/go-utils/log
 github.com/bitrise-io/go-utils/pathutil
 github.com/bitrise-io/go-utils/pretty
 github.com/bitrise-io/go-utils/sliceutil
-# github.com/bitrise-io/go-utils/v2 v2.0.0-alpha.36
+# github.com/bitrise-io/go-utils/v2 v2.0.0-alpha.39
 ## explicit; go 1.21
 github.com/bitrise-io/go-utils/v2/analytics
 github.com/bitrise-io/go-utils/v2/command
 github.com/bitrise-io/go-utils/v2/env
 github.com/bitrise-io/go-utils/v2/errorutil
+github.com/bitrise-io/go-utils/v2/filedownloader
 github.com/bitrise-io/go-utils/v2/fileutil
 github.com/bitrise-io/go-utils/v2/log
 github.com/bitrise-io/go-utils/v2/log/colorstring
+github.com/bitrise-io/go-utils/v2/parseutil
 github.com/bitrise-io/go-utils/v2/pathutil
 github.com/bitrise-io/go-utils/v2/retryhttp
 # github.com/bitrise-io/go-xcode v1.0.19
