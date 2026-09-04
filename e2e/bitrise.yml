@@ -55,18 +55,18 @@ workflows:
     - TEST_APP_URL: https://github.com/bitrise-io/Bitrise-iOS-Cocoapods-Sample.git
     - TEST_APP_BRANCH: main
     - COMMAND: install
-    - PIN_ASDF_RUBY: 3.4.10
+    - PIN_ASDF_RUBY: 3.4.8
     after_run:
     - _run
     - _check_cache_include_paths
 
-  # previous test isntalled required ruby version
+  # previous test installed required ruby version
   test_with_specific_installed_ruby_rbenv:
     envs:
     - TEST_APP_URL: https://github.com/bitrise-io/Bitrise-iOS-Cocoapods-Sample.git
     - TEST_APP_BRANCH: main
     - COMMAND: install
-    - PIN_RBENV_RUBY: 3.4.10
+    - PIN_RBENV_RUBY: 3.4.8
     after_run:
     - _run
     - _check_cache_include_paths
