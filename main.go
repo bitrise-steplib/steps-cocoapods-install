@@ -223,7 +223,7 @@ func main() {
 	envRepository := env.NewRepository()
 	cmdLocator := env.NewCommandLocator()
 	cmdFactory := command.NewFactory(envRepository)
-	rubyCmdFactory, err := ruby.NewCommandFactory(cmdFactory, cmdLocator)
+	rubyCmdFactory, err := ruby.NewCommandFactory(cmdFactory, cmdLocator, logger)
 	if err != nil {
 		failf("failed to create ruby command factory: %s", err)
 	}
