@@ -245,9 +245,7 @@ func rubyBuildNeedsPipe2Workaround(goos string, cmdFactory command.Factory) bool
 
 // buildRubyInstallOpts returns command.Opts for building Ruby from source (via "asdf install
 // ruby" or "rbenv install", both of which shell out to ruby-build), applying the pipe2/dup3
-// configure workaround when the host needs it. goos is passed in (rather than read from
-// runtime.GOOS directly) so this is testable across platforms regardless of which OS runs the
-// tests; see rubyBuildNeedsPipe2Workaround.
+// configure workaround when the host needs it.
 func buildRubyInstallOpts(goos string, cmdFactory command.Factory) *command.Opts {
 	opts := &command.Opts{
 		Stdout: os.Stdout,
@@ -256,7 +254,7 @@ func buildRubyInstallOpts(goos string, cmdFactory command.Factory) *command.Opts
 
 	configureOpts := os.Getenv("RUBY_CONFIGURE_OPTS")
 	if rubyBuildNeedsPipe2Workaround(goos, cmdFactory) {
-		logger.Infof("macOS < 27 detected: working around Ruby's miniruby pipe2/dup3 segfault (https://bitrise.atlassian.net/wiki/spaces/~833061986/pages/5222203413)")
+		logger.Infof("macOS < 27 detected: working around Ruby's miniruby pipe2/dup3 segfault")
 		configureOpts = strings.TrimSpace(configureOpts + " ac_cv_func_pipe2=no ac_cv_func_dup3=no")
 	}
 	if configureOpts != "" {
