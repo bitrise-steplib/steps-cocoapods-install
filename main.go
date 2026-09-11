@@ -243,6 +243,29 @@ func rubyBuildNeedsPipe2Workaround(goos string, cmdFactory command.Factory) bool
 	return majorVersion < 27
 }
 
+// buildRubyInstallOpts returns command.Opts for building Ruby from source (via "asdf install
+// ruby" or "rbenv install", both of which shell out to ruby-build), applying the pipe2/dup3
+// configure workaround when the host needs it. goos is passed in (rather than read from
+// runtime.GOOS directly) so this is testable across platforms regardless of which OS runs the
+// tests; see rubyBuildNeedsPipe2Workaround.
+func buildRubyInstallOpts(goos string, cmdFactory command.Factory) *command.Opts {
+	opts := &command.Opts{
+		Stdout: os.Stdout,
+		Stderr: os.Stderr,
+	}
+
+	configureOpts := os.Getenv("RUBY_CONFIGURE_OPTS")
+	if rubyBuildNeedsPipe2Workaround(goos, cmdFactory) {
+		logger.Infof("macOS < 27 detected: working around Ruby's miniruby pipe2/dup3 segfault (https://bitrise.atlassian.net/wiki/spaces/~833061986/pages/5222203413)")
+		configureOpts = strings.TrimSpace(configureOpts + " ac_cv_func_pipe2=no ac_cv_func_dup3=no")
+	}
+	if configureOpts != "" {
+		opts.Env = []string{"RUBY_CONFIGURE_OPTS=" + configureOpts}
+	}
+
+	return opts
+}
+
 func main() {
 	envRepository := env.NewRepository()
 	cmdLocator := env.NewCommandLocator()
@@ -432,19 +455,7 @@ func main() {
 		if !isRubyVersionInstalled && os.Getenv("CI") == "true" {
 			logger.Infof("Installing missing Ruby version")
 
-			opts := &command.Opts{
-				Stdout: os.Stdout,
-				Stderr: os.Stderr,
-			}
-			if rubyBuildNeedsPipe2Workaround(runtime.GOOS, cmdFactory) {
-				logger.Infof("macOS < 27 detected: working around Ruby's miniruby pipe2/dup3 segfault (https://bitrise.atlassian.net/wiki/spaces/~833061986/pages/5222203413)")
-				opts.Env = []string{"RUBY_CONFIGURE_OPTS=" + strings.TrimSpace(strings.Join([]string{
-					os.Getenv("RUBY_CONFIGURE_OPTS"),
-					"ac_cv_func_pipe2=no ac_cv_func_dup3=no",
-				}, " "))}
-			}
-
-			cmd := cmdFactory.Create("asdf", []string{"install", "ruby", rubyVersion}, opts)
+			cmd := cmdFactory.Create("asdf", []string{"install", "ruby", rubyVersion}, buildRubyInstallOpts(runtime.GOOS, cmdFactory))
 			logger.Donef("$ %s", cmd.PrintableCommandArgs())
 			if err := cmd.Run(); err != nil {
 				logger.Errorf("Failed to install Ruby version %s, error: %s", rubyVersion, err)
@@ -467,10 +478,7 @@ func main() {
 				logger.Errorf("Ruby %s is not installed", rversion)
 				fmt.Println()
 
-				cmd := cmdFactory.Create("rbenv", []string{"install", rversion}, &command.Opts{
-					Stdout: os.Stdout,
-					Stderr: os.Stderr,
-				})
+				cmd := cmdFactory.Create("rbenv", []string{"install", rversion}, buildRubyInstallOpts(runtime.GOOS, cmdFactory))
 				logger.Donef("$ %s", cmd.PrintableCommandArgs())
 				if err := cmd.Run(); err != nil {
 					logger.Errorf("Failed to install Ruby version %s, error: %s", rversion, err)

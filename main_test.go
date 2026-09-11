@@ -161,74 +161,101 @@ func TestIsIncludedInGemfileLockVersionRanges(t *testing.T) {
 	}
 }
 
+// newSwVersFactory returns a CommandFactory mock that only answers "sw_vers -productVersion"
+func newSwVersFactory(t *testing.T, output string, err error) *mocks.CommandFactory {
+	t.Helper()
+
+	cmd := new(mocks.Command)
+	cmd.On("RunAndReturnTrimmedOutput").Return(output, err)
+
+	cmdFactory := new(mocks.CommandFactory)
+	cmdFactory.On("Create", "sw_vers", []string{"-productVersion"}, mock.Anything).Return(cmd)
+	t.Cleanup(func() { cmd.AssertExpectations(t) })
+
+	return cmdFactory
+}
+
 func TestRubyBuildNeedsPipe2Workaround(t *testing.T) {
-	t.Log("non-Darwin host: skips the version check, workaround not needed")
-	{
-		cmdFactory := new(mocks.CommandFactory)
-
-		needsWorkaround := rubyBuildNeedsPipe2Workaround("linux", cmdFactory)
-
-		require.False(t, needsWorkaround)
-		cmdFactory.AssertExpectations(t)
+	tests := []struct {
+		name         string
+		goos         string
+		swVersOutput string
+		swVersErr    error
+		want         bool
+	}{
+		{name: "non-Darwin host skips the version check entirely", goos: "linux", want: false},
+		{name: "macOS below 27", goos: "darwin", swVersOutput: "26.6.2", want: true},
+		{name: "macOS 27 or newer", goos: "darwin", swVersOutput: "27.0", want: false},
+		{name: "sw_vers fails: fail safe", goos: "darwin", swVersErr: errors.New("command not found"), want: true},
+		{name: "sw_vers returns unparsable output: fail safe", goos: "darwin", swVersOutput: "not-a-version", want: true},
 	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cmdFactory := new(mocks.CommandFactory)
+			if tt.goos == "darwin" {
+				cmdFactory = newSwVersFactory(t, tt.swVersOutput, tt.swVersErr)
+			}
 
-	t.Log("macOS below 27: workaround needed")
-	{
-		cmd := new(mocks.Command)
-		cmd.On("RunAndReturnTrimmedOutput").Return("26.6.2", nil)
+			got := rubyBuildNeedsPipe2Workaround(tt.goos, cmdFactory)
 
-		cmdFactory := new(mocks.CommandFactory)
-		cmdFactory.On("Create", "sw_vers", []string{"-productVersion"}, mock.Anything).Return(cmd)
-
-		needsWorkaround := rubyBuildNeedsPipe2Workaround("darwin", cmdFactory)
-
-		require.True(t, needsWorkaround)
-		cmdFactory.AssertExpectations(t)
-		cmd.AssertExpectations(t)
+			require.Equal(t, tt.want, got)
+			cmdFactory.AssertExpectations(t)
+		})
 	}
+}
 
-	t.Log("macOS 27 or newer: workaround not needed")
-	{
-		cmd := new(mocks.Command)
-		cmd.On("RunAndReturnTrimmedOutput").Return("27.0", nil)
-
-		cmdFactory := new(mocks.CommandFactory)
-		cmdFactory.On("Create", "sw_vers", []string{"-productVersion"}, mock.Anything).Return(cmd)
-
-		needsWorkaround := rubyBuildNeedsPipe2Workaround("darwin", cmdFactory)
-
-		require.False(t, needsWorkaround)
-		cmdFactory.AssertExpectations(t)
-		cmd.AssertExpectations(t)
+func TestBuildRubyInstallOpts(t *testing.T) {
+	tests := []struct {
+		name                   string
+		goos                   string
+		existingRubyConfigOpts string
+		swVersOutput           string
+		wantEnv                []string
+	}{
+		{
+			name: "workaround not needed: RUBY_CONFIGURE_OPTS left untouched",
+			goos: "linux",
+		},
+		{
+			name:         "workaround needed, no pre-existing RUBY_CONFIGURE_OPTS: sets the pipe2/dup3 overrides",
+			goos:         "darwin",
+			swVersOutput: "26.6.2",
+			wantEnv:      []string{"RUBY_CONFIGURE_OPTS=ac_cv_func_pipe2=no ac_cv_func_dup3=no"},
+		},
+		{
+			name:                   "workaround needed, pre-existing RUBY_CONFIGURE_OPTS: appends rather than overwrites",
+			goos:                   "darwin",
+			existingRubyConfigOpts: "--with-openssl-dir=/opt/openssl",
+			swVersOutput:           "26.6.2",
+			wantEnv:                []string{"RUBY_CONFIGURE_OPTS=--with-openssl-dir=/opt/openssl ac_cv_func_pipe2=no ac_cv_func_dup3=no"},
+		},
+		{
+			name:                   "workaround not needed on macOS 27+, pre-existing RUBY_CONFIGURE_OPTS: still propagated explicitly",
+			goos:                   "darwin",
+			existingRubyConfigOpts: "--with-openssl-dir=/opt/openssl",
+			swVersOutput:           "27.0",
+			wantEnv:                []string{"RUBY_CONFIGURE_OPTS=--with-openssl-dir=/opt/openssl"},
+		},
+		{
+			name:                   "workaround not needed, non-Darwin, pre-existing RUBY_CONFIGURE_OPTS: still propagated explicitly",
+			goos:                   "linux",
+			existingRubyConfigOpts: "--with-openssl-dir=/opt/openssl",
+			wantEnv:                []string{"RUBY_CONFIGURE_OPTS=--with-openssl-dir=/opt/openssl"},
+		},
 	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Setenv("RUBY_CONFIGURE_OPTS", tt.existingRubyConfigOpts)
 
-	t.Log("sw_vers fails: fail safe, assume workaround needed")
-	{
-		cmd := new(mocks.Command)
-		cmd.On("RunAndReturnTrimmedOutput").Return("", errors.New("command not found"))
+			cmdFactory := new(mocks.CommandFactory)
+			if tt.goos == "darwin" {
+				cmdFactory = newSwVersFactory(t, tt.swVersOutput, nil)
+			}
 
-		cmdFactory := new(mocks.CommandFactory)
-		cmdFactory.On("Create", "sw_vers", []string{"-productVersion"}, mock.Anything).Return(cmd)
+			opts := buildRubyInstallOpts(tt.goos, cmdFactory)
 
-		needsWorkaround := rubyBuildNeedsPipe2Workaround("darwin", cmdFactory)
-
-		require.True(t, needsWorkaround)
-		cmdFactory.AssertExpectations(t)
-		cmd.AssertExpectations(t)
-	}
-
-	t.Log("sw_vers returns unparsable output: fail safe, assume workaround needed")
-	{
-		cmd := new(mocks.Command)
-		cmd.On("RunAndReturnTrimmedOutput").Return("not-a-version", nil)
-
-		cmdFactory := new(mocks.CommandFactory)
-		cmdFactory.On("Create", "sw_vers", []string{"-productVersion"}, mock.Anything).Return(cmd)
-
-		needsWorkaround := rubyBuildNeedsPipe2Workaround("darwin", cmdFactory)
-
-		require.True(t, needsWorkaround)
-		cmdFactory.AssertExpectations(t)
-		cmd.AssertExpectations(t)
+			require.Equal(t, tt.wantEnv, opts.Env)
+			cmdFactory.AssertExpectations(t)
+		})
 	}
 }
