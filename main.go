@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -219,6 +220,29 @@ func isIncludedInGemfileLockVersionRanges(input string, gemfileLockVersion strin
 	return true, nil
 }
 
+// Xcode 27+ SDKs declare pipe2/dup3 in headers, so Ruby's configure script detects them as
+// available, but the symbols are weakly linked and resolve to null at runtime on hosts running
+// macOS <27 (the syscalls became availabe in 27+).
+func rubyBuildNeedsPipe2Workaround(goos string, cmdFactory command.Factory) bool {
+	if goos != "darwin" {
+		return false
+	}
+
+	out, err := cmdFactory.Create("sw_vers", []string{"-productVersion"}, nil).RunAndReturnTrimmedOutput()
+	if err != nil {
+		logger.Warnf("Failed to determine macOS version, assuming Ruby's pipe2/dup3 workaround is needed: %s", err)
+		return true
+	}
+
+	majorVersion, err := strconv.Atoi(strings.SplitN(out, ".", 2)[0])
+	if err != nil {
+		logger.Warnf("Failed to parse macOS version (%s), assuming Ruby's pipe2/dup3 workaround is needed: %s", out, err)
+		return true
+	}
+
+	return majorVersion < 27
+}
+
 func main() {
 	envRepository := env.NewRepository()
 	cmdLocator := env.NewCommandLocator()
@@ -407,10 +431,20 @@ func main() {
 
 		if !isRubyVersionInstalled && os.Getenv("CI") == "true" {
 			logger.Infof("Installing missing Ruby version")
-			cmd := cmdFactory.Create("asdf", []string{"install", "ruby", rubyVersion}, &command.Opts{
+
+			opts := &command.Opts{
 				Stdout: os.Stdout,
 				Stderr: os.Stderr,
-			})
+			}
+			if rubyBuildNeedsPipe2Workaround(runtime.GOOS, cmdFactory) {
+				logger.Infof("macOS < 27 detected: working around Ruby's miniruby pipe2/dup3 segfault (https://bitrise.atlassian.net/wiki/spaces/~833061986/pages/5222203413)")
+				opts.Env = []string{"RUBY_CONFIGURE_OPTS=" + strings.TrimSpace(strings.Join([]string{
+					os.Getenv("RUBY_CONFIGURE_OPTS"),
+					"ac_cv_func_pipe2=no ac_cv_func_dup3=no",
+				}, " "))}
+			}
+
+			cmd := cmdFactory.Create("asdf", []string{"install", "ruby", rubyVersion}, opts)
 			logger.Donef("$ %s", cmd.PrintableCommandArgs())
 			if err := cmd.Run(); err != nil {
 				logger.Errorf("Failed to install Ruby version %s, error: %s", rubyVersion, err)
