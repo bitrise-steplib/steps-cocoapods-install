@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -219,6 +220,50 @@ func isIncludedInGemfileLockVersionRanges(input string, gemfileLockVersion strin
 	return true, nil
 }
 
+// Xcode 27+ SDKs declare pipe2/dup3 in headers, so Ruby's configure script detects them as
+// available, but the symbols are weakly linked and resolve to null at runtime on hosts running
+// macOS <27 (the syscalls became availabe in 27+).
+func rubyBuildNeedsPipe2Workaround(goos string, cmdFactory command.Factory) bool {
+	if goos != "darwin" {
+		return false
+	}
+
+	out, err := cmdFactory.Create("sw_vers", []string{"-productVersion"}, nil).RunAndReturnTrimmedOutput()
+	if err != nil {
+		logger.Warnf("Failed to determine macOS version, assuming Ruby's pipe2/dup3 workaround is needed: %s", err)
+		return true
+	}
+
+	majorVersion, err := strconv.Atoi(strings.SplitN(out, ".", 2)[0])
+	if err != nil {
+		logger.Warnf("Failed to parse macOS version (%s), assuming Ruby's pipe2/dup3 workaround is needed: %s", out, err)
+		return true
+	}
+
+	return majorVersion < 27
+}
+
+// buildRubyInstallOpts returns command.Opts for building Ruby from source (via "asdf install
+// ruby" or "rbenv install", both of which shell out to ruby-build), applying the pipe2/dup3
+// configure workaround when the host needs it.
+func buildRubyInstallOpts(goos string, cmdFactory command.Factory) *command.Opts {
+	opts := &command.Opts{
+		Stdout: os.Stdout,
+		Stderr: os.Stderr,
+	}
+
+	configureOpts := os.Getenv("RUBY_CONFIGURE_OPTS")
+	if rubyBuildNeedsPipe2Workaround(goos, cmdFactory) {
+		logger.Infof("macOS < 27 detected: working around Ruby's miniruby pipe2/dup3 segfault")
+		configureOpts = strings.TrimSpace(configureOpts + " ac_cv_func_pipe2=no ac_cv_func_dup3=no")
+	}
+	if configureOpts != "" {
+		opts.Env = []string{"RUBY_CONFIGURE_OPTS=" + configureOpts}
+	}
+
+	return opts
+}
+
 func main() {
 	envRepository := env.NewRepository()
 	cmdLocator := env.NewCommandLocator()
@@ -407,10 +452,8 @@ func main() {
 
 		if !isRubyVersionInstalled && os.Getenv("CI") == "true" {
 			logger.Infof("Installing missing Ruby version")
-			cmd := cmdFactory.Create("asdf", []string{"install", "ruby", rubyVersion}, &command.Opts{
-				Stdout: os.Stdout,
-				Stderr: os.Stderr,
-			})
+
+			cmd := cmdFactory.Create("asdf", []string{"install", "ruby", rubyVersion}, buildRubyInstallOpts(runtime.GOOS, cmdFactory))
 			logger.Donef("$ %s", cmd.PrintableCommandArgs())
 			if err := cmd.Run(); err != nil {
 				logger.Errorf("Failed to install Ruby version %s, error: %s", rubyVersion, err)
@@ -433,10 +476,7 @@ func main() {
 				logger.Errorf("Ruby %s is not installed", rversion)
 				fmt.Println()
 
-				cmd := cmdFactory.Create("rbenv", []string{"install", rversion}, &command.Opts{
-					Stdout: os.Stdout,
-					Stderr: os.Stderr,
-				})
+				cmd := cmdFactory.Create("rbenv", []string{"install", rversion}, buildRubyInstallOpts(runtime.GOOS, cmdFactory))
 				logger.Donef("$ %s", cmd.PrintableCommandArgs())
 				if err := cmd.Run(); err != nil {
 					logger.Errorf("Failed to install Ruby version %s, error: %s", rversion, err)
